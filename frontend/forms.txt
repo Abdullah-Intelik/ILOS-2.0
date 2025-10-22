@@ -1,0 +1,1 @@
+hey buddy see this image last we have an application history in which have alldata are coming from backend now you can see the table including platinum row in which have platinum amount is zero bacause we donot have any amount input field so now i want 

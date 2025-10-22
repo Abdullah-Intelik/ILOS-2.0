@@ -1,0 +1,226 @@
+{
+  "chainKey": "31_DATABASE_AUDIT",
+  "changes": [
+    {
+      "id": "d6ea9996-42b0-45ce-b9bb-5fa2a23f7db8",
+      "losId": "31",
+      "department": "DATABASE_AUDIT",
+      "officer": "psql",
+      "timestamp": "2025-09-16T12:04:30.258Z",
+      "changeType": "FINANCIAL_MODIFICATION",
+      "fieldChanges": [
+        {
+          "fieldName": "amount_requested",
+          "fieldPath": "database.cashplus_applications.amount_requested",
+          "oldValue": "600000",
+          "newValue": "85000",
+          "changeReason": "Direct database modification detected - Risk Score: 8",
+          "timestamp": "2025-09-16T12:04:30.259Z",
+          "oldHash": "fc96bf7757d7fd0688c8cb4c1b5cfbee7dd912d85e3d63ffc00a74a57ee912cc",
+          "newHash": "134c572a2bfb0494ae795773513ac5bdefcfcc5b989a4b4c62df2e467fc50352",
+          "changeHash": "5859baeba668bf1d4f554673094561def05d80cc0a68464561b216ae16f4ec40",
+          "sensitivity": "HIGH",
+          "riskScore": 8,
+          "requiresApproval": true
+        }
+      ],
+      "departmentContext": {
+        "workflowStage": "DATABASE_DIRECT",
+        "businessReason": "Direct database modification detected by audit triggers",
+        "auditRecordId": 1,
+        "tableName": "cashplus_applications",
+        "operation": "UPDATE",
+        "riskScore": 8,
+        "detectedAt": "2025-09-16T12:04:20.382Z",
+        "sensitiveFieldsChanged": true,
+        "totalFieldsChanged": 1
+      },
+      "previousHash": "genesis",
+      "compositeHash": "b06173fc6cf51166208794871d10a43ae3c4493d0b0c9f932e913da2d41781f0",
+      "sequence": 1,
+      "blockchain": {
+        "txId": "fabric_49cfa7d6a40ef6d9",
+        "chainHash": "ee5612efdc2556ede01e582bad9d44a07e36a5e6815b0ceaff087a699f48d1f9",
+        "verificationStatus": "VERIFIED",
+        "network": "Real Hyperledger Fabric"
+      }
+    },
+    {
+      "id": "2156ee3f-c532-43b6-aad2-509a05743f7f",
+      "losId": "31",
+      "department": "DATABASE_AUDIT",
+      "officer": "pgAdmin 4 - CONN:1574501",
+      "timestamp": "2025-09-16T12:05:01.021Z",
+      "changeType": "FINANCIAL_MODIFICATION",
+      "fieldChanges": [
+        {
+          "fieldName": "amount_requested",
+          "fieldPath": "database.cashplus_applications.amount_requested",
+          "oldValue": "85000",
+          "newValue": "6500",
+          "changeReason": "Direct database modification detected - Risk Score: 8",
+          "timestamp": "2025-09-16T12:05:01.021Z",
+          "oldHash": "134c572a2bfb0494ae795773513ac5bdefcfcc5b989a4b4c62df2e467fc50352",
+          "newHash": "373829f0041c0fea0cc771c431dfb69280e2df1fe96f29500936eec53662eff4",
+          "changeHash": "fcb6541f544917456b50161ebbac58e431bcf615490e74bb414f70629bccf5ce",
+          "sensitivity": "HIGH",
+          "riskScore": 8,
+          "requiresApproval": true
+        }
+      ],
+      "departmentContext": {
+        "workflowStage": "DATABASE_DIRECT",
+        "businessReason": "Direct database modification detected by audit triggers",
+        "auditRecordId": 2,
+        "tableName": "cashplus_applications",
+        "operation": "UPDATE",
+        "riskScore": 8,
+        "detectedAt": "2025-09-16T12:04:41.944Z",
+        "sensitiveFieldsChanged": true,
+        "totalFieldsChanged": 1
+      },
+      "previousHash": "b06173fc6cf51166208794871d10a43ae3c4493d0b0c9f932e913da2d41781f0",
+      "compositeHash": "83ec0f6f54ae0345b45c46c968bdb4930314e140e7b57fe0c95332f9c197f260",
+      "sequence": 2,
+      "blockchain": {
+        "txId": "fabric_b536501922e225b1",
+        "chainHash": "ba61d9c8fbfb70607588c2796774b59df94928910ea680dc597e082d5b3f3ab3",
+        "verificationStatus": "VERIFIED",
+        "network": "Real Hyperledger Fabric"
+      }
+    },
+    {
+      "id": "c2b75ad2-6c23-4f33-8dfc-acca23d1c8d8",
+      "losId": "31",
+      "department": "DATABASE_AUDIT",
+      "officer": "pgAdmin 4 - CONN:9768705",
+      "timestamp": "2025-09-16T12:26:27.278Z",
+      "changeType": "PERSONAL_DATA_MODIFICATION",
+      "fieldChanges": [
+        {
+          "fieldName": "last_name",
+          "fieldPath": "database.cashplus_applications.last_name",
+          "oldValue": "Doe",
+          "newValue": "ABC",
+          "changeReason": "Direct database modification detected - Risk Score: 3",
+          "timestamp": "2025-09-16T12:26:27.278Z",
+          "oldHash": "e6d598142d26c52bc42c465a907bbe1a83f7526f03f276ecfd462a500304db06",
+          "newHash": "05bee7f79c559da8c321f40c5690af16b66853090c75ab1674dffaabee26f80d",
+          "changeHash": "6f6137b4c872da6743522c847b9f3ce9496d989a010cce32dfead71e17926c23",
+          "sensitivity": "MEDIUM",
+          "riskScore": 3,
+          "requiresApproval": false
+        }
+      ],
+      "departmentContext": {
+        "workflowStage": "DATABASE_DIRECT",
+        "businessReason": "Direct database modification detected by audit triggers",
+        "auditRecordId": 4,
+        "tableName": "cashplus_applications",
+        "operation": "UPDATE",
+        "riskScore": 3,
+        "detectedAt": "2025-09-16T12:26:19.772Z",
+        "sensitiveFieldsChanged": true,
+        "totalFieldsChanged": 1
+      },
+      "previousHash": "83ec0f6f54ae0345b45c46c968bdb4930314e140e7b57fe0c95332f9c197f260",
+      "compositeHash": "ee8e7f12ed9d736b67806083f5e0967d1c9e6e94e40545f6925549741b9b9489",
+      "sequence": 3,
+      "blockchain": {
+        "txId": "fabric_9351d0d53125315a",
+        "chainHash": "2066360bcab52799297bd225d0cde397def9d901aea55526b388769cf109729b",
+        "verificationStatus": "VERIFIED",
+        "network": "Real Hyperledger Fabric"
+      }
+    },
+    {
+      "id": "02f3ab57-be65-4b05-8e02-b24495c3a553",
+      "losId": "31",
+      "department": "DATABASE_AUDIT",
+      "officer": "pgAdmin 4 - CONN:9768705",
+      "timestamp": "2025-09-16T12:26:27.303Z",
+      "changeType": "FINANCIAL_MODIFICATION",
+      "fieldChanges": [
+        {
+          "fieldName": "amount_requested",
+          "fieldPath": "database.cashplus_applications.amount_requested",
+          "oldValue": "6500",
+          "newValue": "5000",
+          "changeReason": "Direct database modification detected - Risk Score: 7",
+          "timestamp": "2025-09-16T12:26:27.303Z",
+          "oldHash": "373829f0041c0fea0cc771c431dfb69280e2df1fe96f29500936eec53662eff4",
+          "newHash": "17edbe68e125d6b7bfd8661756ace696b0a649fd3496b59be42bfc8458f56504",
+          "changeHash": "01ad5184e37742c104acdc823c2ea6de9362cfb488ec2c1397c402bc7644cbed",
+          "sensitivity": "HIGH",
+          "riskScore": 7,
+          "requiresApproval": true
+        }
+      ],
+      "departmentContext": {
+        "workflowStage": "DATABASE_DIRECT",
+        "businessReason": "Direct database modification detected by audit triggers",
+        "auditRecordId": 3,
+        "tableName": "cashplus_applications",
+        "operation": "UPDATE",
+        "riskScore": 7,
+        "detectedAt": "2025-09-16T12:25:57.266Z",
+        "sensitiveFieldsChanged": true,
+        "totalFieldsChanged": 1
+      },
+      "previousHash": "ee8e7f12ed9d736b67806083f5e0967d1c9e6e94e40545f6925549741b9b9489",
+      "compositeHash": "eb46b94f50472e42d609c2ce5f1b20c7ad5a6b756e19dbabc01c6f6bf5c1d0d9",
+      "sequence": 4,
+      "blockchain": {
+        "txId": "fabric_1827e7addd05ea59",
+        "chainHash": "09cd11e7a4c011706f4ad097b96e00c03c938ff685c24aef0ab915ca3b0689b1",
+        "verificationStatus": "VERIFIED",
+        "network": "Real Hyperledger Fabric"
+      }
+    },
+    {
+      "id": "70788eb9-9573-4328-80cf-66d28836ae62",
+      "losId": "31",
+      "department": "DATABASE_AUDIT",
+      "officer": "pgAdmin 4 - CONN:8772883",
+      "timestamp": "2025-09-29T07:12:58.732Z",
+      "changeType": "PERSONAL_DATA_MODIFICATION",
+      "fieldChanges": [
+        {
+          "fieldName": "cnic",
+          "fieldPath": "database.ilos_applications.cnic",
+          "oldValue": "1234512345671",
+          "newValue": "1234512345672",
+          "changeReason": "Direct database modification detected - Risk Score: 5",
+          "timestamp": "2025-09-29T07:12:58.733Z",
+          "oldHash": "39043ef5d57587188b226bc21cf0739ca1b16c6dcb61eb907956aa5f0f0c0cd5",
+          "newHash": "e863b3dfa11bc28ad1f473146c8b6f970942b8b4facaf556d0fe7cdd7f66aec8",
+          "changeHash": "22bb7db6797e63ff096546edc00b18dfcd6d5707baf75c6199010d55a5c1e6d2",
+          "sensitivity": "HIGH",
+          "riskScore": 5,
+          "requiresApproval": true
+        }
+      ],
+      "departmentContext": {
+        "workflowStage": "DATABASE_DIRECT",
+        "businessReason": "Direct database modification detected by audit triggers",
+        "auditRecordId": 75,
+        "tableName": "ilos_applications",
+        "operation": "UPDATE",
+        "riskScore": 5,
+        "detectedAt": "2025-09-29T07:12:42.652Z",
+        "sensitiveFieldsChanged": true,
+        "totalFieldsChanged": 1
+      },
+      "previousHash": "eb46b94f50472e42d609c2ce5f1b20c7ad5a6b756e19dbabc01c6f6bf5c1d0d9",
+      "compositeHash": "669525f016c2f6de59e3452e5b3c423b136b09058c2562c641777f6e59b2f7ef",
+      "sequence": 5,
+      "blockchain": {
+        "txId": "fabric_2c92a051589e4cc7",
+        "chainHash": "3e846e0de24ccd674f568705d356b1594082b6f180710df273a7d6f97c063616",
+        "verificationStatus": "VERIFIED",
+        "network": "Real Hyperledger Fabric"
+      }
+    }
+  ],
+  "lastUpdated": "2025-09-29T07:12:58.743Z"
+}

@@ -1,0 +1,89 @@
+{
+  "chainKey": "58_SPU",
+  "changes": [
+    {
+      "id": "6c1f2b32-c33b-4ce5-a8d7-964d52da3733",
+      "losId": "58",
+      "department": "SPU",
+      "officer": "SPU_officer",
+      "timestamp": "2025-10-06T09:08:42.800Z",
+      "changeType": "FIELD_MODIFICATION",
+      "fieldChanges": [
+        {
+          "fieldName": "status",
+          "fieldPath": "application.workflow.status",
+          "oldValue": "PB_SUBMITTED",
+          "newValue": "submitted_by_spu",
+          "changeReason": "verify by SPU: Application verified by SPU - submitted to COPS and EAMVU Head",
+          "timestamp": "2025-10-06T09:08:42.800Z",
+          "oldHash": "3a2085d6ea8cf6ba05798d607905b30bd2b586880d0c7f323bff64fdd83f4b1f",
+          "newHash": "892a2a7e1f22c22de6fe22de5d277e5c5605ef6cc54bceed2040f171b35ede19",
+          "changeHash": "35060810246df005f090a623900abb9c55856a16bcc21e360bda990d181c98c9",
+          "sensitivity": "LOW",
+          "riskScore": 1,
+          "requiresApproval": false
+        }
+      ],
+      "departmentContext": {
+        "workflowStage": "VERIFY",
+        "applicationType": "ClassicCreditCard",
+        "department": "SPU",
+        "resolveComment": "",
+        "businessReason": "Application verified by SPU - submitted to COPS and EAMVU Head",
+        "workflowAction": "verify"
+      },
+      "previousHash": "genesis",
+      "compositeHash": "5c093cf5ccca9b92667a83628d1d741c6c7eb05c1d42695efa6a686feadc1729",
+      "sequence": 1,
+      "blockchain": {
+        "txId": "fabric_e25d1257b5326e35",
+        "chainHash": "3fa9ea5c036d2840b811cf93a7576b8fe11949235021ed06052402db8814511b",
+        "verificationStatus": "VERIFIED",
+        "network": "Real Hyperledger Fabric"
+      }
+    },
+    {
+      "id": "13eef4ad-2727-4433-9796-3ab692eed25d",
+      "losId": "58",
+      "department": "SPU",
+      "officer": "SPU_officer",
+      "timestamp": "2025-10-16T11:54:12.298Z",
+      "changeType": "FIELD_MODIFICATION",
+      "fieldChanges": [
+        {
+          "fieldName": "status",
+          "fieldPath": "application.workflow.status",
+          "oldValue": "PB_SUBMITTED",
+          "newValue": "submitted_by_spu",
+          "changeReason": "verify by SPU: Application verified by SPU - submitted to COPS and EAMVU Head",
+          "timestamp": "2025-10-16T11:54:12.299Z",
+          "oldHash": "3a2085d6ea8cf6ba05798d607905b30bd2b586880d0c7f323bff64fdd83f4b1f",
+          "newHash": "892a2a7e1f22c22de6fe22de5d277e5c5605ef6cc54bceed2040f171b35ede19",
+          "changeHash": "35060810246df005f090a623900abb9c55856a16bcc21e360bda990d181c98c9",
+          "sensitivity": "LOW",
+          "riskScore": 1,
+          "requiresApproval": false
+        }
+      ],
+      "departmentContext": {
+        "workflowStage": "VERIFY",
+        "applicationType": "CashPlus",
+        "department": "SPU",
+        "resolveComment": "",
+        "businessReason": "Application verified by SPU - submitted to COPS and EAMVU Head",
+        "workflowAction": "verify"
+      },
+      "previousHash": "5c093cf5ccca9b92667a83628d1d741c6c7eb05c1d42695efa6a686feadc1729",
+      "compositeHash": "9fa91c694424b3e4a4f8552703cf3797a5b4436d65eaca1dd16164c77859d9dc",
+      "sequence": 2,
+      "blockchain": {
+        "txId": null,
+        "blockNumber": null,
+        "chainHash": null,
+        "verificationStatus": "FAILED",
+        "error": ""
+      }
+    }
+  ],
+  "lastUpdated": "2025-10-16T11:54:12.304Z"
+}

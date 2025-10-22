@@ -1,0 +1,15 @@
+{
+  "framework": "nextjs",
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next",
+  "installCommand": "npm install",
+  "env": {
+    "NEXT_PUBLIC_API_URL": "https://ilos-backend.vercel.app"
+  },
+  "regions": ["iad1"],
+  "functions": {
+    "app/**/*": {
+      "maxDuration": 30
+    }
+  }
+} 

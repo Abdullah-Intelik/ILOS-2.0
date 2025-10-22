@@ -1,0 +1,48 @@
+{
+  "chainKey": "65_COPS",
+  "changes": [
+    {
+      "id": "920776f0-c310-42ab-8bc6-f05e01d8eff7",
+      "losId": "65",
+      "department": "COPS",
+      "officer": "COPS_officer",
+      "timestamp": "2025-10-22T08:02:47.633Z",
+      "changeType": "FIELD_MODIFICATION",
+      "fieldChanges": [
+        {
+          "fieldName": "status",
+          "fieldPath": "application.workflow.status",
+          "oldValue": "submitted_by_eavmu",
+          "newValue": "submitted_to_ciu",
+          "changeReason": "approve by COPS: Application approved by COPS - Both COPS and EAMVU approved, submitted to CIU",
+          "timestamp": "2025-10-22T08:02:47.633Z",
+          "oldHash": "71b891b7bce1c60e5fb92d18968e5a36f33d018a0b6f1c7cb4e4838e935c72e1",
+          "newHash": "b8fa0a515c6181c8286aeb767a4d2e4408a80316280b7f7140e3656de39708c0",
+          "changeHash": "e798927d10cacdee1aae09e904394424ca1b95d4a5d8fef9de2d46903f13062f",
+          "sensitivity": "LOW",
+          "riskScore": 1,
+          "requiresApproval": false
+        }
+      ],
+      "departmentContext": {
+        "workflowStage": "APPROVE",
+        "applicationType": "CashPlus",
+        "department": "COPS",
+        "resolveComment": "",
+        "businessReason": "Application approved by COPS - Both COPS and EAMVU approved, submitted to CIU",
+        "workflowAction": "approve"
+      },
+      "previousHash": "genesis",
+      "compositeHash": "3334a04abdb9894a40cb41fd36a098d7cc5f1d2ef737bc5349023510205ed54d",
+      "sequence": 1,
+      "blockchain": {
+        "txId": null,
+        "blockNumber": null,
+        "chainHash": null,
+        "verificationStatus": "FAILED",
+        "error": ""
+      }
+    }
+  ],
+  "lastUpdated": "2025-10-22T08:02:47.635Z"
+}

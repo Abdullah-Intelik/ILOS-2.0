@@ -1,0 +1,115 @@
+flowchart TB
+  subgraph "UBL Core Banking System"
+    UBL_Core["UBL Core Banking<br/>System"]
+    UBL_DB["UBL Database"]
+    UBL_API["UBL APIs"]
+  end
+
+  subgraph "HRMS System"
+    HRMS_App["HRMS Application"]
+    HRMS_DB["HRMS Database"]
+  end
+
+  subgraph "ILOS - Integrated Loan Origination System"
+    subgraph "ILOS Frontend"
+      ILOS_Web["Next.js Web App<br/>(Dashboards)"]
+      ILOS_Mobile["React Native<br/>(EAMVU Mobile)"]
+    end
+    
+    subgraph "ILOS Backend Services"
+      ILOS_API["Express API<br/>(Applications, ECIB)"]
+      ILOS_DBR["Data Engine<br/>(DBR Service)"]
+    end
+    
+    subgraph "ILOS Data Layer"
+      ILOS_DB["PostgreSQL HA<br/>(Operational Data)"]
+      ILOS_Fabric["Hyperledger Fabric<br/>(Audit Trail)"]
+    end
+    
+    subgraph "ILOS Blockchain Network"
+      ILOS_Orderer["Fabric Orderer<br/>(Raft Consensus)"]
+      ILOS_Peers["Department Peers<br/>(PB/COPS/CIU/Risk)"]
+      ILOS_CA["Fabric CAs<br/>(Identity Mgmt)"]
+    end
+  end
+
+  subgraph "Users & Departments"
+    PB_Users["PB Users"]
+    SPU_Users["SPU Users"] 
+    COPS_Users["COPS Users"]
+    EAMVU_Users["EAMVU Users"]
+    CIU_Users["CIU Users"]
+    RRU_Users["RRU Users"]
+    Risk_Users["Risk Users"]
+    Compliance_Users["Compliance Users"]
+  end
+
+  subgraph "External Systems"
+    ECIB["ECIB<br/>(Credit Bureau)"]
+    External_APIs["External APIs<br/>(Verification)"]
+  end
+
+  subgraph "Infrastructure & Monitoring"
+    Monitoring["Prometheus + Grafana<br/>(Monitoring)"]
+    Logging["ELK Stack<br/>(Centralized Logs)"]
+    Backup["Backup & DR<br/>(pgBackRest + Fabric)"]
+  end
+
+  %% User connections to ILOS
+  PB_Users --> ILOS_Web
+  SPU_Users --> ILOS_Web
+  COPS_Users --> ILOS_Web
+  EAMVU_Users --> ILOS_Mobile
+  CIU_Users --> ILOS_Web
+  RRU_Users --> ILOS_Web
+  Risk_Users --> ILOS_Web
+  Compliance_Users --> ILOS_Web
+
+  %% ILOS internal flow
+  ILOS_Web --> ILOS_API
+  ILOS_Mobile --> ILOS_API
+  ILOS_API --> ILOS_DB
+  ILOS_Web --> ILOS_DBR
+  ILOS_DBR --> ILOS_API
+  ILOS_API --> ILOS_Fabric
+  
+  %% Fabric network connections
+  ILOS_Fabric --> ILOS_Orderer
+  ILOS_Orderer --> ILOS_Peers
+  ILOS_CA --> ILOS_Peers
+
+  %% Integration with UBL systems
+  ILOS_API -.-> UBL_API
+  ILOS_DB -.-> UBL_DB
+  ILOS_API -.-> HRMS_App
+
+  %% External integrations
+  ILOS_API --> ECIB
+  ILOS_API --> External_APIs
+
+  %% Monitoring connections
+  Monitoring --> ILOS_API
+  Monitoring --> ILOS_DBR
+  Monitoring --> ILOS_DB
+  Monitoring --> ILOS_Fabric
+  
+  Logging --> ILOS_API
+  Logging --> ILOS_DBR
+  Logging --> ILOS_DB
+  Logging --> ILOS_Fabric
+
+  %% Backup connections
+  ILOS_DB --> Backup
+  ILOS_Fabric --> Backup
+
+  %% Styling
+  classDef ilosSystem fill:#e1f5fe,stroke:#0277bd,stroke-width:2px
+  classDef ublSystem fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+  classDef infrastructure fill:#fff3e0,stroke:#ef6c00,stroke-width:2px
+  classDef users fill:#e8f5e8,stroke:#388e3c,stroke-width:2px
+
+  class ILOS_Web,ILOS_Mobile,ILOS_API,ILOS_DBR,ILOS_DB,ILOS_Fabric,ILOS_Orderer,ILOS_Peers,ILOS_CA ilosSystem
+  class UBL_Core,UBL_DB,UBL_API,HRMS_App,HRMS_DB ublSystem
+  class Monitoring,Logging,Backup infrastructure
+  class PB_Users,SPU_Users,COPS_Users,EAMVU_Users,CIU_Users,RRU_Users,Risk_Users,Compliance_Users users
+

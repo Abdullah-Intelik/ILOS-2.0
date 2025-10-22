@@ -1,0 +1,94 @@
+flowchart LR
+  subgraph "Client"
+    A["Users (PB/SPU/COPS/EAMVU/CIU/RRU/Risk/Compliance)"]
+  end
+
+  subgraph "Frontend"
+    B["Next.js App (Dashboards, CIU DBR)"]
+  end
+
+  subgraph "Backend"
+    C["Express API (Applications, ECIB, etc.)"]
+    D["Data Engine (DBR Service)"]
+  end
+
+  subgraph "Database"
+    E["PostgreSQL HA Cluster"]
+  end
+
+  subgraph "Hyperledger Fabric"
+    F["Orderer Cluster (Raft)"]
+    subgraph Orgs["Orgs & Peers"]
+      G1["Org PB - Peers + CouchDB"]
+      G2["Org Ops (COPS/EAMVU) - Peers + CouchDB"]
+      G3["Org CIU/RRU - Peers + CouchDB"]
+      G4["Org Risk/Compliance - Peers + CouchDB"]
+    end
+    H["Fabric CAs (per org)"]
+    I["Channel: iloschannel"]
+    J["Private Data Collections per Department"]
+  end
+
+  subgraph "Observability"
+    K["Prometheus + Grafana"]
+    L["Centralized Logs (ELK/Splunk)"]
+  end
+
+  subgraph "Backup & DR"
+    M["pgBackRest (WAL + Full Backups)"]
+    N["Fabric Artifacts Backup (MSP, Channel, Ledger)"]
+    O["Secondary DC (DR Site)"]
+  end
+
+  A --> B
+  B --> C
+  C --> E
+
+  B -- "Calculate DBR" --> D
+  D -- "Fetch Form/ECIB" --> C
+  D --> B
+
+  C -- "Anchor Hash / PDC Writes" --> I
+  I --> F
+  I --> G1
+  I --> G2
+  I --> G3
+  I --> G4
+  I --> J
+  H --> G1
+  H --> G2
+  H --> G3
+  H --> G4
+
+  E -- "Hash Verification (Recompute)" --> C
+  C -- "Verify Hash/Read" --> I
+
+  K --> C
+  K --> D
+  K --> E
+  K --> F
+  K --> G1
+  K --> G2
+  K --> G3
+  K --> G4
+
+  L --> C
+  L --> D
+  L --> E
+  L --> F
+  L --> G1
+  L --> G2
+  L --> G3
+  L --> G4
+
+  E --> M
+  F --> N
+  G1 --> N
+  G2 --> N
+  G3 --> N
+  G4 --> N
+
+  M --> O
+  N --> O
+
+

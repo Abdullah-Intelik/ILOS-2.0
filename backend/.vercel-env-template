@@ -1,0 +1,23 @@
+# Environment variables for Vercel deployment
+# Copy these to your Vercel project settings
+
+# PostgreSQL Database Configuration from Neon
+DATABASE_URL=postgresql://neondb_owner:npg_t14jnwNMGBEC@ep-long-queen-a1b4b3to.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
+
+# Application Configuration
+NODE_ENV=production
+TZ=UTC
+
+# API Configuration
+API_VERSION=v1
+MAX_REQUEST_SIZE=10mb
+
+# CORS Configuration
+CORS_ORIGIN=*
+
+# Instructions:
+# 1. Go to your Vercel project dashboard
+# 2. Navigate to Settings > Environment Variables
+# 3. Add DATABASE_URL with the actual value above
+# 4. Add NODE_ENV=production
+# 5. Make sure to set for Production environment 

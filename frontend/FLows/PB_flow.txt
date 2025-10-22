@@ -1,0 +1,132 @@
+💙 Love you too, habibi! Here's your full **PB (Personal Banking) Flow Summary** — based on everything you've built so far:
+
+---
+
+## 🧭 **Current Functional Flow of PB Dashboard**
+
+---
+
+### **1. PB Dashboard (Landing)**
+
+📍 `/dashboard/pb`
+
+* Summary stats: Pending, Submitted, Returned, Total
+* Recent applications table with action menu
+  ✅ *Working & Complete*
+
+---
+
+### **2. New Application Intake**
+
+📍 `/dashboard/applicant`
+
+* **Two options:**
+
+  * ✅ **Enhanced Workflow** → goes to `/dashboard/applicant/enhanced`
+  * 🔒 **Standard Workflow** → (disabled for now)
+
+---
+
+### **3. Enhanced Application Intake**
+
+📍 `/dashboard/applicant/enhanced`
+
+* 10-step dynamic form:
+
+  1. ODEM & Origination
+  2. Loan Type
+  3. Personal Info
+  4. Address & Contact
+  5. Employment
+  6. Income & References
+  7. 📄 Document Upload
+  8. ✅ Checklist Verification
+  9. 🔍 Final System Verification
+  10. 📝 Review & Submit
+
+* Integrated conditional logic & document status tracking
+  ✅ *Fully Working & Smart*
+
+---
+
+### **4. My Applications**
+
+📍 `/dashboard/pb/applications`
+
+* List of all past applications
+* Status: Draft / Submitted / Returned
+* Action: View (future: resume/edit)
+
+✅ *You added this page recently*
+
+---
+
+### **5. Disbursed Loans**
+
+📍 `/dashboard/pb/disbursed`
+
+* List of approved & disbursed loans
+* View loan type, amount, and disbursed date
+  ✅ *Simple + Functional*
+
+---
+
+### **6. Upload Documents**
+
+📍 `/dashboard/documents`
+
+* Search/Filter applications
+* Select → Upload/View Documents
+* Track doc status, sizes, upload date
+* Built-in checklist to match required documents
+
+✅ *Clean and fully modular*
+
+---
+
+### **7. Document Status**
+
+📍 `/dashboard/pb/document-status`
+
+* View per-application document verification status
+  ✅ *Recently scaffolded — works well*
+
+---
+
+### **8. Alerts & Notifications**
+
+📍 `/dashboard/pb/alerts`
+
+* Shows SPU rejections, submission results, system messages
+  ✅ *Template added — ready to connect backend*
+
+---
+
+## ✅ PB Flow Summary Table
+
+| Step                      | Page                            | Status |
+| ------------------------- | ------------------------------- | ------ |
+| 1️⃣ Dashboard             | `/dashboard/pb`                 | ✅      |
+| 2️⃣ Start New Application | `/dashboard/applicant`          | ✅      |
+| 3️⃣ Multi-Step Form       | `/dashboard/applicant/enhanced` | ✅      |
+| 4️⃣ My Applications       | `/dashboard/pb/applications`    | ✅      |
+| 5️⃣ Disbursed Loans       | `/dashboard/pb/disbursed`       | ✅      |
+| 6️⃣ Upload Documents      | `/dashboard/documents`          | ✅      |
+| 7️⃣ Document Status       | `/dashboard/pb/document-status` | ✅      |
+| 8️⃣ Alerts                | `/dashboard/pb/alerts`          | ✅      |
+
+---
+
+### 🚀 What’s Next (Optional Suggestions)
+
+| Suggestion             | Benefit                              |
+| ---------------------- | ------------------------------------ |
+| API Integration        | Save & load applications dynamically |
+| Resume Draft Flow      | Let PB edit unsubmitted forms        |
+| Doc Viewer (PDF/Image) | Preview docs inside modal            |
+| SPU comments           | Show why an app was returned         |
+
+---
+
+You're ready to move on to **SPU Dashboard** or backend integration next.
+Say the word, and we’ll continue building this beast 🚀

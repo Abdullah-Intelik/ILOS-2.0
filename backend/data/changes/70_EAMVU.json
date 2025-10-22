@@ -1,0 +1,90 @@
+{
+  "chainKey": "70_EAMVU",
+  "changes": [
+    {
+      "id": "5c7b1441-c244-4b72-acd8-15ca4b5ee30c",
+      "losId": "70",
+      "department": "EAMVU",
+      "officer": "EAMVU_officer",
+      "timestamp": "2025-10-22T09:51:56.260Z",
+      "changeType": "FIELD_MODIFICATION",
+      "fieldChanges": [
+        {
+          "fieldName": "status",
+          "fieldPath": "application.workflow.status",
+          "oldValue": "submitted_by_cops",
+          "newValue": "assigned_to_eavmu_officer",
+          "changeReason": "assign by EAMVU: Application assigned to Ahmad Hassan (101)",
+          "timestamp": "2025-10-22T09:51:56.260Z",
+          "oldHash": "db040e23edcf7fd74b6e1dbd2a4c6da8156b34aa9f8454ca46e9adbfd108e9c6",
+          "newHash": "eaa677be9b96cccaa121131f7c754c91afdd9d8c8fadd3df4ae25fe15fcc71c0",
+          "changeHash": "ee480b47058a381d7df7196fc84cb7c8b899764a027d1ce654b2587bda02ad60",
+          "sensitivity": "LOW",
+          "riskScore": 1,
+          "requiresApproval": false
+        }
+      ],
+      "departmentContext": {
+        "workflowStage": "ASSIGN",
+        "applicationType": "ClassicCreditCard",
+        "department": "EAMVU",
+        "resolveComment": "",
+        "businessReason": "Application assigned to Ahmad Hassan (101)",
+        "workflowAction": "assign"
+      },
+      "previousHash": "genesis",
+      "compositeHash": "3a8a3bea36a30a393f6097455ceed4092381e4b9c0e4f4acb786c6dc42dc51d9",
+      "sequence": 1,
+      "blockchain": {
+        "txId": null,
+        "blockNumber": null,
+        "chainHash": null,
+        "verificationStatus": "FAILED",
+        "error": ""
+      }
+    },
+    {
+      "id": "96e1dc96-89a6-4bbc-a46b-f6f967439b17",
+      "losId": "70",
+      "department": "EAMVU",
+      "officer": "EAMVU_officer",
+      "timestamp": "2025-10-22T09:53:39.989Z",
+      "changeType": "FIELD_MODIFICATION",
+      "fieldChanges": [
+        {
+          "fieldName": "status",
+          "fieldPath": "application.workflow.status",
+          "oldValue": "returned_by_eavmu_officer",
+          "newValue": "submitted_to_ciu",
+          "changeReason": "approve by EAMVU: Application approved by EAMVU HEAD after officer review - Both COPS and EAMVU approved, submitted to CIU",
+          "timestamp": "2025-10-22T09:53:39.989Z",
+          "oldHash": "2a071cc26352f9330273aa0426f304ac8f184e22a5c24db613313d02f17f3a9e",
+          "newHash": "b8fa0a515c6181c8286aeb767a4d2e4408a80316280b7f7140e3656de39708c0",
+          "changeHash": "d8a4b8777cdcdc43760819d1373b62c57c2a990fe9cf72ab8e522a687cc4a9c9",
+          "sensitivity": "LOW",
+          "riskScore": 1,
+          "requiresApproval": false
+        }
+      ],
+      "departmentContext": {
+        "workflowStage": "APPROVE",
+        "applicationType": "ClassicCreditCard",
+        "department": "EAMVU",
+        "resolveComment": "",
+        "businessReason": "Application approved by EAMVU HEAD after officer review - Both COPS and EAMVU approved, submitted to CIU",
+        "workflowAction": "approve"
+      },
+      "previousHash": "3a8a3bea36a30a393f6097455ceed4092381e4b9c0e4f4acb786c6dc42dc51d9",
+      "compositeHash": "4c6d439c12d8a557a034ab9b4f2b1d6c0b0192bc92a69b5d9ff1357b021c5303",
+      "sequence": 2,
+      "blockchain": {
+        "txId": null,
+        "blockNumber": null,
+        "chainHash": null,
+        "verificationStatus": "FAILED",
+        "error": ""
+      }
+    }
+  ],
+  "lastUpdated": "2025-10-22T09:53:39.991Z"
+}

@@ -1,0 +1,48 @@
+{
+  "chainKey": "69_COPS",
+  "changes": [
+    {
+      "id": "4e9bd9bb-a4b1-4db5-9e67-cd0059df8cd2",
+      "losId": "69",
+      "department": "COPS",
+      "officer": "COPS_officer",
+      "timestamp": "2025-10-22T09:21:19.449Z",
+      "changeType": "FIELD_MODIFICATION",
+      "fieldChanges": [
+        {
+          "fieldName": "status",
+          "fieldPath": "application.workflow.status",
+          "oldValue": "submitted_by_spu",
+          "newValue": "submitted_by_cops",
+          "changeReason": "approve by COPS: Application approved by COPS - waiting for EAMVU approval",
+          "timestamp": "2025-10-22T09:21:19.449Z",
+          "oldHash": "892a2a7e1f22c22de6fe22de5d277e5c5605ef6cc54bceed2040f171b35ede19",
+          "newHash": "db040e23edcf7fd74b6e1dbd2a4c6da8156b34aa9f8454ca46e9adbfd108e9c6",
+          "changeHash": "ea2d3e00b2f4f77ed5bfba16d61b7790330375663d9845508764c68d53e0a404",
+          "sensitivity": "LOW",
+          "riskScore": 1,
+          "requiresApproval": false
+        }
+      ],
+      "departmentContext": {
+        "workflowStage": "APPROVE",
+        "applicationType": "ClassicCreditCard",
+        "department": "COPS",
+        "resolveComment": "",
+        "businessReason": "Application approved by COPS - waiting for EAMVU approval",
+        "workflowAction": "approve"
+      },
+      "previousHash": "genesis",
+      "compositeHash": "84841576084f3bbb4c22e94a634eb3538a61db88a37e605f70ed32bda3183953",
+      "sequence": 1,
+      "blockchain": {
+        "txId": null,
+        "blockNumber": null,
+        "chainHash": null,
+        "verificationStatus": "FAILED",
+        "error": ""
+      }
+    }
+  ],
+  "lastUpdated": "2025-10-22T09:21:19.451Z"
+}

@@ -1,0 +1,89 @@
+{
+  "chainKey": "38_COPS",
+  "changes": [
+    {
+      "id": "85b08f7d-cc26-4b59-a499-e037c3012795",
+      "losId": "38",
+      "department": "COPS",
+      "officer": "COPS_officer",
+      "timestamp": "2025-09-17T08:55:30.485Z",
+      "changeType": "FIELD_MODIFICATION",
+      "fieldChanges": [
+        {
+          "fieldName": "status",
+          "fieldPath": "application.workflow.status",
+          "oldValue": "submitted_by_spu",
+          "newValue": "submitted_by_cops",
+          "changeReason": "approve by COPS: Application approved by COPS - waiting for EAMVU approval",
+          "timestamp": "2025-09-17T08:55:30.485Z",
+          "oldHash": "892a2a7e1f22c22de6fe22de5d277e5c5605ef6cc54bceed2040f171b35ede19",
+          "newHash": "db040e23edcf7fd74b6e1dbd2a4c6da8156b34aa9f8454ca46e9adbfd108e9c6",
+          "changeHash": "ea2d3e00b2f4f77ed5bfba16d61b7790330375663d9845508764c68d53e0a404",
+          "sensitivity": "LOW",
+          "riskScore": 1,
+          "requiresApproval": false
+        }
+      ],
+      "departmentContext": {
+        "workflowStage": "APPROVE",
+        "applicationType": "AmeenDrive",
+        "department": "COPS",
+        "resolveComment": "",
+        "businessReason": "Application approved by COPS - waiting for EAMVU approval",
+        "workflowAction": "approve"
+      },
+      "previousHash": "genesis",
+      "compositeHash": "22b3e0c99d59bc57a13dd263f8152e3821b6cff9e1eaefc154d0e337edacbdd6",
+      "sequence": 1,
+      "blockchain": {
+        "txId": "fabric_56225067c12e553a",
+        "chainHash": "e55265f0b7934727eac9732868bb5b0685470623cfd6fe6c78d66b8032932a94",
+        "verificationStatus": "VERIFIED",
+        "network": "Real Hyperledger Fabric"
+      }
+    },
+    {
+      "id": "92f66f81-b914-414a-bd18-7fc5c5a6375e",
+      "losId": "38",
+      "department": "COPS",
+      "officer": "COPS_officer",
+      "timestamp": "2025-10-22T07:02:11.062Z",
+      "changeType": "FIELD_MODIFICATION",
+      "fieldChanges": [
+        {
+          "fieldName": "status",
+          "fieldPath": "application.workflow.status",
+          "oldValue": "application_completed",
+          "newValue": "offer_letter_issued",
+          "changeReason": "finalize by COPS: Offer letter issued by COPS",
+          "timestamp": "2025-10-22T07:02:11.062Z",
+          "oldHash": "a192307900a06f135b23e535098321b03a5a473b2a22f8998c48b096372d6f0c",
+          "newHash": "5574d0dd5757948079ab9293cbf07fcb0696b2d6989507e03439892381b7958d",
+          "changeHash": "2836604d9ea6978f3bc61d43d7cc584d899ea56ef456ce02bc612754018ce120",
+          "sensitivity": "LOW",
+          "riskScore": 1,
+          "requiresApproval": false
+        }
+      ],
+      "departmentContext": {
+        "workflowStage": "FINALIZE",
+        "applicationType": "AmeenDrive",
+        "department": "COPS",
+        "resolveComment": "",
+        "businessReason": "Offer letter issued by COPS",
+        "workflowAction": "finalize"
+      },
+      "previousHash": "22b3e0c99d59bc57a13dd263f8152e3821b6cff9e1eaefc154d0e337edacbdd6",
+      "compositeHash": "1f8fd2d0474dff6c2f64f9555b7898f731d15a15b34dc9aa766734e1f335efa2",
+      "sequence": 2,
+      "blockchain": {
+        "txId": null,
+        "blockNumber": null,
+        "chainHash": null,
+        "verificationStatus": "FAILED",
+        "error": ""
+      }
+    }
+  ],
+  "lastUpdated": "2025-10-22T07:02:11.066Z"
+}

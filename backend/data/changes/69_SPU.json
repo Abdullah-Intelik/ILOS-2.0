@@ -1,0 +1,48 @@
+{
+  "chainKey": "69_SPU",
+  "changes": [
+    {
+      "id": "9f84ca26-9d9e-4391-91cf-360f755f9aa6",
+      "losId": "69",
+      "department": "SPU",
+      "officer": "SPU_officer",
+      "timestamp": "2025-10-22T09:21:06.400Z",
+      "changeType": "FIELD_MODIFICATION",
+      "fieldChanges": [
+        {
+          "fieldName": "status",
+          "fieldPath": "application.workflow.status",
+          "oldValue": "PB_SUBMITTED",
+          "newValue": "submitted_by_spu",
+          "changeReason": "verify by SPU: Application verified by SPU - submitted to COPS and EAMVU Head",
+          "timestamp": "2025-10-22T09:21:06.400Z",
+          "oldHash": "3a2085d6ea8cf6ba05798d607905b30bd2b586880d0c7f323bff64fdd83f4b1f",
+          "newHash": "892a2a7e1f22c22de6fe22de5d277e5c5605ef6cc54bceed2040f171b35ede19",
+          "changeHash": "35060810246df005f090a623900abb9c55856a16bcc21e360bda990d181c98c9",
+          "sensitivity": "LOW",
+          "riskScore": 1,
+          "requiresApproval": false
+        }
+      ],
+      "departmentContext": {
+        "workflowStage": "VERIFY",
+        "applicationType": "ClassicCreditCard",
+        "department": "SPU",
+        "resolveComment": "",
+        "businessReason": "Application verified by SPU - submitted to COPS and EAMVU Head",
+        "workflowAction": "verify"
+      },
+      "previousHash": "genesis",
+      "compositeHash": "f5c03aeb33cf93d84fdb2c33c5dd4a034302ec3980cd276a50575965d99cd5d1",
+      "sequence": 1,
+      "blockchain": {
+        "txId": null,
+        "blockNumber": null,
+        "chainHash": null,
+        "verificationStatus": "FAILED",
+        "error": ""
+      }
+    }
+  ],
+  "lastUpdated": "2025-10-22T09:21:06.402Z"
+}

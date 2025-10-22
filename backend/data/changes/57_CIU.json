@@ -1,0 +1,47 @@
+{
+  "chainKey": "57_CIU",
+  "changes": [
+    {
+      "id": "0809c307-01d0-4c62-8bfb-e12743d7d6f1",
+      "losId": "57",
+      "department": "CIU",
+      "officer": "CIU_officer",
+      "timestamp": "2025-09-29T07:37:25.518Z",
+      "changeType": "FIELD_MODIFICATION",
+      "fieldChanges": [
+        {
+          "fieldName": "status",
+          "fieldPath": "application.workflow.status",
+          "oldValue": "submitted_to_ciu",
+          "newValue": "application_completed",
+          "changeReason": "approve by CIU: Application completed by CIU",
+          "timestamp": "2025-09-29T07:37:25.518Z",
+          "oldHash": "b8fa0a515c6181c8286aeb767a4d2e4408a80316280b7f7140e3656de39708c0",
+          "newHash": "a192307900a06f135b23e535098321b03a5a473b2a22f8998c48b096372d6f0c",
+          "changeHash": "a5735f82c62bcaf0dd40f3c0a009c689f619816a3598a2aa9f2213ad6d7a6a66",
+          "sensitivity": "LOW",
+          "riskScore": 1,
+          "requiresApproval": false
+        }
+      ],
+      "departmentContext": {
+        "workflowStage": "APPROVE",
+        "applicationType": "CashPlus",
+        "department": "CIU",
+        "resolveComment": "",
+        "businessReason": "Application completed by CIU",
+        "workflowAction": "approve"
+      },
+      "previousHash": "genesis",
+      "compositeHash": "a05ecee5700ceda0bd6b5a941f1d927c3510c22f78ade442ba878ff90a20b815",
+      "sequence": 1,
+      "blockchain": {
+        "txId": "fabric_67d2516f29cba171",
+        "chainHash": "142fb088a8470dc82cd2d6585d3396b3cc8b4cd6efeff82282ccf62871ce1ca0",
+        "verificationStatus": "VERIFIED",
+        "network": "Real Hyperledger Fabric"
+      }
+    }
+  ],
+  "lastUpdated": "2025-09-29T07:37:25.523Z"
+}

@@ -1,0 +1,48 @@
+{
+  "chainKey": "61_EAMVU_OFFICER",
+  "changes": [
+    {
+      "id": "1922ba8c-a9cc-48e2-bbb4-72f2bec18239",
+      "losId": "61",
+      "department": "EAMVU_OFFICER",
+      "officer": "EAMVU_OFFICER_officer",
+      "timestamp": "2025-10-20T15:20:57.670Z",
+      "changeType": "FIELD_MODIFICATION",
+      "fieldChanges": [
+        {
+          "fieldName": "status",
+          "fieldPath": "application.workflow.status",
+          "oldValue": "assigned_to_eavmu_officer",
+          "newValue": "returned_by_eavmu_officer",
+          "changeReason": "complete by EAMVU_OFFICER: Application completed by EAMVU Officer (Agent: agent-004) - returned to EAMVU HEAD",
+          "timestamp": "2025-10-20T15:20:57.670Z",
+          "oldHash": "eaa677be9b96cccaa121131f7c754c91afdd9d8c8fadd3df4ae25fe15fcc71c0",
+          "newHash": "2a071cc26352f9330273aa0426f304ac8f184e22a5c24db613313d02f17f3a9e",
+          "changeHash": "af92925f25c3f65218d1fb83609b426e9c7a9efdfeda2d4b63c478d81aec5929",
+          "sensitivity": "LOW",
+          "riskScore": 1,
+          "requiresApproval": false
+        }
+      ],
+      "departmentContext": {
+        "workflowStage": "COMPLETE",
+        "applicationType": "CashPlus",
+        "department": "EAMVU_OFFICER",
+        "resolveComment": "",
+        "businessReason": "Application completed by EAMVU Officer (Agent: agent-004) - returned to EAMVU HEAD",
+        "workflowAction": "complete"
+      },
+      "previousHash": "genesis",
+      "compositeHash": "2b8c2f897b862d69254ffe94315737fa867091446ac5c655e6750403249dce5d",
+      "sequence": 1,
+      "blockchain": {
+        "txId": null,
+        "blockNumber": null,
+        "chainHash": null,
+        "verificationStatus": "FAILED",
+        "error": ""
+      }
+    }
+  ],
+  "lastUpdated": "2025-10-20T15:20:57.672Z"
+}

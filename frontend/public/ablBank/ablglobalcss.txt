@@ -1,0 +1,214 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 220 33% 98%;              /* very light background */
+    --foreground: 220 10% 10%;             /* dark text */
+    --card: 220 33% 98%;
+    --card-foreground: 220 10% 10%;
+    --popover: 220 33% 98%;
+    --popover-foreground: 220 10% 10%;
+
+    /* ✅ ABL Corporate Colors */
+    --primary: 213 100% 19%;               /* Navy Blue #002D62 */
+    --primary-foreground: 0 0% 100%;       /* white text */
+
+    --secondary: 28 90% 56%;               /* Orange #F58220 */
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 220 10% 94%;                  /* light gray-blue */
+    --muted-foreground: 220 10% 35%;
+
+    --accent: 28 100% 90%;                 /* pale orange */
+    --accent-foreground: 28 90% 30%;
+
+    --destructive: 0 72% 40%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 15% 88%;
+    --input: 220 15% 88%;
+    --ring: 213 100% 19%;                  /* navy blue focus */
+
+    /* Chart colors */
+    --chart-1: 213 100% 19%;               /* navy */
+    --chart-2: 28 90% 56%;                 /* orange */
+    --chart-3: 220 70% 35%;                /* lighter blue */
+    --chart-4: 28 80% 45%;                 /* darker orange */
+    --chart-5: 210 30% 50%;                /* muted blue */
+
+    /* Sidebar */
+    --sidebar: 220 10% 96%;
+    --sidebar-foreground: 220 10% 15%;
+    --sidebar-primary: 213 100% 19%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 28 90% 56%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 220 15% 88%;
+    --sidebar-ring: 213 100% 19%;
+
+    /* Fonts & radii */
+    --font-sans: Poppins, sans-serif;
+    --font-serif: Libre Baskerville, serif;
+    --font-mono: IBM Plex Mono, monospace;
+    --radius: 0.375rem;
+
+    /* Shadows */
+    --shadow-2xs: 1px 1px 16px -2px hsl(220 40% 20% / 0.06);
+    --shadow-xs: 1px 1px 16px -2px hsl(220 40% 20% / 0.06);
+    --shadow-sm: 1px 1px 16px -2px hsl(220 40% 20% / 0.12), 1px 1px 2px -3px hsl(220 40% 20% / 0.12);
+    --shadow: 1px 1px 16px -2px hsl(220 40% 20% / 0.12), 1px 1px 2px -3px hsl(220 40% 20% / 0.12);
+    --shadow-md: 1px 1px 16px -2px hsl(220 40% 20% / 0.12), 1px 2px 4px -3px hsl(220 40% 20% / 0.12);
+    --shadow-lg: 1px 1px 16px -2px hsl(220 40% 20% / 0.12), 1px 4px 6px -3px hsl(220 40% 20% / 0.12);
+    --shadow-xl: 1px 1px 16px -2px hsl(220 40% 20% / 0.12), 1px 8px 10px -3px hsl(220 40% 20% / 0.12);
+    --shadow-2xl: 1px 1px 16px -2px hsl(220 40% 20% / 0.30);
+
+    --tracking-normal: 0em;
+    --spacing: 0.25rem;
+  }
+
+  .dark {
+    --background: 220 15% 10%;
+    --foreground: 220 5% 96%;
+    --card: 220 10% 15%;
+    --card-foreground: 220 5% 96%;
+    --popover: 220 10% 15%;
+    --popover-foreground: 220 5% 96%;
+
+    --primary: 213 100% 30%;              /* brighter navy */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 28 90% 56%;              /* orange pops */
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 220 15% 15%;
+    --muted-foreground: 220 5% 80%;
+
+    --accent: 28 80% 45%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 80% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 10% 25%;
+    --input: 220 10% 25%;
+    --ring: 213 100% 30%;
+
+    --chart-1: 213 100% 30%;
+    --chart-2: 28 90% 56%;
+    --chart-3: 220 70% 40%;
+    --chart-4: 28 80% 50%;
+    --chart-5: 210 40% 60%;
+
+    --sidebar: 220 15% 12%;
+    --sidebar-foreground: 220 5% 96%;
+    --sidebar-primary: 213 100% 30%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 28 90% 56%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 220 10% 25%;
+    --sidebar-ring: 213 100% 30%;
+  }
+}
+
+@layer base {
+  * { @apply border-border; }
+  body {
+    @apply bg-background text-foreground antialiased;
+    background-image:
+      radial-gradient(1200px 400px at 50% -200px, hsl(var(--primary) / 0.06), transparent),
+      linear-gradient(180deg, hsl(var(--background)), hsl(var(--background)) 200px, hsl(var(--accent) / 0.15) 200px, hsl(var(--background)) 100%);
+  }
+}
+
+
+
+
+/* Light, safe, app-wide polish without touching TS/logic */
+@layer components {
+  /* Buttons and interactive elements: subtle transitions */
+  button,
+  [role="button"],
+  a {
+    @apply transition-colors duration-150;
+  }
+
+  /* Unified form field look without changing components/logic */
+  input[type="text"],
+  input[type="number"],
+  input[type="email"],
+  input[type="tel"],
+  input[type="date"],
+  input[type="datetime-local"],
+  select,
+  textarea {
+    border-radius: var(--radius);
+    border: 1px solid hsl(var(--border));
+    background-color: hsl(var(--card));
+    padding: 0.625rem 0.75rem;
+    line-height: 1.4;
+    transition: border-color 150ms ease, box-shadow 150ms ease, background-color 150ms ease;
+  }
+  input::placeholder,
+  textarea::placeholder {
+    color: hsl(var(--muted-foreground));
+  }
+  input:focus,
+  select:focus,
+  textarea:focus {
+    outline: none;
+    border-color: hsl(var(--ring));
+    box-shadow: 0 0 0 3px hsl(var(--primary) / 0.15);
+    background-color: hsl(var(--background));
+  }
+  label { @apply text-sm font-medium text-slate-700; }
+  textarea { min-height: 96px; resize: vertical; }
+
+  /* Helper utility classes developers can opt into without logic changes */
+  .form-section { @apply rounded-xl border bg-card p-4 md:p-6 space-y-4; }
+  .form-grid { @apply grid grid-cols-1 md:grid-cols-2 gap-4; }
+  .form-grid-3 { @apply grid grid-cols-1 md:grid-cols-3 gap-4; }
+  .help-text { @apply text-xs text-muted-foreground; }
+
+  /* Tables: zebra rows and hover highlight */
+  table tbody tr:nth-child(odd) {
+    background-color: hsl(var(--muted) / 0.4);
+  }
+  table tbody tr:hover {
+    background-color: hsl(var(--accent) / 0.6);
+  }
+
+  /* Sticky table headers when container scrolls */
+  table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background-color: hsl(var(--background));
+    box-shadow: inset 0 -1px 0 hsl(var(--border));
+  }
+
+  /* Table padding and dividers for readability */
+  table th, table td { padding: 0.75rem 1rem; }
+  table tbody tr + tr td { border-top: 1px solid hsl(var(--border)); }
+
+  /* Card-like containers: slightly elevated */
+  [class*="rounded-"][class*="border"][class*="bg-card"] {
+    box-shadow: 0 4px 12px hsl(220 3% 15% / 0.06), 0 1px 2px hsl(220 3% 15% / 0.04);
+    transition: box-shadow 150ms ease;
+  }
+  [class*="rounded-"][class*="border"][class*="bg-card"]:hover {
+    box-shadow: 0 8px 20px hsl(220 3% 15% / 0.10), 0 2px 4px hsl(220 3% 15% / 0.06);
+  }
+
+  /* Dialog content elevation */
+  [class*="DialogContent"], [role="dialog"] [class*="max-w-"] {
+    box-shadow: 0 24px 48px hsl(220 3% 15% / 0.24), 0 8px 16px hsl(220 3% 15% / 0.16);
+  }
+}
+
+/* Polished scrollbars (WebKit-based browsers) */
+::-webkit-scrollbar { height: 10px; width: 10px; }
+::-webkit-scrollbar-track { background: hsl(var(--muted)); border-radius: 8px; }
+::-webkit-scrollbar-thumb { background: hsl(var(--primary) / 0.35); border-radius: 8px; }
+::-webkit-scrollbar-thumb:hover { background: hsl(var(--primary) / 0.5); }

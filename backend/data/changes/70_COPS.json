@@ -1,0 +1,90 @@
+{
+  "chainKey": "70_COPS",
+  "changes": [
+    {
+      "id": "751c5d76-8c9b-4d26-8733-4be0f8194928",
+      "losId": "70",
+      "department": "COPS",
+      "officer": "COPS_officer",
+      "timestamp": "2025-10-22T09:51:01.998Z",
+      "changeType": "FIELD_MODIFICATION",
+      "fieldChanges": [
+        {
+          "fieldName": "status",
+          "fieldPath": "application.workflow.status",
+          "oldValue": "submitted_by_spu",
+          "newValue": "submitted_by_cops",
+          "changeReason": "approve by COPS: Application approved by COPS - waiting for EAMVU approval",
+          "timestamp": "2025-10-22T09:51:01.998Z",
+          "oldHash": "892a2a7e1f22c22de6fe22de5d277e5c5605ef6cc54bceed2040f171b35ede19",
+          "newHash": "db040e23edcf7fd74b6e1dbd2a4c6da8156b34aa9f8454ca46e9adbfd108e9c6",
+          "changeHash": "ea2d3e00b2f4f77ed5bfba16d61b7790330375663d9845508764c68d53e0a404",
+          "sensitivity": "LOW",
+          "riskScore": 1,
+          "requiresApproval": false
+        }
+      ],
+      "departmentContext": {
+        "workflowStage": "APPROVE",
+        "applicationType": "ClassicCreditCard",
+        "department": "COPS",
+        "resolveComment": "",
+        "businessReason": "Application approved by COPS - waiting for EAMVU approval",
+        "workflowAction": "approve"
+      },
+      "previousHash": "genesis",
+      "compositeHash": "c6da48a83c48cd224ea4779a2617ee7a57948a59c9404ee087b8ac92accf83e4",
+      "sequence": 1,
+      "blockchain": {
+        "txId": null,
+        "blockNumber": null,
+        "chainHash": null,
+        "verificationStatus": "FAILED",
+        "error": ""
+      }
+    },
+    {
+      "id": "26599c41-5462-49a4-84f9-af395d353c8e",
+      "losId": "70",
+      "department": "COPS",
+      "officer": "COPS_officer",
+      "timestamp": "2025-10-22T10:00:12.913Z",
+      "changeType": "FIELD_MODIFICATION",
+      "fieldChanges": [
+        {
+          "fieldName": "status",
+          "fieldPath": "application.workflow.status",
+          "oldValue": "application_completed",
+          "newValue": "card_issued",
+          "changeReason": "finalize by COPS: Card issued by COPS",
+          "timestamp": "2025-10-22T10:00:12.913Z",
+          "oldHash": "a192307900a06f135b23e535098321b03a5a473b2a22f8998c48b096372d6f0c",
+          "newHash": "f8534885475aa8c11a5f75ebf7f64eb245d78f4dd56e9d43fb25b9d72ffb5fdd",
+          "changeHash": "2fa03678c905106443bab11c4f7da211af8cd3b198e1aa90185402973c744ec5",
+          "sensitivity": "LOW",
+          "riskScore": 1,
+          "requiresApproval": false
+        }
+      ],
+      "departmentContext": {
+        "workflowStage": "FINALIZE",
+        "applicationType": "ClassicCreditCard",
+        "department": "COPS",
+        "resolveComment": "",
+        "businessReason": "Card issued by COPS",
+        "workflowAction": "finalize"
+      },
+      "previousHash": "c6da48a83c48cd224ea4779a2617ee7a57948a59c9404ee087b8ac92accf83e4",
+      "compositeHash": "d525cc0784e445512aff5728cec7d7ccc5c74ce3ed744fb5d5de9c1233057492",
+      "sequence": 2,
+      "blockchain": {
+        "txId": null,
+        "blockNumber": null,
+        "chainHash": null,
+        "verificationStatus": "FAILED",
+        "error": ""
+      }
+    }
+  ],
+  "lastUpdated": "2025-10-22T10:00:12.915Z"
+}

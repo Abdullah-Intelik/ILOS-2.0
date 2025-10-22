@@ -1,0 +1,78 @@
+{
+  "chainKey": "38_DATABASE_AUDIT",
+  "changes": [
+    {
+      "id": "48fb2606-a452-4267-ba6a-978bd920b6be",
+      "losId": "38",
+      "department": "DATABASE_AUDIT",
+      "officer": "pgAdmin 4 - CONN:4900994",
+      "timestamp": "2025-10-06T09:56:39.543Z",
+      "changeType": "FINANCIAL_MODIFICATION",
+      "fieldChanges": [
+        {
+          "fieldName": "gross_income",
+          "fieldPath": "database.ameendrive_applications.gross_income",
+          "oldValue": "null",
+          "newValue": "321312",
+          "changeReason": "Direct database modification detected - Risk Score: 7",
+          "timestamp": "2025-10-06T09:56:39.544Z",
+          "oldHash": "e11d6da82f6896d88c6d7d1eb0ae0654ac5cb0f3d6130a53192726fd45abb6ff",
+          "newHash": "028c2b314e2c50bef2dec6f74c1444c477dac791fc71b93a1ed8d94374449a6d",
+          "changeHash": "fc657f76e85c54c54b29e5fb8012b964dcbfcd54e462a78281e115a71e7190c4",
+          "sensitivity": "HIGH",
+          "riskScore": 5,
+          "requiresApproval": true
+        },
+        {
+          "fieldName": "net_take_home",
+          "fieldPath": "database.ameendrive_applications.net_take_home",
+          "oldValue": "null",
+          "newValue": "2313213",
+          "changeReason": "Direct database modification detected - Risk Score: 7",
+          "timestamp": "2025-10-06T09:56:39.544Z",
+          "oldHash": "79be01d3b6262afef1d025f514bb38949faa362af06a8087311d0e586929e0a7",
+          "newHash": "768089f88a8b09c4201d27470a473daf0313966a69753f25f16895a3659da986",
+          "changeHash": "ddd22c54193c3b433e655127cde1dcc946d400f73aadef9455b1dba488dcda45",
+          "sensitivity": "LOW",
+          "riskScore": 1,
+          "requiresApproval": false
+        },
+        {
+          "fieldName": "regular_monthly",
+          "fieldPath": "database.ameendrive_applications.regular_monthly",
+          "oldValue": "null",
+          "newValue": "3131231",
+          "changeReason": "Direct database modification detected - Risk Score: 7",
+          "timestamp": "2025-10-06T09:56:39.544Z",
+          "oldHash": "40f4754a79df22d98414342e2f22056df93ca4c73ce7459a658636112e835094",
+          "newHash": "0a56f9ebf2328c8b14e103aebe3f026e20fbb6ba6064530074743c7d64b9dc9c",
+          "changeHash": "34987accc17fbb947c911cca2c3bf615706fc28539fa44aa3a2c6e9e142257da",
+          "sensitivity": "LOW",
+          "riskScore": 1,
+          "requiresApproval": false
+        }
+      ],
+      "departmentContext": {
+        "workflowStage": "DATABASE_DIRECT",
+        "businessReason": "Direct database modification detected by audit triggers",
+        "auditRecordId": 116,
+        "tableName": "ameendrive_applications",
+        "operation": "UPDATE",
+        "riskScore": 7,
+        "detectedAt": "2025-10-06T09:56:19.690Z",
+        "sensitiveFieldsChanged": true,
+        "totalFieldsChanged": 3
+      },
+      "previousHash": "genesis",
+      "compositeHash": "1e5e71a66eba459ef61ccae332b5d0de46d0d7794575ffe0ccf44701e7697b31",
+      "sequence": 1,
+      "blockchain": {
+        "txId": "fabric_543d8e94c3a4d3ff",
+        "chainHash": "034a3ae29b78063ebd9d0f5878f052c2520214ed1be7c07d547dd172c207074e",
+        "verificationStatus": "VERIFIED",
+        "network": "Real Hyperledger Fabric"
+      }
+    }
+  ],
+  "lastUpdated": "2025-10-06T09:56:39.557Z"
+}

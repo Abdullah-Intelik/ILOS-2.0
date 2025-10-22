@@ -1,0 +1,48 @@
+{
+  "chainKey": "66_EAMVU_OFFICER",
+  "changes": [
+    {
+      "id": "9e1d8d9f-d87c-46ed-b034-1989a3c7a815",
+      "losId": "66",
+      "department": "EAMVU_OFFICER",
+      "officer": "EAMVU_OFFICER_officer",
+      "timestamp": "2025-10-22T06:56:26.972Z",
+      "changeType": "FIELD_MODIFICATION",
+      "fieldChanges": [
+        {
+          "fieldName": "status",
+          "fieldPath": "application.workflow.status",
+          "oldValue": "assigned_to_eavmu_officer",
+          "newValue": "returned_by_eavmu_officer",
+          "changeReason": "complete by EAMVU_OFFICER: Application completed by EAMVU Officer (Agent: 104) - returned to EAMVU HEAD",
+          "timestamp": "2025-10-22T06:56:26.972Z",
+          "oldHash": "eaa677be9b96cccaa121131f7c754c91afdd9d8c8fadd3df4ae25fe15fcc71c0",
+          "newHash": "2a071cc26352f9330273aa0426f304ac8f184e22a5c24db613313d02f17f3a9e",
+          "changeHash": "995ef612417dcc28547bd690262420859e839d932e7e121646b7ec8625b81611",
+          "sensitivity": "LOW",
+          "riskScore": 1,
+          "requiresApproval": false
+        }
+      ],
+      "departmentContext": {
+        "workflowStage": "COMPLETE",
+        "applicationType": "ClassicCreditCard",
+        "department": "EAMVU_OFFICER",
+        "resolveComment": "",
+        "businessReason": "Application completed by EAMVU Officer (Agent: 104) - returned to EAMVU HEAD",
+        "workflowAction": "complete"
+      },
+      "previousHash": "genesis",
+      "compositeHash": "b97dd68d88d19eaed39a55fa4744c00a3c6ed6abe6fda125eecb5af5318dd370",
+      "sequence": 1,
+      "blockchain": {
+        "txId": null,
+        "blockNumber": null,
+        "chainHash": null,
+        "verificationStatus": "FAILED",
+        "error": ""
+      }
+    }
+  ],
+  "lastUpdated": "2025-10-22T06:56:26.974Z"
+}

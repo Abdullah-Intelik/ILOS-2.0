@@ -1,0 +1,248 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* ------------------------------
+       🌿 Bank AL Habib (Light Mode)
+       ------------------------------ */
+    --background: 140 20% 98%;
+    --foreground: 145 5% 10%;
+    --card: 140 20% 98%;
+    --card-foreground: 145 5% 10%;
+    --popover: 140 20% 98%;
+    --popover-foreground: 145 5% 10%;
+
+    /* 🟢 Primary Green & Gold Accents */
+    --primary: 146 100% 19%;           /* #006231 */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 45 65% 52%;           /* #C9A635 */
+    --secondary-foreground: 0 0% 100%;
+    --muted: 145 15% 90%;
+    --muted-foreground: 145 5% 40%;
+
+    --accent: 45 60% 55%;              /* soft gold accent */
+    --accent-foreground: 146 100% 18%;
+
+    --destructive: 0 72% 40%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 146 15% 85%;
+    --input: 146 15% 85%;
+    --ring: 146 100% 19%;              /* deep green outline */
+
+    /* Chart Colors (green–gold harmony) */
+    --chart-1: 146 100% 19%;
+    --chart-2: 146 70% 30%;
+    --chart-3: 45 65% 52%;
+    --chart-4: 45 70% 60%;
+    --chart-5: 146 40% 40%;
+
+    /* Sidebar */
+    --sidebar: 145 15% 96%;
+    --sidebar-foreground: 145 5% 15%;
+    --sidebar-primary: 146 100% 19%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 45 65% 52%;
+    --sidebar-accent-foreground: 146 100% 19%;
+    --sidebar-border: 145 15% 85%;
+    --sidebar-ring: 146 100% 19%;
+
+    /* Fonts & Radii */
+    --font-sans: Poppins, sans-serif;
+    --font-serif: "Libre Baskerville", serif;
+    --font-mono: "IBM Plex Mono", monospace;
+    --radius: 0.375rem;
+
+    /* Subtle shadow tone */
+    --shadow-sm: 0 1px 3px hsl(146 40% 30% / 0.1);
+    --shadow-md: 0 4px 6px hsl(146 40% 30% / 0.15);
+    --shadow-lg: 0 10px 15px hsl(146 40% 30% / 0.2);
+  }
+
+  /* ------------------------------
+     🌙 Dark Mode (Elegant Contrast)
+     ------------------------------ */
+  .dark {
+    --background: 146 15% 9%;
+    --foreground: 146 5% 96%;
+    --card: 146 15% 12%;
+    --card-foreground: 146 5% 96%;
+    --popover: 146 15% 12%;
+    --popover-foreground: 146 5% 96%;
+
+    --primary: 146 80% 28%;            /* bright emerald */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 45 70% 50%;           /* glowing gold */
+    --secondary-foreground: 146 10% 10%;
+
+    --muted: 146 10% 20%;
+    --muted-foreground: 146 5% 80%;
+
+    --accent: 45 70% 55%;
+    --accent-foreground: 146 100% 18%;
+
+    --destructive: 0 80% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 146 10% 25%;
+    --input: 146 10% 25%;
+    --ring: 146 80% 28%;
+
+    --chart-1: 146 80% 28%;
+    --chart-2: 45 70% 55%;
+    --chart-3: 146 60% 35%;
+    --chart-4: 45 60% 50%;
+    --chart-5: 146 40% 45%;
+
+    --sidebar: 146 15% 12%;
+    --sidebar-foreground: 146 5% 96%;
+    --sidebar-primary: 146 80% 28%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 45 70% 55%;
+    --sidebar-accent-foreground: 146 100% 18%;
+    --sidebar-border: 146 10% 25%;
+    --sidebar-ring: 146 80% 28%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    background-image:
+      radial-gradient(1200px 400px at 50% -200px, hsl(var(--primary) / 0.06), transparent),
+      linear-gradient(
+        180deg,
+        hsl(var(--background)),
+        hsl(var(--background)) 200px,
+        hsl(var(--accent) / 0.25) 200px,
+        hsl(var(--background)) 100%
+      );
+  }
+}
+
+/* ---------------------------------
+   🧩 Unified Component Enhancements
+   --------------------------------- */
+@layer components {
+  button,
+  [role="button"],
+  a {
+    @apply transition-colors duration-150;
+  }
+
+  /* Unified form styling */
+  input[type="text"],
+  input[type="number"],
+  input[type="email"],
+  input[type="tel"],
+  input[type="date"],
+  input[type="datetime-local"],
+  select,
+  textarea {
+    border-radius: var(--radius);
+    border: 1px solid hsl(var(--border));
+    background-color: hsl(var(--card));
+    padding: 0.625rem 0.75rem;
+    line-height: 1.4;
+    transition: border-color 150ms ease, box-shadow 150ms ease, background-color 150ms ease;
+  }
+  input::placeholder,
+  textarea::placeholder {
+    color: hsl(var(--muted-foreground));
+  }
+  input:focus,
+  select:focus,
+  textarea:focus {
+    outline: none;
+    border-color: hsl(var(--ring));
+    box-shadow: 0 0 0 3px hsl(var(--primary) / 0.15);
+    background-color: hsl(var(--background));
+  }
+
+  label {
+    @apply text-sm font-medium text-slate-700;
+  }
+  textarea {
+    min-height: 96px;
+    resize: vertical;
+  }
+
+  .form-section {
+    @apply rounded-xl border bg-card p-4 md:p-6 space-y-4;
+  }
+  .form-grid {
+    @apply grid grid-cols-1 md:grid-cols-2 gap-4;
+  }
+  .form-grid-3 {
+    @apply grid grid-cols-1 md:grid-cols-3 gap-4;
+  }
+  .help-text {
+    @apply text-xs text-muted-foreground;
+  }
+
+  /* Table visuals */
+  table tbody tr:nth-child(odd) {
+    background-color: hsl(var(--muted) / 0.4);
+  }
+  table tbody tr:hover {
+    background-color: hsl(var(--accent) / 0.6);
+  }
+
+  table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background-color: hsl(var(--background));
+    box-shadow: inset 0 -1px 0 hsl(var(--border));
+  }
+  table th,
+  table td {
+    padding: 0.75rem 1rem;
+  }
+  table tbody tr + tr td {
+    border-top: 1px solid hsl(var(--border));
+  }
+
+  /* Card elevation */
+  [class*="rounded-"][class*="border"][class*="bg-card"] {
+    box-shadow: 0 4px 12px hsl(146 30% 20% / 0.06),
+      0 1px 2px hsl(146 30% 20% / 0.04);
+    transition: box-shadow 150ms ease;
+  }
+  [class*="rounded-"][class*="border"][class*="bg-card"]:hover {
+    box-shadow: 0 8px 20px hsl(146 30% 20% / 0.10),
+      0 2px 4px hsl(146 30% 20% / 0.06);
+  }
+
+  [class*="DialogContent"],
+  [role="dialog"] [class*="max-w-"] {
+    box-shadow: 0 24px 48px hsl(146 30% 20% / 0.24),
+      0 8px 16px hsl(146 30% 20% / 0.16);
+  }
+}
+
+/* ---------------------------------
+   🎚️ Modern Scrollbars
+   --------------------------------- */
+::-webkit-scrollbar {
+  height: 10px;
+  width: 10px;
+}
+::-webkit-scrollbar-track {
+  background: hsl(var(--muted));
+  border-radius: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--primary) / 0.35);
+  border-radius: 8px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--primary) / 0.5);
+}

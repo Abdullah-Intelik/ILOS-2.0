@@ -1,0 +1,64 @@
+{
+  "chainKey": "30_DATABASE_AUDIT",
+  "changes": [
+    {
+      "id": "a5f3bb8a-305f-4eef-b8b2-bbadb6b7639b",
+      "losId": "30",
+      "department": "DATABASE_AUDIT",
+      "officer": "pgAdmin 4 - CONN:9768705",
+      "timestamp": "2025-09-16T12:29:30.695Z",
+      "changeType": "FINANCIAL_MODIFICATION",
+      "fieldChanges": [
+        {
+          "fieldName": "last_name",
+          "fieldPath": "database.cashplus_applications.last_name",
+          "oldValue": "Doe",
+          "newValue": "afrta",
+          "changeReason": "Direct database modification detected - Risk Score: 10",
+          "timestamp": "2025-09-16T12:29:30.695Z",
+          "oldHash": "e6d598142d26c52bc42c465a907bbe1a83f7526f03f276ecfd462a500304db06",
+          "newHash": "8b501eb78342f2be1ac7a1da971f4dd5e77cd9004fce53e71c77408a2d1759cf",
+          "changeHash": "62e5b4256ddacb9fd02273b19387b766020b78b12d36e6799c861ac9007c1470",
+          "sensitivity": "MEDIUM",
+          "riskScore": 3,
+          "requiresApproval": false
+        },
+        {
+          "fieldName": "amount_requested",
+          "fieldPath": "database.cashplus_applications.amount_requested",
+          "oldValue": "500000",
+          "newValue": "5000000",
+          "changeReason": "Direct database modification detected - Risk Score: 10",
+          "timestamp": "2025-09-16T12:29:30.695Z",
+          "oldHash": "c32134c64c312a96bda2c14982e6d039604b61b7ba1b5c96e2cd3ce295fee861",
+          "newHash": "5338bcefd127bfc67245c7dc05afdd8bfb735ee2bc547ffe04c59679f6355149",
+          "changeHash": "905108fd60142e59516b16338be7c0118890feef4a8ebaaefef55f5efe84ebc2",
+          "sensitivity": "HIGH",
+          "riskScore": 8,
+          "requiresApproval": true
+        }
+      ],
+      "departmentContext": {
+        "workflowStage": "DATABASE_DIRECT",
+        "businessReason": "Direct database modification detected by audit triggers",
+        "auditRecordId": 5,
+        "tableName": "cashplus_applications",
+        "operation": "UPDATE",
+        "riskScore": 10,
+        "detectedAt": "2025-09-16T12:29:21.474Z",
+        "sensitiveFieldsChanged": true,
+        "totalFieldsChanged": 2
+      },
+      "previousHash": "genesis",
+      "compositeHash": "a775c563d0c9692c762e6554e910a8de688fd008b8069433865890c784ddfc17",
+      "sequence": 1,
+      "blockchain": {
+        "txId": "fabric_eb82fda84b4b0504",
+        "chainHash": "a878879838a9ccb801c9d94256c759f5f35916b7570c3bd0181208f2c85d937d",
+        "verificationStatus": "VERIFIED",
+        "network": "Real Hyperledger Fabric"
+      }
+    }
+  ],
+  "lastUpdated": "2025-09-16T12:29:30.700Z"
+}

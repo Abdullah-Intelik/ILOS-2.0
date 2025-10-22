@@ -1,0 +1,538 @@
+/**
+ * ILOS Banking System - Secure Production Server
+ * ==============================================
+ * Enterprise-grade banking application with comprehensive security
+ */
+
+// Load environment configuration first
+require('dotenv').config();
+
+const express = require('express');
+const cors = require('cors');
+const compression = require('compression');
+const helmet = require('helmet');
+
+// Security imports
+const securityConfig = require('./config/security');
+const { authenticate, authorize, requireAdmin, requireManager, requireOfficer } = require('./middleware/auth');
+const { apiLimiter, authLimiter, strictLimiter, applicationLimiters, smartRateLimiter } = require('./middleware/rateLimiter');
+const { sanitizeInput, handleValidationErrors, sqlInjectionProtection } = require('./middleware/validation');
+
+// Database connections
+const db = require('./db');
+const db1 = require('./db1');
+
+// Initialize Express app
+const app = express();
+const PORT = process.env.PORT || 5000;
+
+// =============================================================================
+// SECURITY CONFIGURATION VALIDATION
+// =============================================================================
+
+try {
+    securityConfig.validate();
+    console.log('✅ Security configuration validated');
+} catch (error) {
+    console.error('❌ Security configuration error:', error.message);
+    process.exit(1);
+}
+
+// =============================================================================
+// SECURITY MIDDLEWARE (Applied in order - CRITICAL!)
+// =============================================================================
+
+// 1. Trust proxy (for rate limiting and IP detection)
+app.set('trust proxy', process.env.TRUSTED_PROXIES?.split(',') || ['127.0.0.1']);
+
+// 2. Security headers (MUST be first)
+app.use(helmet({
+    contentSecurityPolicy: securityConfig.headers.contentSecurityPolicy,
+    hsts: securityConfig.headers.hsts,
+    referrerPolicy: securityConfig.headers.referrerPolicy,
+    crossOriginEmbedderPolicy: false, // Banking apps may need iframe embedding
+    crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
+
+// 3. CORS configuration
+app.use(cors(securityConfig.cors));
+
+// 4. Request compression
+app.use(compression());
+
+// 5. Request parsing with size limits
+app.use(express.json({ 
+    limit: '10mb',
+    verify: (req, res, buf) => {
+        // Store raw body for webhook signature verification if needed
+        req.rawBody = buf;
+    }
+}));
+app.use(express.urlencoded({ 
+    limit: '10mb', 
+    extended: true,
+    parameterLimit: 100 // Prevent parameter pollution
+}));
+
+// 6. Input sanitization and SQL injection protection
+app.use(sanitizeInput);
+app.use(sqlInjectionProtection);
+
+// 7. Global rate limiting
+app.use(apiLimiter);
+
+// =============================================================================
+// HEALTH CHECK ENDPOINTS (No auth required)
+// =============================================================================
+
+app.get('/health', (req, res) => {
+    res.json({
+        status: 'healthy',
+        service: 'ILOS Banking System',
+        version: '2.0.0',
+        environment: process.env.NODE_ENV || 'development',
+        timestamp: new Date().toISOString(),
+        security: {
+            authenticationEnabled: true,
+            rateLimitingEnabled: true,
+            inputValidationEnabled: true,
+            auditLoggingEnabled: true
+        }
+    });
+});
+
+app.get('/api/health', (req, res) => {
+    res.json({
+        api: 'healthy',
+        database: 'connected',
+        blockchain: 'connected',
+        security: 'enabled',
+        timestamp: new Date().toISOString()
+    });
+});
+
+// =============================================================================
+// AUTHENTICATION ROUTES (Public endpoints)
+// =============================================================================
+
+app.use('/api/auth', require('./routes/auth'));
+
+// =============================================================================
+// PROTECTED API ROUTES (Authentication required)
+// =============================================================================
+
+// Application management (requires authentication)
+app.use('/api/applications', 
+    authenticate,
+    authorize(['read', 'write']),
+    require('./routes/applications')
+);
+
+// Lightweight endpoints with authentication
+app.use('/api', 
+    authenticate,
+    require('./routes/applications-minimal')
+);
+
+// Form-specific routes with department-based access
+app.use('/api/personal-details', 
+    authenticate,
+    authorize(['write'], { allowedDepartments: ['PB', 'SPU'] }),
+    require('./routes/personalDetails')
+);
+
+app.use('/api/current-address', 
+    authenticate,
+    authorize(['write'], { allowedDepartments: ['PB', 'SPU'] }),
+    require('./routes/currentAddress')
+);
+
+app.use('/api/permanent-address', 
+    authenticate,
+    authorize(['write'], { allowedDepartments: ['PB', 'SPU'] }),
+    require('./routes/permanentAddress')
+);
+
+app.use('/api/employment-details', 
+    authenticate,
+    authorize(['write'], { allowedDepartments: ['PB', 'SPU'] }),
+    require('./routes/employmentDetails')
+);
+
+app.use('/api/vehicle-details', 
+    authenticate,
+    authorize(['write'], { allowedDepartments: ['PB', 'SPU'] }),
+    require('./routes/vehicleDetails')
+);
+
+app.use('/api/reference-contacts', 
+    authenticate,
+    authorize(['write'], { allowedDepartments: ['PB', 'SPU'] }),
+    require('./routes/referenceContacts')
+);
+
+app.use('/api/insurance-details', 
+    authenticate,
+    authorize(['write'], { allowedDepartments: ['PB', 'SPU'] }),
+    require('./routes/insuranceDetails')
+);
+
+app.use('/api/contact-details', 
+    authenticate,
+    authorize(['write'], { allowedDepartments: ['PB', 'SPU'] }),
+    require('./routes/contactDetails')
+);
+
+app.use('/api/verification', 
+    authenticate,
+    requireOfficer,
+    require('./routes/verification')
+);
+
+// SPU Officer routes (restricted access)
+app.use('/api/spu-officer', 
+    authenticate,
+    authorize(['approve'], { allowedDepartments: ['SPU'], allowedRoles: ['SENIOR_OFFICER', 'DEPARTMENT_HEAD', 'ADMIN'] }),
+    require('./routes/spuOfficer')
+);
+
+app.use('/api/spu', 
+    authenticate,
+    authorize(['read', 'write'], { allowedDepartments: ['SPU'] }),
+    require('./routes/spu')
+);
+
+// CIF routes with restricted access
+app.use('/api/cif', 
+    authenticate,
+    authorize(['read'], { allowedDepartments: ['CIU', 'RRU', 'ADMIN'] }),
+    require('./routes/cif')
+);
+
+app.use('/cif', 
+    authenticate,
+    authorize(['read'], { allowedDepartments: ['CIU', 'RRU', 'ADMIN'] }),
+    require('./routes/cif')
+);
+
+// Loan application routes with rate limiting
+app.use('/api/cashplus', 
+    authenticate,
+    authorize(['write'], { allowedDepartments: ['PB'] }),
+    applicationLimiters.loanSubmission,
+    require('./routes/cashplus')
+);
+
+app.use('/api/autoloan', 
+    authenticate,
+    authorize(['write'], { allowedDepartments: ['PB'] }),
+    applicationLimiters.loanSubmission,
+    require('./routes/autoloan')
+);
+
+app.use('/api/ameendrive', 
+    authenticate,
+    authorize(['write'], { allowedDepartments: ['PB'] }),
+    applicationLimiters.loanSubmission,
+    require('./routes/ameendrive')
+);
+
+app.use('/api/smeasaan', 
+    authenticate,
+    authorize(['write'], { allowedDepartments: ['PB'] }),
+    applicationLimiters.loanSubmission,
+    require('./routes/smeasaan')
+);
+
+app.use('/api/commercialVehicle', 
+    authenticate,
+    authorize(['write'], { allowedDepartments: ['PB'] }),
+    applicationLimiters.loanSubmission,
+    require('./routes/commercialVehicle')
+);
+
+app.use('/api/classic_creditcard', 
+    authenticate,
+    authorize(['write'], { allowedDepartments: ['PB'] }),
+    applicationLimiters.loanSubmission,
+    require('./routes/classic_creditcard')
+);
+
+app.use('/api/platinum_creditcard', 
+    authenticate,
+    authorize(['write'], { allowedDepartments: ['PB'] }),
+    applicationLimiters.loanSubmission,
+    require('./routes/platinum_creditcard')
+);
+
+// =============================================================================
+// EXTERNAL API ROUTES (High security)
+// =============================================================================
+
+app.use('/api/sbp-blacklist', 
+    authenticate,
+    authorize(['read'], { allowedDepartments: ['SPU', 'COMPLIANCE', 'RISK'] }),
+    applicationLimiters.externalApi,
+    require('./routes/sbp_blacklist')
+);
+
+app.use('/api/pep', 
+    authenticate,
+    authorize(['read'], { allowedDepartments: ['SPU', 'COMPLIANCE', 'RISK'] }),
+    applicationLimiters.externalApi,
+    require('./routes/pep')
+);
+
+app.use('/api/internal-watchlist', 
+    authenticate,
+    authorize(['read'], { allowedDepartments: ['SPU', 'COMPLIANCE', 'RISK'] }),
+    applicationLimiters.externalApi,
+    require('./routes/internal_watchlist')
+);
+
+app.use('/api/nadra-verisys', 
+    authenticate,
+    authorize(['read'], { allowedDepartments: ['SPU', 'CIU'] }),
+    applicationLimiters.externalApi,
+    require('./routes/nadra_verisys')
+);
+
+app.use('/api/frms', 
+    authenticate,
+    authorize(['read'], { allowedDepartments: ['RISK', 'SPU'] }),
+    applicationLimiters.externalApi,
+    require('./routes/frms')
+);
+
+app.use('/api/consumer-companies', 
+    authenticate,
+    authorize(['read']),
+    applicationLimiters.externalApi,
+    require('./routes/consumer_companies_list')
+);
+
+app.use('/api/ecib-reports', 
+    authenticate,
+    authorize(['read'], { allowedDepartments: ['CIU', 'RRU'] }),
+    applicationLimiters.externalApi,
+    require('./routes/ecib_reports')
+);
+
+app.use('/api', 
+    authenticate,
+    applicationLimiters.externalApi,
+    require('./routes/combineChecks')
+);
+
+app.use('/api/ccl', 
+    authenticate,
+    applicationLimiters.externalApi,
+    require('./routes/consumer_companies_list')
+);
+
+// =============================================================================
+// DEPARTMENT CHANGE TRACKING (High security)
+// =============================================================================
+
+app.use('/api/department-changes', 
+    authenticate,
+    authorize(['read', 'write'], { requireSameDepartment: true }),
+    require('./routes/department-changes')
+);
+
+// =============================================================================
+// BLOCKCHAIN INTEGRATION (Critical security)
+// =============================================================================
+
+const blockchainHashModule = require('./routes/blockchain-hash');
+app.use('/api/blockchain-hash',
+    authenticate,
+    authorize(['read', 'write']),
+    applicationLimiters.blockchain,
+    blockchainHashModule.router
+);
+
+// =============================================================================
+// DATABASE CHANGE DETECTION (Admin only)
+// =============================================================================
+
+console.log('🔍 Initializing Database Change Detection...');
+try {
+    const DatabaseChangeProcessor = require('./lib/DatabaseChangeProcessor');
+    const dbChangeProcessor = new DatabaseChangeProcessor();
+    
+    // Start processing database changes
+    dbChangeProcessor.startProcessing();
+    console.log('✅ Database change detection started');
+
+    // Database changes API (admin only)
+    app.get('/api/database-changes/health', 
+        authenticate,
+        requireAdmin,
+        async (req, res) => {
+            try {
+                const stats = await dbChangeProcessor.getProcessingStats();
+                res.json({
+                    health: {
+                        status: 'healthy',
+                        processor: 'active'
+                    },
+                    stats: stats
+                });
+            } catch (error) {
+                res.status(500).json({
+                    health: {
+                        status: 'error',
+                        error: error.message
+                    }
+                });
+            }
+        }
+    );
+
+    app.get('/api/database-changes/recent', 
+        authenticate,
+        requireAdmin,
+        async (req, res) => {
+            try {
+                const changes = await dbChangeProcessor.getRecentChanges(50);
+                res.json({
+                    success: true,
+                    changes: changes
+                });
+            } catch (error) {
+                res.status(500).json({
+                    success: false,
+                    error: error.message
+                });
+            }
+        }
+    );
+
+    // Graceful shutdown handler
+    process.on('SIGTERM', () => {
+        console.log('🛑 Stopping database change processor...');
+        dbChangeProcessor.stopProcessing();
+    });
+
+} catch (error) {
+    console.error('❌ Database change detection setup failed:', error.message);
+}
+
+// =============================================================================
+// ERROR HANDLING MIDDLEWARE
+// =============================================================================
+
+// 404 handler
+app.use('*', (req, res) => {
+    res.status(404).json({
+        error: 'ENDPOINT_NOT_FOUND',
+        message: 'The requested endpoint does not exist',
+        path: req.originalUrl,
+        method: req.method
+    });
+});
+
+// Global error handler
+app.use((error, req, res, next) => {
+    console.error('🚨 Unhandled error:', {
+        error: error.message,
+        stack: error.stack,
+        url: req.url,
+        method: req.method,
+        user: req.user?.email || 'anonymous',
+        ip: req.ip
+    });
+
+    // Log security incident
+    const { logSecurityEvent } = require('./middleware/auth');
+    logSecurityEvent(req, 'UNHANDLED_ERROR', {
+        error: error.message,
+        stack: error.stack,
+        riskScore: 7
+    });
+
+    // Don't leak error details in production
+    if (process.env.NODE_ENV === 'production') {
+        res.status(500).json({
+            error: 'INTERNAL_SERVER_ERROR',
+            message: 'An internal server error occurred',
+            requestId: req.headers['x-request-id'] || 'unknown'
+        });
+    } else {
+        res.status(500).json({
+            error: 'INTERNAL_SERVER_ERROR',
+            message: error.message,
+            stack: error.stack
+        });
+    }
+});
+
+// =============================================================================
+// SERVER STARTUP
+// =============================================================================
+
+// Graceful shutdown handler
+const gracefulShutdown = (signal) => {
+    console.log(`\n🛑 Received ${signal}. Starting graceful shutdown...`);
+    
+    process.exit(0);
+};
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+
+// Start the server
+const server = app.listen(PORT, '0.0.0.0', () => {
+    console.log('\n🏦 ILOS Banking System - Production Security Enabled');
+    console.log('======================================================');
+    console.log(`🚀 Server running on http://0.0.0.0:${PORT}`);
+    console.log(`📅 Started: ${new Date().toISOString()}`);
+    console.log(`🔒 Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log('\n🛡️  Security Features Enabled:');
+    console.log('   ✅ JWT Authentication');
+    console.log('   ✅ Role-Based Access Control (RBAC)');
+    console.log('   ✅ Rate Limiting');
+    console.log('   ✅ Input Validation & Sanitization');
+    console.log('   ✅ SQL Injection Protection');
+    console.log('   ✅ XSS Protection');
+    console.log('   ✅ Security Headers (Helmet)');
+    console.log('   ✅ CORS Protection');
+    console.log('   ✅ Audit Logging');
+    console.log('   ✅ Department-based Access Control');
+    console.log('   ✅ Blockchain Integration Security');
+    console.log('   ✅ Database Change Detection');
+    console.log('\n🔐 Default Admin Account:');
+    console.log('   📧 Email: admin@ilos.com');
+    console.log('   🔑 Password: Admin@123456');
+    console.log('   ⚠️  CHANGE THIS PASSWORD IMMEDIATELY!');
+    console.log('\n🌐 API Endpoints:');
+    console.log('   🔐 Authentication: /api/auth/*');
+    console.log('   🏦 Applications: /api/applications/*');
+    console.log('   ⛓️  Blockchain: /api/blockchain-hash/*');
+    console.log('   👥 Department Changes: /api/department-changes/*');
+    console.log('   🔍 Health Check: /health');
+    console.log('\n📊 Frontend Applications:');
+    console.log('   🎨 Main Frontend: http://localhost:3000');
+    console.log('   ⛓️  Blockchain Monitor: http://localhost:3001');
+    console.log('\n🚨 Security Notes:');
+    console.log('   - All API endpoints now require authentication');
+    console.log('   - Rate limiting is active for all endpoints');
+    console.log('   - All inputs are validated and sanitized');
+    console.log('   - Comprehensive audit logging is enabled');
+    console.log('   - Change default admin password immediately');
+    console.log('======================================================\n');
+});
+
+// Handle server errors
+server.on('error', (error) => {
+    if (error.code === 'EADDRINUSE') {
+        console.error(`❌ Port ${PORT} is already in use`);
+        process.exit(1);
+    } else {
+        console.error('❌ Server error:', error);
+        process.exit(1);
+    }
+});
+
+module.exports = app;

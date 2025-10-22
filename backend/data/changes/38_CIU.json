@@ -1,0 +1,47 @@
+{
+  "chainKey": "38_CIU",
+  "changes": [
+    {
+      "id": "20dc6d96-d6a7-4fb8-a661-6ac1a9a7096d",
+      "losId": "38",
+      "department": "CIU",
+      "officer": "CIU_officer",
+      "timestamp": "2025-09-17T09:18:58.914Z",
+      "changeType": "FIELD_MODIFICATION",
+      "fieldChanges": [
+        {
+          "fieldName": "status",
+          "fieldPath": "application.workflow.status",
+          "oldValue": "submitted_to_ciu",
+          "newValue": "application_completed",
+          "changeReason": "approve by CIU: Application completed by CIU",
+          "timestamp": "2025-09-17T09:18:58.914Z",
+          "oldHash": "b8fa0a515c6181c8286aeb767a4d2e4408a80316280b7f7140e3656de39708c0",
+          "newHash": "a192307900a06f135b23e535098321b03a5a473b2a22f8998c48b096372d6f0c",
+          "changeHash": "a5735f82c62bcaf0dd40f3c0a009c689f619816a3598a2aa9f2213ad6d7a6a66",
+          "sensitivity": "LOW",
+          "riskScore": 1,
+          "requiresApproval": false
+        }
+      ],
+      "departmentContext": {
+        "workflowStage": "APPROVE",
+        "applicationType": "AmeenDrive",
+        "department": "CIU",
+        "resolveComment": "",
+        "businessReason": "Application completed by CIU",
+        "workflowAction": "approve"
+      },
+      "previousHash": "genesis",
+      "compositeHash": "f2e2a6c21e0915144b1bd3475c8005c4c6565a03db4a1ce0af6ad90ea90056b1",
+      "sequence": 1,
+      "blockchain": {
+        "txId": "fabric_9f0deace00488907",
+        "chainHash": "a6fb394e3bdefb2f312c8ecbdaae9377ddba4cb6da55369185795ea8a51df034",
+        "verificationStatus": "VERIFIED",
+        "network": "Real Hyperledger Fabric"
+      }
+    }
+  ],
+  "lastUpdated": "2025-09-17T09:18:58.920Z"
+}
