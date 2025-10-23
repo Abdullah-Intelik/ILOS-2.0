@@ -1,0 +1,107 @@
+{
+  "chainKey": "73_DATABASE_AUDIT",
+  "changes": [
+    {
+      "id": "c3eb4c63-1a12-43b5-82cc-e37a85fbc42b",
+      "losId": "73",
+      "department": "DATABASE_AUDIT",
+      "officer": "ILOS-backend-db1",
+      "timestamp": "2025-10-23T11:29:49.150Z",
+      "changeType": "FIELD_MODIFICATION",
+      "fieldChanges": [
+        {
+          "fieldName": "eamvu_officer_location",
+          "fieldPath": "database.ilos_applications.eamvu_officer_location",
+          "oldValue": "null",
+          "newValue": "{\"accuracy\":5,\"latitude\":37.421998,\"longitude\":-122.084,\"timestamp\":\"10/23/2025, 4:29:45 PM\",\"capturedAt\":\"2025-10-23T11:29:48.872Z\"}",
+          "changeReason": "Direct database modification detected - Risk Score: 6",
+          "timestamp": "2025-10-23T11:29:49.150Z",
+          "oldHash": "693da99bf52e44e2a8fb44e26d39eca42d2e44036e33b668f68ab34480c2e824",
+          "newHash": "ed6167b3125326b8d88ad575bd2949f5f49eaed4a70b9665deb04d6d319a7270",
+          "changeHash": "f70cbc560303a89de68e594e706ea4d08fcb68b6eb22ad6e5f39e19f47e2355e",
+          "sensitivity": "LOW",
+          "riskScore": 1,
+          "requiresApproval": false
+        },
+        {
+          "fieldName": "eamvu_employment_comments",
+          "fieldPath": "database.ilos_applications.eamvu_employment_comments",
+          "oldValue": "null",
+          "newValue": "h",
+          "changeReason": "Direct database modification detected - Risk Score: 6",
+          "timestamp": "2025-10-23T11:29:49.150Z",
+          "oldHash": "b9e1e9d2e2b8dbcec527075e5aca441a8797f20db0b691be2c0db8b9d1705545",
+          "newHash": "69fcb764bcb2d6fa4138814e4653af6681271b4e654987cbf1bd172e9a2cc9ff",
+          "changeHash": "d426685357e9dcfc2568eed5b918dccdc6641468096c8092c4b83c108f7ce18b",
+          "sensitivity": "LOW",
+          "riskScore": 1,
+          "requiresApproval": false
+        },
+        {
+          "fieldName": "eamvu_general_observations",
+          "fieldPath": "database.ilos_applications.eamvu_general_observations",
+          "oldValue": "null",
+          "newValue": "dh",
+          "changeReason": "Direct database modification detected - Risk Score: 6",
+          "timestamp": "2025-10-23T11:29:49.150Z",
+          "oldHash": "6c7c808a628480c144c45adc1f152e90939e31df057e357f8d1643dd6b7f5fd3",
+          "newHash": "49213fc1c3c7c1edc73f9335c5ec10714f268fa9906fe1de25cfff23b2f446d4",
+          "changeHash": "40fadbec63d821b82f2ba6d6564eb53bf7fd083544a6ab2bcafa6fc71ba8d8f3",
+          "sensitivity": "LOW",
+          "riskScore": 1,
+          "requiresApproval": false
+        },
+        {
+          "fieldName": "eamvu_neighborhood_comments",
+          "fieldPath": "database.ilos_applications.eamvu_neighborhood_comments",
+          "oldValue": "null",
+          "newValue": "h",
+          "changeReason": "Direct database modification detected - Risk Score: 6",
+          "timestamp": "2025-10-23T11:29:49.150Z",
+          "oldHash": "754cd8c91fb4e555df89d37da5f78e8b7fec3f4371965369cd36c4e801725e5d",
+          "newHash": "a6c3de51b916c0b34993c31ed8f62c570856e988237c935959a614fdf622223a",
+          "changeHash": "3b8d221e8ba4891b9df545f86ca7d88144cdf01c9d8670ff92d59df23d415eb0",
+          "sensitivity": "LOW",
+          "riskScore": 1,
+          "requiresApproval": false
+        },
+        {
+          "fieldName": "eamvu_verification_comments",
+          "fieldPath": "database.ilos_applications.eamvu_verification_comments",
+          "oldValue": "null",
+          "newValue": "h",
+          "changeReason": "Direct database modification detected - Risk Score: 6",
+          "timestamp": "2025-10-23T11:29:49.150Z",
+          "oldHash": "bef2f17a3cab611092f7c1b91eaf64902d1fab2f5d0de4327f0c6a28e9beb472",
+          "newHash": "f386a5295783e2be8f0c0d5ccab244c1a150f140d2263f02186b12833f5055d5",
+          "changeHash": "f3e43a0021c5886e8273f923b911a9df8e79e47af1ba94c0adb75932e0f13ab3",
+          "sensitivity": "LOW",
+          "riskScore": 1,
+          "requiresApproval": false
+        }
+      ],
+      "departmentContext": {
+        "workflowStage": "DATABASE_DIRECT",
+        "businessReason": "Direct database modification detected by audit triggers",
+        "auditRecordId": 447,
+        "tableName": "ilos_applications",
+        "operation": "UPDATE",
+        "riskScore": 6,
+        "detectedAt": "2025-10-23T11:29:48.873Z",
+        "sensitiveFieldsChanged": false,
+        "totalFieldsChanged": 6
+      },
+      "previousHash": "genesis",
+      "compositeHash": "4547a0c71193fdff2874a42dfce59e99b89af59b1e6ec9836901adc81c726911",
+      "sequence": 1,
+      "blockchain": {
+        "txId": null,
+        "blockNumber": null,
+        "chainHash": null,
+        "verificationStatus": "FAILED",
+        "error": ""
+      }
+    }
+  ],
+  "lastUpdated": "2025-10-23T11:29:49.152Z"
+}

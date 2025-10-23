@@ -18,7 +18,17 @@ const getApiBaseUrl = () => {
   if (isEmulator()) {
     return 'http://10.0.2.2:5000'; // For Android emulator
   }
-  return 'http://192.168.1.155:5000'; // For physical device
+  // With adb reverse, we can use localhost which works for both emulator and physical device
+  return 'http://localhost:5000'; // Works with adb reverse tcp:5000 tcp:5000
+};
+
+// Document server (FileZilla) - same as web app uses
+const getDocumentServerUrl = () => {
+  if (isEmulator()) {
+    return 'http://10.0.2.2:8081'; // For Android emulator
+  }
+  // With adb reverse, we can use localhost which works for both emulator and physical device
+  return 'http://localhost:8081'; // Works with adb reverse tcp:8081 tcp:8081
 };
 
 const ENV = {
@@ -55,6 +65,9 @@ export const API_CONFIG = {
   // For Android emulator: uses 10.0.2.2
   // For physical device: uses computer's local IP (192.168.1.155)
   API_BASE_URL: getApiBaseUrl(),
+  
+  // Document server URL (FileZilla/Port 8081) - same as web app
+  DOCUMENT_SERVER_URL: getDocumentServerUrl(),
   
   // Timeout settings
   TIMEOUT: 30000, // 30 seconds

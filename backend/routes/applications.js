@@ -1085,8 +1085,13 @@ router.post('/update-status-workflow', async (req, res) => {
       approvalMessage = 'Application rejected by EAMVU HEAD'
     } else if (department === 'EAMVU_OFFICER' && action === 'complete') {
       // EAMVU OFFICER completes work and returns to HEAD
-      const { agentId } = req.body;
+      const { agentId, investigationNotes } = req.body;
       console.log(`🔍 EAMVU OFFICER: Agent ${agentId} completing work - Current status: ${status}`)
+      console.log(`📝 Investigation Notes:`, investigationNotes)
+      console.log(`🔍 DEBUG - Notes length: ${investigationNotes?.length || 0}`)
+      console.log(`🔍 DEBUG - Contains "Lat:": ${investigationNotes?.includes('Lat:') || false}`)
+      console.log(`🔍 DEBUG - Contains "Long:": ${investigationNotes?.includes('Long:') || false}`)
+      console.log(`🔍 DEBUG - Contains "📍": ${investigationNotes?.includes('📍') || false}`)
       
       if (!agentId) {
         console.error('❌ Agent ID is required for EAMVU OFFICER actions')
@@ -1096,6 +1101,62 @@ router.post('/update-status-workflow', async (req, res) => {
       try {
         // Support both numeric ID and string ID (agent-001)
         const isNumeric = !isNaN(agentId);
+        
+        // Parse investigation notes and save to ilos_applications
+        if (investigationNotes) {
+          try {
+            // Extract individual comment sections
+            const verificationMatch = investigationNotes.match(/Verification Comments:\s*(.+?)(?=Employment Verification:|Neighborhood Feedback:|General Observations:|📍 Location:|$)/s);
+            const employmentMatch = investigationNotes.match(/Employment Verification:\s*(.+?)(?=Neighborhood Feedback:|General Observations:|📍 Location:|$)/s);
+            const neighborhoodMatch = investigationNotes.match(/Neighborhood Feedback:\s*(.+?)(?=General Observations:|📍 Location:|$)/s);
+            const observationsMatch = investigationNotes.match(/General Observations:\s*(.+?)(?=📍 Location:|$)/s);
+            
+            // Extract location data (support negative coordinates with - sign)
+            const latMatch = investigationNotes.match(/Lat:\s*([-\d.]+)/);
+            const longMatch = investigationNotes.match(/Long:\s*([-\d.]+)/);
+            const timestampMatch = investigationNotes.match(/Timestamp:\s*([^\n]+)/);
+            const accuracyMatch = investigationNotes.match(/Accuracy:\s*(\d+)m/);
+            
+            // Build location JSON
+            let locationData = null;
+            if (latMatch && longMatch) {
+              locationData = {
+                latitude: parseFloat(latMatch[1]),
+                longitude: parseFloat(longMatch[1]),
+                timestamp: timestampMatch ? timestampMatch[1].trim() : null,
+                accuracy: accuracyMatch ? parseInt(accuracyMatch[1]) : null,
+                capturedAt: new Date().toISOString()
+              };
+            }
+            
+            // Save to ilos_applications table (CBS database - db connection)
+            await db.query(`
+              UPDATE ilos_applications
+              SET 
+                eamvu_verification_comments = $1,
+                eamvu_employment_comments = $2,
+                eamvu_neighborhood_comments = $3,
+                eamvu_general_observations = $4,
+                eamvu_officer_location = $5,
+                updated_at = CURRENT_TIMESTAMP
+              WHERE los_id = $6
+            `, [
+              verificationMatch ? verificationMatch[1].trim() : null,
+              employmentMatch ? employmentMatch[1].trim() : null,
+              neighborhoodMatch ? neighborhoodMatch[1].trim() : null,
+              observationsMatch ? observationsMatch[1].trim() : null,
+              locationData ? JSON.stringify(locationData) : null,
+              losIdInt
+            ]);
+            
+            console.log(`✅ Saved investigation to ilos_applications.los_id=${losIdInt}`);
+            console.log(`📍 Location saved:`, locationData);
+            
+          } catch (parseError) {
+            console.error('❌ Error parsing/saving investigation notes:', parseError);
+            // Continue anyway - don't fail the whole operation
+          }
+        }
         
         let updateResult;
         if (isNumeric) {
@@ -1141,8 +1202,13 @@ router.post('/update-status-workflow', async (req, res) => {
         return res.status(500).json({ error: 'Failed to complete assignment' });
       }
     } else if (department === 'EAMVU_OFFICER' && action === 'reject') {
-      const { agentId } = req.body;
+      const { agentId, investigationNotes } = req.body;
       console.log(`🔍 EAMVU OFFICER: Agent ${agentId} rejecting application - Current status: ${status}`)
+      console.log(`📝 Investigation Notes:`, investigationNotes)
+      console.log(`🔍 DEBUG - Notes length: ${investigationNotes?.length || 0}`)
+      console.log(`🔍 DEBUG - Contains "Lat:": ${investigationNotes?.includes('Lat:') || false}`)
+      console.log(`🔍 DEBUG - Contains "Long:": ${investigationNotes?.includes('Long:') || false}`)
+      console.log(`🔍 DEBUG - Contains "📍": ${investigationNotes?.includes('📍') || false}`)
       
       if (!agentId) {
         console.error('❌ Agent ID is required for EAMVU OFFICER actions')
@@ -1152,6 +1218,62 @@ router.post('/update-status-workflow', async (req, res) => {
       try {
         // Support both numeric ID and string ID (agent-001)
         const isNumeric = !isNaN(agentId);
+        
+        // Parse investigation notes and save to ilos_applications
+        if (investigationNotes) {
+          try {
+            // Extract individual comment sections
+            const verificationMatch = investigationNotes.match(/Verification Comments:\s*(.+?)(?=Employment Verification:|Neighborhood Feedback:|General Observations:|📍 Location:|$)/s);
+            const employmentMatch = investigationNotes.match(/Employment Verification:\s*(.+?)(?=Neighborhood Feedback:|General Observations:|📍 Location:|$)/s);
+            const neighborhoodMatch = investigationNotes.match(/Neighborhood Feedback:\s*(.+?)(?=General Observations:|📍 Location:|$)/s);
+            const observationsMatch = investigationNotes.match(/General Observations:\s*(.+?)(?=📍 Location:|$)/s);
+            
+            // Extract location data (support negative coordinates with - sign)
+            const latMatch = investigationNotes.match(/Lat:\s*([-\d.]+)/);
+            const longMatch = investigationNotes.match(/Long:\s*([-\d.]+)/);
+            const timestampMatch = investigationNotes.match(/Timestamp:\s*([^\n]+)/);
+            const accuracyMatch = investigationNotes.match(/Accuracy:\s*(\d+)m/);
+            
+            // Build location JSON
+            let locationData = null;
+            if (latMatch && longMatch) {
+              locationData = {
+                latitude: parseFloat(latMatch[1]),
+                longitude: parseFloat(longMatch[1]),
+                timestamp: timestampMatch ? timestampMatch[1].trim() : null,
+                accuracy: accuracyMatch ? parseInt(accuracyMatch[1]) : null,
+                capturedAt: new Date().toISOString()
+              };
+            }
+            
+            // Save to ilos_applications table (CBS database - db connection)
+            await db.query(`
+              UPDATE ilos_applications
+              SET 
+                eamvu_verification_comments = $1,
+                eamvu_employment_comments = $2,
+                eamvu_neighborhood_comments = $3,
+                eamvu_general_observations = $4,
+                eamvu_officer_location = $5,
+                updated_at = CURRENT_TIMESTAMP
+              WHERE los_id = $6
+            `, [
+              verificationMatch ? verificationMatch[1].trim() : null,
+              employmentMatch ? employmentMatch[1].trim() : null,
+              neighborhoodMatch ? neighborhoodMatch[1].trim() : null,
+              observationsMatch ? observationsMatch[1].trim() : null,
+              locationData ? JSON.stringify(locationData) : null,
+              losIdInt
+            ]);
+            
+            console.log(`✅ Saved investigation to ilos_applications.los_id=${losIdInt}`);
+            console.log(`📍 Location saved:`, locationData);
+            
+          } catch (parseError) {
+            console.error('❌ Error parsing/saving investigation notes:', parseError);
+            // Continue anyway - don't fail the whole operation
+          }
+        }
         
         let updateResult;
         if (isNumeric) {
@@ -1579,6 +1701,7 @@ router.get('/comments/:losId', async (req, res) => {
       'spu_comments': 'SPU',
       'cops_comments': 'COPS',
       'eamvu_comments': 'EAMVU',
+      'eamvu_officer_comments': 'EAMVU_OFFICER',
       'ciu_comments': 'CIU',
       'rru_comments': 'RRU'
     }

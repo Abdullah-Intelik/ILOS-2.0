@@ -224,32 +224,96 @@ class ILOSApiService {
   }
 
   // Document Management
-  async getApplicationDocuments(losId) {
+  async getApplicationDocuments(losId, applicationType = null) {
     try {
-      debugLog(`Fetching documents for LOS ID: ${losId}`);
-      const response = await apiClient.get(API_ENDPOINTS.APPLICATION_DOCUMENTS(losId));
-      return response.data;
+      debugLog(`Fetching documents for LOS ID: ${losId}` + (applicationType ? ` (${applicationType})` : ''));
+      // Extract numeric ID
+      const numericId = losId.toString().replace('LOS-', '');
+      
+      // Use document server (port 8081) for document operations
+      const docServerUrl = API_CONFIG.DOCUMENT_SERVER_URL || API_CONFIG.API_BASE_URL;
+      
+      // Add applicationType as query parameter if provided
+      const queryParam = applicationType ? `?applicationType=${applicationType}` : '';
+      const url = `${docServerUrl}/api/documents/${numericId}${queryParam}`;
+      
+      debugLog(`Fetching from document server: ${url}`);
+      const response = await axios.get(url, { timeout: API_CONFIG.TIMEOUT });
+      
+      return response.data.documents || [];
     } catch (error) {
       throw handleApiError(error, 'Failed to fetch application documents');
     }
   }
 
-  // Upload Document
-  async uploadDocument(losId, documentData) {
+  // Upload Document (Enhanced for React Native)
+  async uploadDocument(losId, applicationType, documentUri, documentType = 'investigation_photo', customFileName = null) {
     try {
       debugLog(`Uploading document for LOS ID: ${losId}`);
+      
       const formData = new FormData();
-      formData.append('losId', losId);
-      formData.append('document', documentData);
+      
+      // Extract numeric LOS ID
+      const numericLosId = losId.toString().replace('LOS-', '');
+      
+      // Document server (port 8081) uses different field names
+      formData.append('losId', numericLosId);
+      formData.append('loanType', applicationType); // Document server uses 'loanType'
+      formData.append('document_type', documentType);
+      
+      // Handle file from React Native
+      const originalFilename = documentUri.split('/').pop() || `photo_${Date.now()}.jpg`;
+      const match = /\.(\w+)$/.exec(originalFilename);
+      const type = match ? `image/${match[1]}` : 'image/jpeg';
+      
+      // Use custom filename if provided, otherwise use original
+      const filename = customFileName || originalFilename;
+      
+      // Document server expects field name 'file' not 'document'
+      formData.append('file', {
+        uri: documentUri,
+        name: filename, // This will be used by multer
+        type: type,
+      });
+      
+      // Add custom_name field for document server to use
+      if (customFileName) {
+        formData.append('custom_name', customFileName);
+      }
 
-      const response = await apiClient.post(API_ENDPOINTS.UPLOAD_DOCUMENT, formData, {
+      debugLog('Upload request:', { losId: numericLosId, loanType: applicationType, documentType, filename, customName: customFileName });
+
+      // Use document server (port 8081) for upload
+      const docServerUrl = API_CONFIG.DOCUMENT_SERVER_URL || API_CONFIG.API_BASE_URL;
+      const url = `${docServerUrl}/upload`; // Document server uses /upload not /api/upload-document
+      
+      debugLog(`Uploading to document server: ${url}`);
+      const response = await axios.post(url, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
+          'Accept': 'application/json', // Ensure JSON response
         },
+        timeout: 60000, // 60 seconds for upload
       });
+      
       return response.data;
     } catch (error) {
+      debugError('Upload error:', error.response?.data || error.message);
       throw handleApiError(error, 'Failed to upload document');
+    }
+  }
+
+  // Get Document URL for viewing
+  async getDocumentUrl(documentPath) {
+    try {
+      // documentPath is like: /explorer/cashplus/los-123/photo.jpg
+      // Use document server (port 8081) for viewing documents
+      const docServerUrl = API_CONFIG.DOCUMENT_SERVER_URL || API_CONFIG.API_BASE_URL;
+      const fullUrl = `${docServerUrl}${documentPath}`;
+      debugLog(`Document URL: ${fullUrl}`);
+      return fullUrl;
+    } catch (error) {
+      throw handleApiError(error, 'Failed to get document URL');
     }
   }
 

@@ -131,6 +131,43 @@ function getActivityIcon(type: string) {
   }
 }
 
+// Extract location from EAMVU Officer investigation in application data
+function extractLocationFromApplication(application: any): { latitude: number, longitude: number, timestamp: string, accuracy: number } | null {
+  try {
+    // Try to get location from formData.eamvu_officer_location (JSONB column)
+    const locationData = application.formData?.eamvu_officer_location;
+    
+    if (locationData && typeof locationData === 'object') {
+      return {
+        latitude: locationData.latitude,
+        longitude: locationData.longitude,
+        timestamp: locationData.timestamp || 'Unknown',
+        accuracy: locationData.accuracy || 0
+      };
+    }
+    
+    // Fallback: parse from string if stored as string
+    if (typeof locationData === 'string') {
+      try {
+        const parsed = JSON.parse(locationData);
+        return {
+          latitude: parsed.latitude,
+          longitude: parsed.longitude,
+          timestamp: parsed.timestamp || 'Unknown',
+          accuracy: parsed.accuracy || 0
+        };
+      } catch {
+        // Not valid JSON, return null
+      }
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Error extracting location:', error);
+    return null;
+  }
+}
+
 export default function EAMVUDashboardPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [applicationsData, setApplicationsData] = useState<EAMVUApplication[]>([])
@@ -930,6 +967,108 @@ export default function EAMVUDashboardPage() {
                                           </div>
                                         )}
 
+                                        {/* Officer Location (if available) */}
+                                        {(() => {
+                                           const location = extractLocationFromApplication(selectedApplication);
+                                           if (!location) return null;
+                                           
+                                           const googleMapsUrl = `https://www.google.com/maps?q=${location.latitude},${location.longitude}`;
+                                           
+                                           return (
+                                             <Card className="bg-gradient-to-r from-blue-50 to-green-50 border-2 border-blue-200">
+                                               <CardHeader>
+                                                 <CardTitle className="text-lg flex items-center gap-2">
+                                                   <MapPin className="h-5 w-5 text-green-600" />
+                                                   Officer Investigation Location
+                                                 </CardTitle>
+                                                 <CardDescription>
+                                                   GPS location captured during field investigation
+                                                 </CardDescription>
+                                               </CardHeader>
+                                               <CardContent className="space-y-4">
+                                                 <div className="grid grid-cols-2 gap-3 text-sm">
+                                                   <div>
+                                                     <span className="font-medium text-gray-600">Latitude:</span>
+                                                     <div className="font-mono text-blue-700">{location.latitude.toFixed(6)}</div>
+                                                   </div>
+                                                   <div>
+                                                     <span className="font-medium text-gray-600">Longitude:</span>
+                                                     <div className="font-mono text-blue-700">{location.longitude.toFixed(6)}</div>
+                                                   </div>
+                                                   <div>
+                                                     <span className="font-medium text-gray-600">Visit Time:</span>
+                                                     <div className="text-gray-700 flex items-center gap-1">
+                                                       <Clock className="h-3 w-3" />
+                                                       {location.timestamp}
+                                                     </div>
+                                                   </div>
+                                                   <div>
+                                                     <span className="font-medium text-gray-600">GPS Accuracy:</span>
+                                                     <div className="text-gray-700">{location.accuracy}m</div>
+                                                   </div>
+                                                 </div>
+                                                 <Button
+                                                   variant="outline"
+                                                   className="w-full bg-white hover:bg-blue-50"
+                                                   onClick={() => window.open(googleMapsUrl, '_blank')}
+                                                 >
+                                                   <MapPin className="mr-2 h-4 w-4" />
+                                                   View on Google Maps
+                                                 </Button>
+                                               </CardContent>
+                                             </Card>
+                                           );
+                                         })()}
+
+                                        {/* EAMVU Officer Investigation Report (Structured) */}
+                                        {selectedApplication.formData && (
+                                          selectedApplication.formData.eamvu_verification_comments ||
+                                          selectedApplication.formData.eamvu_employment_comments ||
+                                          selectedApplication.formData.eamvu_neighborhood_comments ||
+                                          selectedApplication.formData.eamvu_general_observations
+                                        ) && (
+                                          <Card className="bg-gradient-to-r from-teal-50 to-cyan-50 border-2 border-teal-200">
+                                            <CardHeader>
+                                              <CardTitle className="text-lg flex items-center gap-2">
+                                                <MapPin className="h-5 w-5 text-teal-600" />
+                                                EAMVU Officer Investigation Report
+                                              </CardTitle>
+                                              <CardDescription>
+                                                Detailed field investigation findings
+                                              </CardDescription>
+                                            </CardHeader>
+                                            <CardContent className="space-y-4">
+                                              {selectedApplication.formData.eamvu_verification_comments && (
+                                                <div className="bg-white rounded-lg p-3 border border-teal-100">
+                                                  <h5 className="font-semibold text-sm text-teal-700 mb-1">✓ Verification Comments</h5>
+                                                  <p className="text-sm text-gray-700">{selectedApplication.formData.eamvu_verification_comments}</p>
+                                                </div>
+                                              )}
+                                              
+                                              {selectedApplication.formData.eamvu_employment_comments && (
+                                                <div className="bg-white rounded-lg p-3 border border-teal-100">
+                                                  <h5 className="font-semibold text-sm text-teal-700 mb-1">💼 Employment Verification</h5>
+                                                  <p className="text-sm text-gray-700">{selectedApplication.formData.eamvu_employment_comments}</p>
+                                                </div>
+                                              )}
+                                              
+                                              {selectedApplication.formData.eamvu_neighborhood_comments && (
+                                                <div className="bg-white rounded-lg p-3 border border-teal-100">
+                                                  <h5 className="font-semibold text-sm text-teal-700 mb-1">🏘️ Neighborhood Feedback</h5>
+                                                  <p className="text-sm text-gray-700">{selectedApplication.formData.eamvu_neighborhood_comments}</p>
+                                                </div>
+                                              )}
+                                              
+                                              {selectedApplication.formData.eamvu_general_observations && (
+                                                <div className="bg-white rounded-lg p-3 border border-teal-100">
+                                                  <h5 className="font-semibold text-sm text-teal-700 mb-1">📋 General Observations</h5>
+                                                  <p className="text-sm text-gray-700">{selectedApplication.formData.eamvu_general_observations}</p>
+                                                </div>
+                                              )}
+                                            </CardContent>
+                                          </Card>
+                                        )}
+
                                         {/* Comments Section */}
                                         <div>
                                           <h4 className="font-semibold mb-3 text-purple-600">All Department Comments</h4>
@@ -942,24 +1081,27 @@ export default function EAMVUDashboardPage() {
                                                   comment.department === 'SPU' ? 'bg-green-50 border-green-200' :
                                                   comment.department === 'COPS' ? 'bg-purple-50 border-purple-200' :
                                                   comment.department === 'EAMVU' ? 'bg-orange-50 border-orange-200' :
+                                                  comment.department === 'EAMVU_OFFICER' ? 'bg-teal-50 border-teal-300 border-2' :
                                                   comment.department === 'CIU' ? 'bg-red-50 border-red-200' :
                                                   comment.department === 'RRU' ? 'bg-indigo-50 border-indigo-200' :
                                                   'bg-gray-50 border-gray-200'
                                                 }`}>
                                                   <div className="flex justify-between items-start mb-2">
-                                                    <span className={`text-xs font-medium px-2 py-1 rounded ${
+                                                    <span className={`text-xs font-medium px-2 py-1 rounded flex items-center gap-1 ${
                                                       comment.department === 'PB' ? 'bg-blue-100 text-blue-800' :
                                                       comment.department === 'SPU' ? 'bg-green-100 text-green-800' :
                                                       comment.department === 'COPS' ? 'bg-purple-100 text-purple-800' :
                                                       comment.department === 'EAMVU' ? 'bg-orange-100 text-orange-800' :
+                                                      comment.department === 'EAMVU_OFFICER' ? 'bg-teal-100 text-teal-800' :
                                                       comment.department === 'CIU' ? 'bg-red-100 text-red-800' :
                                                       comment.department === 'RRU' ? 'bg-indigo-100 text-indigo-800' :
                                                       'bg-gray-100 text-gray-800'
                                                     }`}>
+                                                      {comment.department === 'EAMVU_OFFICER' && <MapPin className="h-3 w-3" />}
                                                       {comment.department}
                                                     </span>
                                                   </div>
-                                                  <p className="text-sm text-gray-700">
+                                                  <p className="text-sm text-gray-700 whitespace-pre-wrap">
                                                     {comment.comment_text}
                                                   </p>
                                                 </div>

@@ -74,14 +74,39 @@ app.post("/upload", upload.single("file"), (req, res) => {
         });
     }
     
+    // UNIVERSAL APPLICATION TYPE MAPPING
+    const normalized = finalLoanType.toLowerCase().replace(/[-_\s]/g, '');
+    let mappedLoanType = 'temp';
+    
+    if (normalized === 'cashplus') {
+        mappedLoanType = 'cashplus';
+    } else if (normalized === 'autoloan') {
+        mappedLoanType = 'autoloan';
+    } else if (normalized === 'smeasaan') {
+        mappedLoanType = 'smeasaan';
+    } else if (normalized === 'commercialvehicle') {
+        mappedLoanType = 'commercialvehicle';
+    } else if (normalized === 'ameendrive') {
+        mappedLoanType = 'ameendrive';
+    } else if (normalized === 'personalloan') {
+        mappedLoanType = 'personalloan';
+    } else if (normalized === 'homeloan') {
+        mappedLoanType = 'homeloan';
+    } else if (normalized.includes('creditcard') || normalized === 'platinumcreditcard' || normalized === 'classiccreditcard') {
+        // UNIFIED: All credit card types go to 'creditcard' folder
+        mappedLoanType = 'creditcard';
+    }
+    
+    console.log(`📂 Loan type mapping: "${finalLoanType}" → "${mappedLoanType}"`);
+    
     // Optional subfolder support (e.g., 'eavmu_docs')
     const rawSubfolder = req.body.subfolder || req.body.sub_folder || null;
     const safeSubfolder = rawSubfolder ? String(rawSubfolder).replace(/[^a-zA-Z0-9_\-]/g, '') : null;
 
-    // Create the final destination directory, including subfolder when provided
+    // Create the final destination directory using mapped type, including subfolder when provided
     const finalDir = safeSubfolder
-      ? path.join(LOCAL_ROOT, finalLoanType, `los-${finalLosId}`, safeSubfolder)
-      : path.join(LOCAL_ROOT, finalLoanType, `los-${finalLosId}`);
+      ? path.join(LOCAL_ROOT, mappedLoanType, `los-${finalLosId}`, safeSubfolder)
+      : path.join(LOCAL_ROOT, mappedLoanType, `los-${finalLosId}`);
     fs.mkdirSync(finalDir, { recursive: true });
     
     // Use custom name if provided, otherwise use original filename
@@ -96,6 +121,7 @@ app.post("/upload", upload.single("file"), (req, res) => {
         path: finalPath,
         size: req.file.size,
         loanType: finalLoanType,
+        mappedTo: mappedLoanType,
         losId: finalLosId
     });
     
@@ -113,7 +139,7 @@ app.post("/upload", upload.single("file"), (req, res) => {
                 size: req.file.size,
                 path: finalPath
             },
-            folder: `${finalLoanType}/los-${finalLosId}/`
+            folder: `${mappedLoanType}/los-${finalLosId}/`
         });
     } else {
         // Return HTML response for form submissions
@@ -133,7 +159,7 @@ app.post("/upload", upload.single("file"), (req, res) => {
             <body>
                 <div class="card">
                     <h3>✅ Uploaded: ${finalFilename}</h3>
-                    <p>Folder: <b>${finalLoanType}/los-${finalLosId}/</b></p>
+                    <p>Folder: <b>${mappedLoanType}/los-${finalLosId}/</b></p>
                     <p>
                         <a href="/pb-upload">Upload Another</a> |
                         <a href="/explorer" target="_blank">Go to Document Explorer &rarr;</a>
@@ -298,31 +324,32 @@ app.get("/api/documents/:losId", (req, res) => {
         return res.status(400).json({ error: "LOS ID is required" });
     }
     
-    // Determine the application type path
+    // UNIVERSAL APPLICATION TYPE MAPPING
+    // This ensures consistent folder structure across web, mobile, and all APIs
     let appTypePath = 'temp'; // default
     if (applicationType) {
-        switch (applicationType.toLowerCase()) {
-            case 'cashplus':
-                appTypePath = 'cashplus';
-                break;
-            case 'autoloan':
-                appTypePath = 'AutoLoan';
-                break;
-            case 'smeasaan':
-                appTypePath = 'smeasaan';
-                break;
-            case 'commercialvehicle':
-                appTypePath = 'commercialVehicle';
-                break;
-            case 'ameendrive':
-                appTypePath = 'ameendrive';
-                break;
-            case 'platinumcreditcard':
-            case 'classiccreditcard':
-                appTypePath = 'creditcard';
-                break;
-            default:
-                appTypePath = 'temp';
+        const normalized = applicationType.toLowerCase().replace(/[-_\s]/g, '');
+        
+        // Map all variations to standard folder names
+        if (normalized === 'cashplus') {
+            appTypePath = 'cashplus';
+        } else if (normalized === 'autoloan') {
+            appTypePath = 'autoloan';
+        } else if (normalized === 'smeasaan') {
+            appTypePath = 'smeasaan';
+        } else if (normalized === 'commercialvehicle') {
+            appTypePath = 'commercialvehicle';
+        } else if (normalized === 'ameendrive') {
+            appTypePath = 'ameendrive';
+        } else if (normalized === 'personalloan') {
+            appTypePath = 'personalloan';
+        } else if (normalized === 'homeloan') {
+            appTypePath = 'homeloan';
+        } else if (normalized.includes('creditcard') || normalized === 'platinumcreditcard' || normalized === 'classiccreditcard') {
+            // UNIFIED: All credit card types go to 'creditcard' folder
+            appTypePath = 'creditcard';
+        } else {
+            appTypePath = 'temp';
         }
     }
     
@@ -400,13 +427,16 @@ app.get("/api/documents/search/:losId", (req, res) => {
         return res.status(400).json({ error: "LOS ID is required" });
     }
     
+    // Standard folder names to search
     const applicationTypes = [
         'cashplus',
-        'AutoLoan', 
+        'autoloan', 
         'smeasaan',
-        'commercialVehicle',
+        'commercialvehicle',
         'ameendrive',
-        'creditcard'
+        'personalloan',
+        'homeloan',
+        'creditcard' // All credit card types unified here
     ];
     
     const results = [];
@@ -552,31 +582,30 @@ app.get("/api/documents/enhanced/:losId", (req, res) => {
         return res.status(400).json({ error: "LOS ID is required" })
     }
     
-    // Determine the application type path
+    // UNIVERSAL APPLICATION TYPE MAPPING (same as above)
     let appTypePath = 'temp'
     if (applicationType) {
-        switch (applicationType.toLowerCase()) {
-            case 'cashplus':
-                appTypePath = 'cashplus'
-                break
-            case 'autoloan':
-                appTypePath = 'AutoLoan'
-                break
-            case 'smeasaan':
-                appTypePath = 'smeasaan'
-                break
-            case 'commercialvehicle':
-                appTypePath = 'commercialVehicle'
-                break
-            case 'ameendrive':
-                appTypePath = 'ameendrive'
-                break
-            case 'platinumcreditcard':
-            case 'classiccreditcard':
-                appTypePath = 'creditcard'
-                break
-            default:
-                appTypePath = 'temp'
+        const normalized = applicationType.toLowerCase().replace(/[-_\s]/g, '');
+        
+        if (normalized === 'cashplus') {
+            appTypePath = 'cashplus';
+        } else if (normalized === 'autoloan') {
+            appTypePath = 'autoloan';
+        } else if (normalized === 'smeasaan') {
+            appTypePath = 'smeasaan';
+        } else if (normalized === 'commercialvehicle') {
+            appTypePath = 'commercialvehicle';
+        } else if (normalized === 'ameendrive') {
+            appTypePath = 'ameendrive';
+        } else if (normalized === 'personalloan') {
+            appTypePath = 'personalloan';
+        } else if (normalized === 'homeloan') {
+            appTypePath = 'homeloan';
+        } else if (normalized.includes('creditcard') || normalized === 'platinumcreditcard' || normalized === 'classiccreditcard') {
+            // UNIFIED: All credit card types go to 'creditcard' folder
+            appTypePath = 'creditcard';
+        } else {
+            appTypePath = 'temp';
         }
     }
     

@@ -20,6 +20,12 @@ import { API_CONFIG, APP_CONSTANTS } from '../utils/config';
 import { launchImageLibrary, launchCamera } from 'react-native-image-picker';
 import RNFS from 'react-native-fs';
 import { PermissionsAndroid, Linking } from 'react-native';
+import { 
+  requestLocationPermission, 
+  getCurrentLocation, 
+  formatLocation,
+  showLocationConfirmation 
+} from '../utils/location';
 
 // Fallback icon component for when MaterialIcons fail to load
 const FallbackIcon = ({ name, size, color, style }) => {
@@ -81,10 +87,55 @@ const ApplicationDetailScreen = ({ route, navigation }) => {
   });
   const [uploadedDocuments, setUploadedDocuments] = useState([]);
   const [settingsVisible, setSettingsVisible] = useState(false);
+  const [currentLocation, setCurrentLocation] = useState(null);
+  const [locationLoading, setLocationLoading] = useState(false);
 
   useEffect(() => {
     fetchApplicationDetails();
+    requestAndSetLocation();
   }, []);
+
+  // Load documents when applicationDetails is available
+  useEffect(() => {
+    if (applicationDetails) {
+      loadDocuments();
+    }
+  }, [applicationDetails]);
+
+  // Request location permission and get current location
+  const requestAndSetLocation = async () => {
+    try {
+      const hasPermission = await requestLocationPermission();
+      if (hasPermission) {
+        setLocationLoading(true);
+        const location = await getCurrentLocation();
+        setCurrentLocation(location);
+        console.log('📍 Location captured:', location);
+      }
+    } catch (error) {
+      console.error('📍 Failed to get location:', error);
+    } finally {
+      setLocationLoading(false);
+    }
+  };
+
+  // Load documents for this application
+  const loadDocuments = async () => {
+    try {
+      // Get applicationType from application or applicationDetails
+      const appType = applicationDetails?.application_type || 
+                      applicationDetails?.applicationType || 
+                      application?.applicationType || 
+                      'cashplus'; // Default fallback
+      
+      const documents = await apiService.getApplicationDocuments(application.losId, appType);
+      setUploadedDocuments(documents || []);
+      console.log(`📄 Loaded ${documents?.length || 0} documents for ${application.losId} (${appType})`);
+    } catch (error) {
+      console.error('📄 Failed to load documents:', error);
+      // Don't show error to user, just log it
+    }
+  };
 
   const fetchApplicationDetails = async () => {
     try {
@@ -168,12 +219,34 @@ const ApplicationDetailScreen = ({ route, navigation }) => {
       console.log('🔄 Completing investigation for EAMVU Head...');
       console.log('📝 Comments:', comments);
       
-      // Combine all comments into investigation notes
+      // Capture location for geo-tagging
+      let locationData = null;
+      try {
+        setLocationLoading(true);
+        locationData = await getCurrentLocation();
+        console.log('📍 Location captured for investigation:', locationData);
+        
+        // Show location confirmation
+        await showLocationConfirmation(locationData);
+      } catch (locError) {
+        console.warn('📍 Could not capture location:', locError);
+        // Continue anyway - location is optional
+      } finally {
+        setLocationLoading(false);
+      }
+      
+      // Combine all comments into investigation notes with location
       const investigationNotes = `
 Verification Comments: ${comments.verification || 'N/A'}
 Employment Verification: ${comments.employment || 'N/A'}
 Neighborhood Feedback: ${comments.neighborhood || 'N/A'}
 General Observations: ${comments.observations || 'N/A'}
+
+${locationData ? `
+📍 Location: ${formatLocation(locationData)}
+Timestamp: ${locationData.formattedTime}
+Accuracy: ${Math.round(locationData.accuracy)}m
+` : ''}
       `.trim();
       
       // Extract numeric LOS ID
@@ -192,7 +265,7 @@ General Observations: ${comments.observations || 'N/A'}
       
       Alert.alert(
         'Success',
-        'Investigation completed and returned to EAMVU Head successfully!',
+        'Investigation completed successfully!\n\n' + (locationData ? '✓ Location recorded' : ''),
         [
           { 
             text: 'OK',
@@ -253,12 +326,34 @@ General Observations: ${comments.observations || 'N/A'}
       console.log('🔄 Rejecting application...');
       console.log('📝 Comments:', comments);
       
-      // Combine all comments into investigation notes
+      // Capture location for geo-tagging
+      let locationData = null;
+      try {
+        setLocationLoading(true);
+        locationData = await getCurrentLocation();
+        console.log('📍 Location captured for rejection:', locationData);
+        
+        // Show location confirmation
+        await showLocationConfirmation(locationData);
+      } catch (locError) {
+        console.warn('📍 Could not capture location:', locError);
+        // Continue anyway - location is optional
+      } finally {
+        setLocationLoading(false);
+      }
+      
+      // Combine all comments into investigation notes with location
       const investigationNotes = `
 Verification Comments: ${comments.verification || 'N/A'}
 Employment Verification: ${comments.employment || 'N/A'}
 Neighborhood Feedback: ${comments.neighborhood || 'N/A'}
 General Observations: ${comments.observations || 'N/A'}
+
+${locationData ? `
+📍 Location: ${formatLocation(locationData)}
+Timestamp: ${locationData.formattedTime}
+Accuracy: ${Math.round(locationData.accuracy)}m
+` : ''}
       `.trim();
       
       // Extract numeric LOS ID
@@ -277,7 +372,7 @@ General Observations: ${comments.observations || 'N/A'}
       
       Alert.alert(
         'Application Rejected',
-        'Application has been rejected and returned to EAMVU Head.',
+        'Application has been rejected and returned to EAMVU Head.\n\n' + (locationData ? '✓ Location recorded' : ''),
         [
           { 
             text: 'OK',
@@ -328,6 +423,39 @@ General Observations: ${comments.observations || 'N/A'}
     setSettingsVisible(true);
   };
 
+  // Upload document to backend
+  const uploadToBackend = async (asset) => {
+    try {
+      console.log('📤 Uploading document:', asset.fileName);
+      
+      // Generate custom filename: LOSID_EAVMUOFFICER_OFFICERNAME
+      const agentName = (global.currentAgent?.name || 'Officer').replace(/\s+/g, '_'); // Replace spaces with underscores
+      const timestamp = Date.now();
+      const fileExtension = asset.fileName?.split('.').pop() || 'jpg';
+      const customFileName = `${application.losId}_EAVMUOFFICER_${agentName}_${timestamp}.${fileExtension}`;
+      
+      console.log('📝 Custom filename:', customFileName);
+      
+      // Get application type and normalize to lowercase for folder consistency
+      const appType = (applicationDetails?.application_type || applicationDetails?.applicationType || application?.applicationType || 'cashplus').toLowerCase();
+      console.log('📂 Using application type:', appType, 'for LOS:', application.losId);
+      
+      const result = await apiService.uploadDocument(
+        application.losId,
+        appType,
+        asset.uri,
+        'investigation_photo',
+        customFileName
+      );
+      
+      console.log('✅ Upload successful:', result);
+      return result;
+    } catch (error) {
+      console.error('❌ Upload failed:', error);
+      throw error;
+    }
+  };
+
   const handleUploadDocument = async () => {
     Alert.alert(
       'Upload Document',
@@ -338,27 +466,29 @@ General Observations: ${comments.observations || 'N/A'}
           onPress: async () => {
             try {
               const result = await launchCamera({
-                mediaType: 'mixed',
-                maxWidth: 1024,
-                maxHeight: 1024,
+                mediaType: 'photo',
+                maxWidth: 1920,
+                maxHeight: 1920,
                 quality: 0.8,
+                cameraType: 'back',
               });
 
+              if (result.didCancel) return;
+              
               if (result.assets && result.assets.length > 0) {
-                const newDocuments = result.assets.map(asset => ({
-                  name: asset.fileName || `photo_${Date.now()}.jpg`,
-                  size: `${(asset.fileSize / 1024).toFixed(2)} MB`,
-                  type: asset.type,
-                  uri: asset.uri,
-                }));
-                setUploadedDocuments(prev => [...prev, ...newDocuments]);
-                Alert.alert('Success', `${result.assets.length} document(s) uploaded successfully!`);
+                Alert.alert('Uploading...', 'Please wait while we upload your photo.');
+                
+                for (const asset of result.assets) {
+                  await uploadToBackend(asset);
+                }
+                
+                // Reload documents
+                await loadDocuments();
+                Alert.alert('Success', `${result.assets.length} photo(s) uploaded successfully!`);
               }
             } catch (err) {
-              if (!err.didCancel) {
-                Alert.alert('Error', 'Failed to take photo. Please try again.');
-                console.error(err);
-              }
+              console.error('Camera error:', err);
+              Alert.alert('Error', 'Failed to take photo. Please try again.');
             }
           },
         },
@@ -367,70 +497,40 @@ General Observations: ${comments.observations || 'N/A'}
           onPress: async () => {
             try {
               const result = await launchImageLibrary({
-                mediaType: 'mixed',
-                maxWidth: 1024,
-                maxHeight: 1024,
+                mediaType: 'photo',
+                maxWidth: 1920,
+                maxHeight: 1920,
                 quality: 0.8,
-                selectionLimit: 10,
+                selectionLimit: 5,
               });
 
-              if (result.assets && result.assets.length > 0) {
-                const newDocuments = result.assets.map(asset => ({
-                  name: asset.fileName || 'Unknown',
-                  size: `${(asset.fileSize / 1024).toFixed(2)} MB`,
-                  type: asset.type,
-                  uri: asset.uri,
-                }));
-                setUploadedDocuments(prev => [...prev, ...newDocuments]);
-                Alert.alert('Success', `${result.assets.length} document(s) uploaded successfully!`);
-              }
-            } catch (err) {
-              if (!err.didCancel) {
-                Alert.alert('Error', 'Failed to pick document. Please try again.');
-                console.error(err);
-              }
-            }
-          },
-        },
-        {
-          text: 'File Explorer',
-          onPress: async () => {
-            try {
-              // Use image picker with document-specific settings
-              const result = await launchImageLibrary({
-                mediaType: 'mixed',
-                includeBase64: false,
-                maxWidth: 0,
-                maxHeight: 0,
-                quality: 1,
-                selectionLimit: 10,
-                includeExtra: true,
-                presentationStyle: 'fullScreen',
-                showSelectedAssets: true,
-                showCropGuidelines: false,
-                hideBottomControls: false,
-                // Additional settings for better file access
-                includeData: false,
-                saveToPhotos: false,
-                // Force document picker mode
-                forceDocumentPicker: true,
-              });
+              if (result.didCancel) return;
 
               if (result.assets && result.assets.length > 0) {
-                const newDocuments = result.assets.map(asset => ({
-                  name: asset.fileName || 'Unknown',
-                  size: `${(asset.fileSize / 1024).toFixed(2)} MB`,
-                  type: asset.type,
-                  uri: asset.uri,
-                }));
-                setUploadedDocuments(prev => [...prev, ...newDocuments]);
-                Alert.alert('Success', `${result.assets.length} document(s) uploaded successfully!`);
+                Alert.alert('Uploading...', `Uploading ${result.assets.length} document(s)...`);
+                
+                let successCount = 0;
+                for (const asset of result.assets) {
+                  try {
+                    await uploadToBackend(asset);
+                    successCount++;
+                  } catch (err) {
+                    console.error(`Failed to upload ${asset.fileName}:`, err);
+                  }
+                }
+                
+                // Reload documents
+                await loadDocuments();
+                
+                if (successCount === result.assets.length) {
+                  Alert.alert('Success', `All ${successCount} document(s) uploaded successfully!`);
+                } else {
+                  Alert.alert('Partial Success', `${successCount} of ${result.assets.length} document(s) uploaded successfully.`);
+                }
               }
             } catch (err) {
-              if (!err.didCancel) {
-                Alert.alert('Error', 'Failed to access file system. Please try again.');
-                console.error(err);
-              }
+              console.error('Gallery error:', err);
+              Alert.alert('Error', 'Failed to pick document. Please try again.');
             }
           },
         },
