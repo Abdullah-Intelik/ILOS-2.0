@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Checkbox } from "@/components/ui/checkbox";
-import { LayoutDashboard, ClipboardList, FileSearch, CheckCircle, Eye, ThumbsUp, ThumbsDown, MapPin, Camera, FileText, User, MessageSquare, CheckSquare, AlertCircle, Clock, DollarSign, Building, Phone, Mail, Calendar, Shield, TrendingUp, Users, Activity } from "lucide-react";
+import { LayoutDashboard, ClipboardList, FileSearch, CheckCircle, Eye, ThumbsUp, ThumbsDown, MapPin, Camera, FileText, User, MessageSquare, CheckSquare, AlertCircle, Clock, Banknote, Building, Phone, Mail, Calendar, Shield, TrendingUp, Users, Activity } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import DocumentExplorer from "@/components/document-explorer";
 import { DynamicFieldDisplay } from "@/components/dynamic-field-display";

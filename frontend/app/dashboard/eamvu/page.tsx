@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Progress } from "@/components/ui/progress"
-import { Search, Filter, Clock, CheckCircle, AlertTriangle, FileText, Eye, MapPin, Camera, Users, Upload, BarChart3, TrendingUp, Calendar, Phone, User, DollarSign, Activity, FolderOpen } from "lucide-react"
+import { Search, Filter, Clock, CheckCircle, AlertTriangle, FileText, Eye, MapPin, Camera, Users, Upload, BarChart3, TrendingUp, Calendar, Phone, User, Banknote, Activity, FolderOpen } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import Link from "next/link"
 import DocumentExplorer from "@/components/document-explorer"
@@ -726,7 +726,7 @@ export default function EAMVUDashboardPage() {
                                   <Card>
                                     <CardHeader>
                                       <CardTitle className="text-lg flex items-center gap-2">
-                                        <DollarSign className="h-5 w-5" />
+                                        <Banknote className="h-5 w-5" />
                                         Loan Details
                                       </CardTitle>
                                     </CardHeader>

@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { DollarSign, Users } from "lucide-react"
+import { Banknote, Users } from "lucide-react"
 import type { ApplicantData } from "@/app/dashboard/applicant/auto/personalautoloans/page"
 
 interface IncomeReferenceStepProps {
@@ -92,7 +92,7 @@ export function IncomeReferenceStep({ data, onChange }: IncomeReferenceStepProps
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <DollarSign className="h-5 w-5" />
+              <Banknote className="h-5 w-5" />
               Customer Income
             </CardTitle>
             <CardDescription>Monthly income breakdown and total calculation</CardDescription>

@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Progress } from "@/components/ui/progress"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
-import { Clock, CheckCircle, AlertTriangle, FileText, Eye, MoreHorizontal, Search, Shield, User, DollarSign, Activity, FolderOpen, Calculator } from "lucide-react"
+import { Clock, CheckCircle, AlertTriangle, FileText, Eye, MoreHorizontal, Search, Shield, User, Banknote, Activity, FolderOpen, Calculator } from "lucide-react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { formatDateTime } from "@/lib/utils"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
@@ -686,7 +686,7 @@ export default function CIUDashboardPage() {
                                   <Card>
                                     <CardHeader>
                                       <CardTitle className="text-lg flex items-center gap-2">
-                                        <DollarSign className="h-5 w-5" />
+                                        <Banknote className="h-5 w-5" />
                                         Loan Details
                                       </CardTitle>
                                     </CardHeader>

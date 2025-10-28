@@ -23,7 +23,7 @@ import {
   Eye,
   BarChart3,
   User,
-  DollarSign,
+  Banknote,
   Building,
   Calendar,
   Shield,

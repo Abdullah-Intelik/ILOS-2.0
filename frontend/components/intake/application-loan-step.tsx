@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { CreditCard, DollarSign, HelpCircle } from "lucide-react"
+import { CreditCard, Banknote, HelpCircle } from "lucide-react"
 import type { ApplicantData } from "@/app/dashboard/applicant/auto/personalautoloans/page"
 
 interface ApplicationLoanStepProps {
@@ -212,7 +212,7 @@ export function ApplicationLoanStep({ data, onChange }: ApplicationLoanStepProps
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <DollarSign className="h-5 w-5" />
+              <Banknote className="h-5 w-5" />
               Loan Requirements
             </CardTitle>
             <CardDescription>Loan amount and terms specification</CardDescription>

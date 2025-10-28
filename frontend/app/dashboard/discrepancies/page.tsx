@@ -18,7 +18,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { AlertTriangle, CheckCircle, Clock, User, FileText, DollarSign } from "lucide-react"
+import { AlertTriangle, CheckCircle, Clock, User, FileText, Banknote } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 
 const discrepanciesData = [
@@ -93,7 +93,7 @@ function getStatusBadge(status: string) {
 function getCategoryIcon(category: string) {
   const icons = {
     Identity: User,
-    Financial: DollarSign,
+    Financial: Banknote,
     Document: FileText,
   }
 

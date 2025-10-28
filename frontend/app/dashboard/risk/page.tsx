@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { Progress } from "@/components/ui/progress"
-import { Search, Filter, CheckCircle, AlertTriangle, FileText, Eye, ShieldAlert, X, CheckSquare, FolderOpen, User, DollarSign, Activity } from "lucide-react"
+import { Search, Filter, CheckCircle, AlertTriangle, FileText, Eye, ShieldAlert, X, CheckSquare, FolderOpen, User, Banknote, Activity } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import DocumentExplorer from "@/components/document-explorer"
 import { DynamicFieldDisplay } from "@/components/dynamic-field-display"
@@ -586,7 +586,7 @@ export default function RiskDashboardPage() {
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-lg flex items-center gap-2">
-                      <DollarSign className="h-5 w-5" />
+                      <Banknote className="h-5 w-5" />
                       Loan Details
                     </CardTitle>
                   </CardHeader>

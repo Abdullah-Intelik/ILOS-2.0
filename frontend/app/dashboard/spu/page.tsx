@@ -15,7 +15,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { Progress } from "@/components/ui/progress"
-import { Search, Filter, Clock, CheckCircle, AlertTriangle, FileText, Eye, MoreHorizontal, ArrowRight, ArrowLeft, X, Download, ExternalLink, Check, Ban, User, DollarSign, Activity, CheckSquare, FolderOpen, Upload } from "lucide-react"
+import { Search, Filter, Clock, CheckCircle, AlertTriangle, FileText, Eye, MoreHorizontal, ArrowRight, ArrowLeft, X, Download, ExternalLink, Check, Ban, User, Banknote, Activity, CheckSquare, FolderOpen, Upload } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import DocumentExplorer from "@/components/document-explorer"
 import { DynamicFieldDisplay } from "@/components/dynamic-field-display"
@@ -2669,7 +2669,7 @@ export default function SPUDashboardPage() {
                  <Card>
                    <CardHeader>
                      <CardTitle className="text-lg flex items-center gap-2">
-                       <DollarSign className="h-5 w-5" />
+                       <Banknote className="h-5 w-5" />
                        Loan Details
                      </CardTitle>
                    </CardHeader>

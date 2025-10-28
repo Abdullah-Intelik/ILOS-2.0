@@ -34,7 +34,7 @@ import {
   FileText,
   User,
   Calendar,
-  DollarSign,
+  Banknote,
   Activity,
   TrendingUp,
   BarChart3,
@@ -1384,7 +1384,7 @@ export default function MyApplicationsPage() {
                                       <Card>
                                         <CardHeader>
                                           <CardTitle className="text-lg flex items-center gap-2">
-                                            <DollarSign className="h-5 w-5" />
+                                            <Banknote className="h-5 w-5" />
                                             Loan Details
                                           </CardTitle>
                                         </CardHeader>

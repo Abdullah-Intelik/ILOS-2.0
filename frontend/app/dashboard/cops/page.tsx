@@ -15,7 +15,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { Progress } from "@/components/ui/progress"
-import { Search, Filter, Clock, CheckCircle, AlertTriangle, FileText, Eye, MoreHorizontal, ArrowRight, Database, CheckSquare, X, User, DollarSign, Activity, FolderOpen, CheckCircle2, XCircle } from "lucide-react"
+import { Search, Filter, Clock, CheckCircle, AlertTriangle, FileText, Eye, MoreHorizontal, ArrowRight, Database, CheckSquare, X, User, Banknote, Activity, FolderOpen, CheckCircle2, XCircle } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import DocumentExplorer from "@/components/document-explorer"
 import { DynamicFieldDisplay } from "@/components/dynamic-field-display"
@@ -922,7 +922,7 @@ await fetch('/api/applications/update-status-workflow', {
                                     <Card>
                                       <CardHeader>
                                         <CardTitle className="text-lg flex items-center gap-2">
-                                          <DollarSign className="h-5 w-5" />
+                                          <Banknote className="h-5 w-5" />
                                           Loan Details
                                         </CardTitle>
                                       </CardHeader>
