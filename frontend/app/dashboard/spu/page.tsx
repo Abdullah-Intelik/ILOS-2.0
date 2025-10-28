@@ -2153,12 +2153,12 @@ export default function SPUDashboardPage() {
                                     <CardContent className="space-y-4">
                                       {[
                                         { key: 'ecib', label: 'eCIB – Source SBP', description: 'If Defaulter (unpaid credit history) then application sent to Risk Policy unit for approval.' },
-                                        { key: 'frmu', label: 'FRMU – Source UBL', description: 'Check for API. If output is No Record then pass. If output shows Name & NIC then red flag for fraud and application forwarded to Risk Policy unit & Compliance unit for approvals.' },
-                                        { key: 'negative_list', label: 'Negative (Watch) List – Source UBL Excel', description: 'If Name/CNIC appears on Excel report then send to Compliance unit for approval.' },
+                                        { key: 'frmu', label: 'FRMU – Source Internal', description: 'Check for API. If output is No Record then pass. If output shows Name & NIC then red flag for fraud and application forwarded to Risk Policy unit & Compliance unit for approvals.' },
+                                        { key: 'negative_list', label: 'Negative (Watch) List – Source Internal', description: 'If Name/CNIC appears on Excel report then send to Compliance unit for approval.' },
                                         { key: 'pep_list', label: 'PEP List – Source international databases Excel', description: 'If Name appears on Excel report then send to Compliance unit for approval.' },
-                                        { key: 'credit_card_30k', label: '$30K Credit Card List – Source SBP', description: 'If Name/CNIC appears on Excel report then send to Risk Policy for approval.' },
-                                        { key: 'black_list', label: 'Black List – Source UBL Excel', description: 'If Name/CNIC appears on Excel report then send to Risk Policy for approval.' },
-                                        { key: 'ctl', label: 'CTL – Source UBL', description: 'Check for API. Shows history of past credit cards. If output is No Record then pass. If output shows Name/CNIC then send application to Risk Policy for approval.' }
+                                        { key: 'credit_card_30k', label: 'High Value Credit Card List – Source SBP', description: 'If Name/CNIC appears on Excel report then send to Risk Policy for approval.' },
+                                        { key: 'black_list', label: 'Black List – Source Internal', description: 'If Name/CNIC appears on Excel report then send to Risk Policy for approval.' },
+                                        { key: 'ctl', label: 'CTL – Source Internal', description: 'Check for API. Shows history of past credit cards. If output is No Record then pass. If output shows Name/CNIC then send application to Risk Policy for approval.' }
                                       ].map((item) => (
                                         <div key={item.key} className="border rounded-lg p-4">
                                           <div className="flex items-start gap-3">
@@ -2787,12 +2787,12 @@ export default function SPUDashboardPage() {
                      <div className="space-y-4">
                        {[
                          { key: 'ecib', label: 'eCIB – Source SBP', description: 'If Defaulter (unpaid credit history) then application sent to Risk Policy unit for approval.' },
-                         { key: 'frmu', label: 'FRMU – Source UBL', description: 'Check for API. If output is No Record then pass. If output shows Name & NIC then red flag for fraud and application forwarded to Risk Policy unit & Compliance unit.' },
-                         { key: 'negative_list', label: 'Negative (Watch) List – Source UBL Excel', description: 'If Name/CNIC appears on Excel report then send to Compliance unit for approval.' },
+                         { key: 'frmu', label: 'FRMU – Source Internal', description: 'Check for API. If output is No Record then pass. If output shows Name & NIC then red flag for fraud and application forwarded to Risk Policy unit & Compliance unit.' },
+                         { key: 'negative_list', label: 'Negative (Watch) List – Source Internal', description: 'If Name/CNIC appears on Excel report then send to Compliance unit for approval.' },
                          { key: 'pep_list', label: 'PEP List – Source international databases Excel', description: 'If Name appears on Excel report then send to Compliance unit for approval.' },
-                         { key: 'credit_card_30k', label: '$30K Credit Card List – Source SBP', description: 'If Name/CNIC appears on Excel report then send to Risk Policy for approval.' },
-                         { key: 'black_list', label: 'Black List – Source UBL Excel', description: 'If Name/CNIC appears on Excel report then send to Risk Policy for approval.' },
-                         { key: 'ctl', label: 'CTL – Source UBL', description: 'Check for API. Shows history of past credit cards. If output is No Record then pass. If output shows Name/CNIC then send application to Risk Policy for approval.' }
+                         { key: 'credit_card_30k', label: 'High Value Credit Card List – Source SBP', description: 'If Name/CNIC appears on Excel report then send to Risk Policy for approval.' },
+                         { key: 'black_list', label: 'Black List – Source Internal', description: 'If Name/CNIC appears on Excel report then send to Risk Policy for approval.' },
+                         { key: 'ctl', label: 'CTL – Source Internal', description: 'Check for API. Shows history of past credit cards. If output is No Record then pass. If output shows Name/CNIC then send application to Risk Policy for approval.' }
                        ].map((item) => {
                          const checklistItem = (spuChecklist as any)[item.key]
                          return (

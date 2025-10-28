@@ -37,7 +37,7 @@ export default class IncomeModule {
         console.log('📥 INPUTS:');
         console.log('  • Employment Type:', employmentType);
         console.log('  • Salary Transfer Flag:', salaryTransferFlag, `(original: ${app.salary_transfer_flag}, type: ${typeof app.salary_transfer_flag})`);
-        console.log('  • UBL Customer:', isETB);
+        console.log('  • Existing Customer:', isETB);
         console.log('  • Net Monthly Income:', netIncome);
         console.log('  • Gross Monthly Income:', grossIncome);
         console.log('  • Employment Tenure:', tenure, 'years');

@@ -12,7 +12,7 @@ import { Search, Filter, Download, MoreHorizontal, Eye, Edit, Trash2 } from "luc
 
 const casesData = [
   {
-    id: "UBL-2024-001234",
+    id: "LOS-2024-001234",
     applicantName: "Muhammad Ali Khan",
     segment: "Preferred",
     loanType: "Personal Loan",
@@ -23,7 +23,7 @@ const casesData = [
     priority: "High",
   },
   {
-    id: "UBL-2024-001235",
+    id: "LOS-2024-001235",
     applicantName: "Fatima Ahmed",
     segment: "Mass",
     loanType: "Auto Loan",
@@ -34,7 +34,7 @@ const casesData = [
     priority: "Medium",
   },
   {
-    id: "UBL-2024-001236",
+    id: "LOS-2024-001236",
     applicantName: "Hassan Raza",
     segment: "SME",
     loanType: "Business Loan",
@@ -45,7 +45,7 @@ const casesData = [
     priority: "High",
   },
   {
-    id: "UBL-2024-001237",
+    id: "LOS-2024-001237",
     applicantName: "Ayesha Malik",
     segment: "Preferred",
     loanType: "Home Loan",
@@ -56,7 +56,7 @@ const casesData = [
     priority: "Low",
   },
   {
-    id: "UBL-2024-001238",
+    id: "LOS-2024-001238",
     applicantName: "Omar Sheikh",
     segment: "Mass",
     loanType: "Personal Loan",
@@ -67,7 +67,7 @@ const casesData = [
     priority: "Medium",
   },
   {
-    id: "UBL-2024-001239",
+    id: "LOS-2024-001239",
     applicantName: "Zara Khan",
     segment: "Preferred",
     loanType: "Auto Loan",

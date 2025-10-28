@@ -1,0 +1,48 @@
+{
+  "chainKey": "81_EAMVU",
+  "changes": [
+    {
+      "id": "8eae59db-58e9-4fa8-b6b9-758b0c7910b8",
+      "losId": "81",
+      "department": "EAMVU",
+      "officer": "EAMVU_officer",
+      "timestamp": "2025-10-24T10:56:29.598Z",
+      "changeType": "FIELD_MODIFICATION",
+      "fieldChanges": [
+        {
+          "fieldName": "status",
+          "fieldPath": "application.workflow.status",
+          "oldValue": "submitted_by_spu",
+          "newValue": "assigned_to_eavmu_officer",
+          "changeReason": "assign by EAMVU: Application assigned to Ahmad Hassan (101)",
+          "timestamp": "2025-10-24T10:56:29.598Z",
+          "oldHash": "892a2a7e1f22c22de6fe22de5d277e5c5605ef6cc54bceed2040f171b35ede19",
+          "newHash": "eaa677be9b96cccaa121131f7c754c91afdd9d8c8fadd3df4ae25fe15fcc71c0",
+          "changeHash": "dd05c637914626c5c551e28a9914c7b622bc12e4663556258e97a09aa865d34e",
+          "sensitivity": "LOW",
+          "riskScore": 1,
+          "requiresApproval": false
+        }
+      ],
+      "departmentContext": {
+        "workflowStage": "ASSIGN",
+        "applicationType": "CashPlus",
+        "department": "EAMVU",
+        "resolveComment": "",
+        "businessReason": "Application assigned to Ahmad Hassan (101)",
+        "workflowAction": "assign"
+      },
+      "previousHash": "genesis",
+      "compositeHash": "6ac5e30b09115a19551791818cee10921cd728dafb8da2afb18c742dfd8c3503",
+      "sequence": 1,
+      "blockchain": {
+        "txId": null,
+        "blockNumber": null,
+        "chainHash": null,
+        "verificationStatus": "FAILED",
+        "error": ""
+      }
+    }
+  ],
+  "lastUpdated": "2025-10-24T10:56:29.601Z"
+}

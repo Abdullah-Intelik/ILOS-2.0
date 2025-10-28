@@ -29,17 +29,17 @@
 
 ### ✅ **This is CORRECT and Expected**
 
-**Reason**: This customer is **NTB (New To Bank)** with no UBL history.
+**Reason**: This customer is **NTB (New To Bank)** with no existing banking history.
 
 ### How Behavioral Scoring Works:
 
 | Customer Type | Behavioral Score | Module Weight |
 |---------------|------------------|---------------|
-| **ETB** (Has UBL Account) | 0-100 | 5% |
-| **NTB** (No UBL Account) | Always 0 | 0% |
+| **ETB** (Has Existing Account) | 0-100 | 5% |
+| **NTB** (No Existing Account) | Always 0 | 0% |
 
 ### What It Evaluates (ETB Only):
-1. Bad Counts (Industry & UBL)
+1. Bad Counts (Industry & Banking)
 2. Days Past Due (30+, 60+, 90+)
 3. Defaults in last 12 months
 4. Late payment history
@@ -186,7 +186,7 @@ Action:                REJECT
 ## 🔧 **What You Asked For**
 
 ### Question 1: "Why is behavioral 0? Is it right?"
-**Answer**: ✅ **YES, it's correct.** The customer is NTB (no UBL history), so behavioral scoring doesn't apply. Module weight is automatically 0%.
+**Answer**: ✅ **YES, it's correct.** The customer is NTB (no existing banking history), so behavioral scoring doesn't apply. Module weight is automatically 0%.
 
 ### Question 2: "Display age, city, and all details showing actual values and thresholds"
 **Answer**: The backend already sends all this data in the `modules.{name}.notes` array. 

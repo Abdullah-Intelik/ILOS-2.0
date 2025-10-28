@@ -287,11 +287,11 @@ export function EmploymentStep({ data, onChange }: EmploymentStepProps) {
                     <SelectValue placeholder="Select or enter company" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="ubl">United Bank Limited</SelectItem>
-                    <SelectItem value="hbl">Habib Bank Limited</SelectItem>
-                    <SelectItem value="mcb">MCB Bank</SelectItem>
-                    <SelectItem value="abbl">Allied Bank</SelectItem>
-                    <SelectItem value="nbl">National Bank</SelectItem>
+                    <SelectItem value="company1">Company 1</SelectItem>
+                    <SelectItem value="company2">Company 2</SelectItem>
+                    <SelectItem value="company3">Company 3</SelectItem>
+                    <SelectItem value="company4">Company 4</SelectItem>
+                    <SelectItem value="company5">Company 5</SelectItem>
                     <SelectItem value="other">Other</SelectItem>
                   </SelectContent>
                 </Select>
@@ -541,11 +541,11 @@ export function EmploymentStep({ data, onChange }: EmploymentStepProps) {
                     <SelectValue placeholder="Select company" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="ubl">United Bank Limited</SelectItem>
-                    <SelectItem value="hbl">Habib Bank Limited</SelectItem>
-                    <SelectItem value="mcb">MCB Bank</SelectItem>
-                    <SelectItem value="abbl">Allied Bank</SelectItem>
-                    <SelectItem value="nbl">National Bank</SelectItem>
+                    <SelectItem value="company1">Company 1</SelectItem>
+                    <SelectItem value="company2">Company 2</SelectItem>
+                    <SelectItem value="company3">Company 3</SelectItem>
+                    <SelectItem value="company4">Company 4</SelectItem>
+                    <SelectItem value="company5">Company 5</SelectItem>
                     <SelectItem value="other">Other</SelectItem>
                   </SelectContent>
                 </Select>

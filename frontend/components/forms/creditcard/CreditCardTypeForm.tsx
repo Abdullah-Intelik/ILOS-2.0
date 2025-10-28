@@ -81,14 +81,14 @@ export const CreditCardTypeForm = () => {
         <div>
           <label className="block text-sm font-medium mb-1">Special Card Option</label>
           <div className="flex flex-col gap-2">
-            <label className={`flex items-center gap-2 ${isPreFilled('specialCardOption', 'UBL PSO Auto Credit Card') ? 'bg-green-50 p-1 rounded' : ''}`}>
+            <label className={`flex items-center gap-2 ${isPreFilled('specialCardOption', 'PSO Auto Credit Card') ? 'bg-green-50 p-1 rounded' : ''}`}>
               <input 
                 type="radio" 
                 name="specialCardOption" 
-                value="UBL PSO Auto Credit Card"
-                checked={creditCard.specialCardOption === 'UBL PSO Auto Credit Card'}
+                value="PSO Auto Credit Card"
+                checked={creditCard.specialCardOption === 'PSO Auto Credit Card'}
                 onChange={(e) => handleChange('specialCardOption', e.target.value)}
-              /> UBL PSO Auto Credit Card
+              /> PSO Auto Credit Card
             </label>
             <label className={`flex items-center gap-2 ${isPreFilled('specialCardOption', 'Galleria Card') ? 'bg-green-50 p-1 rounded' : ''}`}>
               <input 

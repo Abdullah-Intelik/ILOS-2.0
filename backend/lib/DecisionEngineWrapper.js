@@ -165,13 +165,13 @@ class DecisionEngineWrapper {
       try {
         console.log('\n📊 Calculating Behavioral Score...');
         console.log('  • ECIB Data Available:', app.ecib ? 'YES' : 'NO');
-        console.log('  • Is UBL Customer (ETB):', app.is_ubl_customer ? 'YES' : 'NO');
+        console.log('  • Is Existing Customer (ETB):', app.is_existing_customer ? 'YES' : 'NO');
         console.log('  • Module Available:', this.engine.BehavioralScoreModule ? 'YES' : 'NO');
         
         if (this.engine.BehavioralScoreModule) {
           const behavioralModule = new this.engine.BehavioralScoreModule();
           // Pass 2 parameters: cbsData (ecib), isETB flag
-          const isETB = app.is_ubl_customer === true || app.is_ubl_customer === 'true';
+          const isETB = app.is_existing_customer === true || app.is_existing_customer === 'true';
           const behavioralResult = behavioralModule.calculate(app.ecib || {}, isETB);
           modules.behavioral_score = {
             score: behavioralResult.raw || 0,

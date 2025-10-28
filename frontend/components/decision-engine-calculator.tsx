@@ -829,7 +829,7 @@ export default function DecisionEngineCalculator({
                           {decisionResult.modules.behavioral_score.notes.join(', ')}
                           {decisionResult.modules.behavioral_score.score === 0 && (
                             <span className="block mt-1 text-blue-600 font-medium">
-                              ℹ️ Note: Behavioral scoring only applies to ETB (Existing To Bank) customers with UBL banking history.
+                              ℹ️ Note: Behavioral scoring only applies to ETB (Existing To Bank) customers with existing banking history.
                             </span>
                           )}
                         </p>

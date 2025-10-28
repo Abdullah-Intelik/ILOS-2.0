@@ -309,11 +309,11 @@ export const PlatinumEmploymentDetailsForm = () => {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1">UBL Employee ID (if applicable)</label>
+          <label className="block text-sm font-medium mb-1">Employee ID (if applicable)</label>
           <input 
             type="text" 
             className="w-full rounded-xl border border-gray-300 bg-white px-4 py-2" 
-            placeholder="UBL Employee ID" 
+            placeholder="Employee ID" 
             value={formData.ublEmployeeId}
             onChange={(e) => handleInputChange("ublEmployeeId", e.target.value)}
           />

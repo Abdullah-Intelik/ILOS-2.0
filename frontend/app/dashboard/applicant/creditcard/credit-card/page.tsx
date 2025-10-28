@@ -181,11 +181,11 @@ export default function CreditCardApplicationPage() {
     }
 
     // Banking validation
-    if (!customerData?.bankingDetails?.isUblCustomer) {
-      errors.push("HBL Customer status is required");
+    if (!customerData?.bankingDetails?.isExistingCustomer) {
+      errors.push("Existing customer status is required");
     }
-    if (customerData?.bankingDetails?.isUblCustomer === 'Yes' && !customerData?.bankingDetails?.ublAccountNumber) {
-      errors.push("HBL Account Number is required for HBL customers");
+    if (customerData?.bankingDetails?.isExistingCustomer === 'Yes' && !customerData?.bankingDetails?.accountNumber) {
+      errors.push("Account Number is required for existing customers");
     }
 
     // Declaration validation
@@ -536,9 +536,9 @@ const refs: Record<string, React.RefObject<HTMLDivElement | null>> = {
         card_destination: creditCard?.cardDestination || 'Home',
         statement_delivery: creditCard?.statementDelivery || 'Email',
         email_for_statement: creditCard?.emailForStatement || personalDetails?.email || currentAddress?.email || '',
-        is_ubl_customer: toBoolean(banking?.isUblCustomer) || true,
-        ubl_account_number: banking?.ublAccountNumber || banking?.accountNumber || '',
-        ubl_branch: banking?.branchName || '',
+        is_existing_customer: toBoolean(banking?.isExistingCustomer) || true,
+        account_number: banking?.accountNumber || '',
+        branch: banking?.branchName || '',
         payment_option: banking?.paymentOption || creditCard?.paymentOption || 'Full',
 
         // Reference details - Use first reference or empty
@@ -778,7 +778,7 @@ const refs: Record<string, React.RefObject<HTMLDivElement | null>> = {
         accountNumber: '1234567890',
         branchCode: 'KHI001',
         accountType: 'Savings',
-        isUblCustomer: 'No'
+        isExistingCustomer: 'No'
       },
       
       // Credit Card Details

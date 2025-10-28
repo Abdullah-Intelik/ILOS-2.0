@@ -143,7 +143,7 @@ customerData.platinumCard.requestedLimit
 - Valid CNICs and date formats
 - **Generic bank names** (Bank A, Bank B, etc.) used instead of specific banks
 - **Generic company names** used for employers and insurance providers
-- Form titles updated to remove bank branding (e.g., "Credit Card Application" instead of "HBL Credit Card Application")
+- Form titles updated to remove bank branding (e.g., "Credit Card Application")
 
 ## Backend Integration
 

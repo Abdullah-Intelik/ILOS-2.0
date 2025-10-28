@@ -50,7 +50,7 @@ const securityConfig = {
     // MFA Configuration
     mfa: {
         issuer: process.env.MFA_ISSUER || 'ILOS-Banking-System',
-        serviceName: process.env.MFA_SERVICE_NAME || 'ILOS-UBL-Banking',
+        serviceName: process.env.MFA_SERVICE_NAME || 'ILOS-Banking',
         windowSize: 2, // Allow 2 windows of 30 seconds each
         tokenLength: 6
     },

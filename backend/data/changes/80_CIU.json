@@ -1,0 +1,90 @@
+{
+  "chainKey": "80_CIU",
+  "changes": [
+    {
+      "id": "efa1131a-38bb-4eb8-884b-dacdc42cd1b0",
+      "losId": "80",
+      "department": "CIU",
+      "officer": "CIU_officer",
+      "timestamp": "2025-10-24T07:21:48.270Z",
+      "changeType": "FIELD_MODIFICATION",
+      "fieldChanges": [
+        {
+          "fieldName": "status",
+          "fieldPath": "application.workflow.status",
+          "oldValue": "submitted_to_ciu",
+          "newValue": "rejected_by_ciu",
+          "changeReason": "reject by CIU: Application rejected by CIU",
+          "timestamp": "2025-10-24T07:21:48.270Z",
+          "oldHash": "b8fa0a515c6181c8286aeb767a4d2e4408a80316280b7f7140e3656de39708c0",
+          "newHash": "098164f6bfc965f349fb378776663a9a3239a8979bcf5a030e45d0d562e01de6",
+          "changeHash": "314d8328ef876642e96eb2f1b3b72d6a430321d53f2f414aab763b62a8805548",
+          "sensitivity": "LOW",
+          "riskScore": 1,
+          "requiresApproval": false
+        }
+      ],
+      "departmentContext": {
+        "workflowStage": "REJECT",
+        "applicationType": "CashPlus",
+        "department": "CIU",
+        "resolveComment": "",
+        "businessReason": "Application rejected by CIU",
+        "workflowAction": "reject"
+      },
+      "previousHash": "genesis",
+      "compositeHash": "a311cf576ab68a0ebd9ee71964241aa0711c55c88318402727a5dc89b9126f24",
+      "sequence": 1,
+      "blockchain": {
+        "txId": null,
+        "blockNumber": null,
+        "chainHash": null,
+        "verificationStatus": "FAILED",
+        "error": ""
+      }
+    },
+    {
+      "id": "8c1f4bef-eae7-4d52-84d6-da019b73952b",
+      "losId": "80",
+      "department": "CIU",
+      "officer": "CIU_officer",
+      "timestamp": "2025-10-24T07:24:39.608Z",
+      "changeType": "FIELD_MODIFICATION",
+      "fieldChanges": [
+        {
+          "fieldName": "status",
+          "fieldPath": "application.workflow.status",
+          "oldValue": "resolved_by_rru",
+          "newValue": "application_completed",
+          "changeReason": "approve by CIU: Application completed by CIU",
+          "timestamp": "2025-10-24T07:24:39.608Z",
+          "oldHash": "8ed85db2cf2475b6e34746fa812ce626d2f516b6ac375cee3a7643a8d12622eb",
+          "newHash": "a192307900a06f135b23e535098321b03a5a473b2a22f8998c48b096372d6f0c",
+          "changeHash": "b7e84aab6ba8dcda6d5bf3a3806fe6e3aded84fbd743bbf217fa161cf1061655",
+          "sensitivity": "LOW",
+          "riskScore": 1,
+          "requiresApproval": false
+        }
+      ],
+      "departmentContext": {
+        "workflowStage": "APPROVE",
+        "applicationType": "CashPlus",
+        "department": "CIU",
+        "resolveComment": "",
+        "businessReason": "Application completed by CIU",
+        "workflowAction": "approve"
+      },
+      "previousHash": "a311cf576ab68a0ebd9ee71964241aa0711c55c88318402727a5dc89b9126f24",
+      "compositeHash": "09f444893e67657345511a8928c8f769ccdac33bba179a9c205c8177b36f4d47",
+      "sequence": 2,
+      "blockchain": {
+        "txId": null,
+        "blockNumber": null,
+        "chainHash": null,
+        "verificationStatus": "FAILED",
+        "error": ""
+      }
+    }
+  ],
+  "lastUpdated": "2025-10-24T07:24:39.614Z"
+}

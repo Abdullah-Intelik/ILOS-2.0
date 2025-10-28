@@ -579,7 +579,7 @@ export default function MyApplicationsPage() {
       // Fallback to mock data if API fails
       const mockApplications = [
         {
-          id: "UBL-2024-001240",
+          id: "LOS-2024-001240",
           applicantName: "Ali Raza",
           loanType: "CashPlus Loan",
           amount: "PKR 1,500,000",
@@ -609,7 +609,7 @@ export default function MyApplicationsPage() {
           ],
         },
         {
-          id: "UBL-2024-001241",
+          id: "LOS-2024-001241",
           applicantName: "Zara Khan",
           loanType: "Auto Loan",
           amount: "PKR 850,000",
@@ -638,7 +638,7 @@ export default function MyApplicationsPage() {
           ],
         },
         {
-          id: "UBL-2024-001242",
+          id: "LOS-2024-001242",
           applicantName: "Ahmed Bilal",
           loanType: "Business Loan",
           amount: "PKR 2,000,000",
@@ -669,7 +669,7 @@ export default function MyApplicationsPage() {
           ],
         },
         {
-          id: "UBL-2024-001243",
+          id: "LOS-2024-001243",
           applicantName: "Sara Ahmed",
           loanType: "Home Loan",
           amount: "PKR 5,500,000",
@@ -1621,8 +1621,8 @@ export default function MyApplicationsPage() {
                                                  <div><span className="font-medium">Other Monthly Income:</span> {selectedApplication.formData.other_monthly_income ? `PKR ${selectedApplication.formData.other_monthly_income.toLocaleString()}` : 'Not provided'}</div>
                                                  <div><span className="font-medium">Other Income Sources:</span> {selectedApplication.formData.other_income_sources || 'Not provided'}</div>
                                                  <div><span className="font-medium">Monthly Rent:</span> {selectedApplication.formData.monthly_rent ? `PKR ${selectedApplication.formData.monthly_rent.toLocaleString()}` : 'Not provided'}</div>
-                                                 <div><span className="font-medium">UBL Account Number:</span> {selectedApplication.formData.ubl_account_number || 'Not provided'}</div>
-                                                 <div><span className="font-medium">Is UBL Customer:</span> {selectedApplication.formData.is_ubl_customer ? 'Yes' : 'No'}</div>
+                                                 <div><span className="font-medium">Account Number:</span> {selectedApplication.formData.account_number || 'Not provided'}</div>
+                                                 <div><span className="font-medium">Is Existing Customer:</span> {selectedApplication.formData.is_existing_customer ? 'Yes' : 'No'}</div>
                                                  <div><span className="font-medium">Customer ID:</span> {selectedApplication.formData.customer_id || 'Not provided'}</div>
                                                  <div><span className="font-medium">Accommodation Type:</span> {selectedApplication.formData.accommodation_type || 'Not provided'}</div>
                                                  <div><span className="font-medium">Dependants:</span> {selectedApplication.formData.dependants || 'Not provided'}</div>

@@ -115,14 +115,14 @@ Weight: 0% (NTB Customer)
 
 📊 Customer Type:
 • Status: NTB (New To Bank)
-• UBL Customer: No
+• Existing Customer: No
 
 ℹ️  Note: N/A for NTB Customers
-Behavioral scoring only applies to existing UBL customers (ETB) 
-with banking history. This customer has no prior UBL relationship.
+Behavioral scoring only applies to existing customers (ETB) 
+with banking history. This customer has no prior banking relationship.
 
 For ETB customers, this module evaluates:
-• Bad counts (Industry & UBL)
+• Bad counts (Industry & Banking)
 • Days Past Due (30+, 60+)
 • Defaults in last 12 months
 • Late payment history

@@ -707,7 +707,7 @@
         console.log('  • Gross Monthly Income:', app.gross_monthly_income, '(type:', typeof app.gross_monthly_income, ')');
         console.log('  • Total Income (Net):', app.total_income, '(type:', typeof app.total_income, ')');
         console.log('  • Length of Employment:', app.length_of_employment, '(type:', typeof app.length_of_employment, ')');
-        console.log('  • UBL Customer:', app.is_ubl_customer, '(type:', typeof app.is_ubl_customer, ')');
+        console.log('  • Existing Customer:', app.is_existing_customer, '(type:', typeof app.is_existing_customer, ')');
         console.log('  • Employment Type:', app.employment_type, '(type:', typeof app.employment_type, ')');
         console.log('  • Salary Transfer Flag:', app.salary_transfer_flag, '(type:', typeof app.salary_transfer_flag, ')');
 
@@ -724,7 +724,7 @@
         console.log('  • Gross Income (parsed):', grossIncome);
         console.log('  • Net Income (parsed):', netIncome);
         console.log('  • Tenure (parsed):', tenure, 'years');
-        console.log('  • UBL Customer (processed):', isETB);
+        console.log('  • Existing Customer (processed):', isETB);
         console.log('  • Employment Type (processed):', employmentType);
         console.log('  • Salary Transfer Flag (processed):', salaryTransferFlag);
         

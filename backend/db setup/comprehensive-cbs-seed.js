@@ -170,9 +170,9 @@ const SEED_DATA = {
 
   // Client banks
   client_banks: [
-    { customer_id: '1001', position: '1', actt_no: 'ACC1001001', bank_name: 'United Bank Limited', branch: 'Karachi Main Branch', version: '1.0' },
-    { customer_id: '1002', position: '1', actt_no: 'ACC1002001', bank_name: 'Habib Bank Limited', branch: 'Lahore Industrial Branch', version: '1.0' },
-    { customer_id: '1003', position: '1', actt_no: 'ACC1003001', bank_name: 'MCB Bank Limited', branch: 'Peshawar Saddar Branch', version: '1.0' }
+    { customer_id: '1001', position: '1', actt_no: 'ACC1001001', bank_name: 'Partner Bank', branch: 'Karachi Main Branch', version: '1.0' },
+    { customer_id: '1002', position: '1', actt_no: 'ACC1002001', bank_name: 'Partner Bank', branch: 'Lahore Industrial Branch', version: '1.0' },
+    { customer_id: '1003', position: '1', actt_no: 'ACC1003001', bank_name: 'Partner Bank', branch: 'Peshawar Saddar Branch', version: '1.0' }
   ],
 
   // Postal addresses

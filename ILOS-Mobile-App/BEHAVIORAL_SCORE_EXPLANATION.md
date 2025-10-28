@@ -9,9 +9,9 @@ The Behavioral Scorecard showing **0/100** is intentional and correct for this a
 ## 📊 **Understanding Behavioral Scoring**
 
 ### What is the Behavioral Scorecard?
-The Behavioral Scorecard (5% weight) evaluates a customer's **banking history and payment behavior** with UBL. It analyzes:
+The Behavioral Scorecard (5% weight) evaluates a customer's **banking history and payment behavior**. It analyzes:
 
-1. **Bad Counts** - Previous defaults or delinquencies (Industry & UBL)
+1. **Bad Counts** - Previous defaults or delinquencies (Industry & Banking)
 2. **Days Past Due** - Late payments (30+, 60+, 90+ days)  
 3. **Defaults** - Number of defaults in last 12 months
 4. **Late Payment History** - Frequency of late payments
@@ -20,10 +20,10 @@ The Behavioral Scorecard (5% weight) evaluates a customer's **banking history an
 
 ### Who Gets Scored?
 - **ETB (Existing To Bank)** - YES ✅  
-  Customers with existing UBL accounts/history
+  Customers with existing accounts/history
   
 - **NTB (New To Bank)** - NO ❌  
-  New customers with no UBL relationship
+  New customers with no existing banking relationship
 
 ---
 
@@ -33,7 +33,7 @@ Looking at your screenshots:
 
 ### Customer Status
 - **Type**: NTB (New To Bank)
-- **UBL Customer**: No
+- **Existing Customer**: No
 - **Banking History**: None
 
 ### Result
@@ -49,7 +49,7 @@ Reason:               "Behavioral scoring only for ETB customers"
 
 The decision engine **automatically adjusts weights** based on customer type:
 
-### For ETB Customers (Has UBL Account):
+### For ETB Customers (Has Existing Account):
 ```
 DBR:               55%
 Age:                5%
@@ -63,7 +63,7 @@ Behavioral Score:   5%  ← Active for ETB
 TOTAL:            100%
 ```
 
-### For NTB Customers (No UBL Account):
+### For NTB Customers (No Existing Account):
 ```
 DBR:               55%
 Age:                5%
@@ -151,8 +151,8 @@ Weight: 0% (NTB Customer)
 
 ℹ️ Not Applicable - NTB Customer
 This module only evaluates customers with existing 
-UBL banking history (ETB). This is a new customer 
-with no prior UBL relationship.
+existing banking history (ETB). This is a new customer 
+with no prior banking relationship.
 ```
 
 ---

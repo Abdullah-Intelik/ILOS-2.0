@@ -100,11 +100,11 @@ export default function CashplusPage() {
     if (customerData?.applicationDetails?.loanPurpose === 'Other' && !customerData?.applicationDetails?.loanPurposeOther) {
       errors.push("Please specify the loan purpose");
     }
-    if (customerData?.applicationDetails?.ublExistingCustomer === 'Yes' && !customerData?.applicationDetails?.branch) {
-      errors.push("Branch is required for existing UBL customers");
+    if (customerData?.applicationDetails?.existingCustomer === 'Yes' && !customerData?.applicationDetails?.branch) {
+      errors.push("Branch is required for existing customers");
     }
-    if (customerData?.applicationDetails?.ublExistingCustomer === 'Yes' && !customerData?.applicationDetails?.account) {
-      errors.push("Account number is required for existing UBL customers");
+    if (customerData?.applicationDetails?.existingCustomer === 'Yes' && !customerData?.applicationDetails?.account) {
+      errors.push("Account number is required for existing customers");
     }
 
     // Personal Information validation
@@ -240,11 +240,11 @@ export default function CashplusPage() {
     }
 
     // Banking validation
-    if (!customerData?.bankingDetails?.isUblCustomer) {
-      errors.push("UBL Customer status is required");
+    if (!customerData?.bankingDetails?.isExistingCustomer) {
+      errors.push("Existing customer status is required");
     }
-    if (customerData?.bankingDetails?.isUblCustomer === 'Yes' && !customerData?.bankingDetails?.ublAccountNumber) {
-      errors.push("UBL Account Number is required for UBL customers");
+    if (customerData?.bankingDetails?.isExistingCustomer === 'Yes' && !customerData?.bankingDetails?.accountNumber) {
+      errors.push("Account Number is required for existing customers");
     }
 
     // Loan preference validation
@@ -425,7 +425,7 @@ export default function CashplusPage() {
     const baseData = {
       applicationDetails: {
         loanPurpose: 'Personal Loan',
-        ublExistingCustomer: 'No',
+        existingCustomer: 'No',
         branch: '',
         account: ''
       },
@@ -499,8 +499,8 @@ export default function CashplusPage() {
         otherMonthlyIncome: ''
       },
       bankingDetails: {
-        isUblCustomer: 'No',
-        ublAccountNumber: ''
+        isExistingCustomer: 'No',
+        accountNumber: ''
       },
       loanPreference: {
         loanType: 'Personal Loan',
@@ -623,7 +623,7 @@ export default function CashplusPage() {
         tenure: customerData.loanPreference?.tenure || '',
         
         // Application type fields - Convert string to boolean
-        is_ubl_existing_customer: applicationTypeToBoolean(customerData.applicationDetails?.ublExistingCustomer),
+        is_existing_customer: applicationTypeToBoolean(customerData.applicationDetails?.existingCustomer),
         branch: customerData.applicationDetails?.branch || '',
         account: customerData.applicationDetails?.account || '',
         purpose_of_loan: customerData.applicationDetails?.loanPurpose || '',
@@ -701,8 +701,8 @@ export default function CashplusPage() {
         other_income_sources: customerData.incomeDetails?.otherIncomeSource || '',
         
         // Banking details - Convert string to boolean
-        is_ubl_customer: applicationTypeToBoolean(customerData.bankingDetails?.isUblCustomer),
-        ubl_account_number: customerData.bankingDetails?.ublAccountNumber || '',
+        is_existing_customer: applicationTypeToBoolean(customerData.bankingDetails?.isExistingCustomer),
+        account_number: customerData.bankingDetails?.accountNumber || '',
         
         // Declaration
         applicant_signature: customerData.declaration?.signature || '',
@@ -890,7 +890,7 @@ export default function CashplusPage() {
 
   return (
     <div className="max-w-5xl rounded-lg mx-auto px-4 py-8 space-y-6">
-      <h2 className="text-3xl text-center text-primary font-bold "> BHL Cashplus Application</h2>
+      <h2 className="text-3xl text-center text-primary font-bold ">Cashplus Application</h2>
 
       {/* Mandatory Fields Note */}
       <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
@@ -1024,7 +1024,7 @@ export default function CashplusPage() {
         )}
         <div>
           <h2 className="text-2xl font-bold text-gray-900">
-           BHL Cashplus Application
+                          Cashplus Application
           </h2>
           <div className="flex items-center gap-4 mt-2">
             <span className="text-lg font-semibold text-gray-700">

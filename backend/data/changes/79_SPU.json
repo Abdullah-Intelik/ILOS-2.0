@@ -1,0 +1,48 @@
+{
+  "chainKey": "79_SPU",
+  "changes": [
+    {
+      "id": "47b1d1d6-8390-4875-b8ca-2263e45c7a62",
+      "losId": "79",
+      "department": "SPU",
+      "officer": "SPU_officer",
+      "timestamp": "2025-10-23T13:01:20.319Z",
+      "changeType": "FIELD_MODIFICATION",
+      "fieldChanges": [
+        {
+          "fieldName": "status",
+          "fieldPath": "application.workflow.status",
+          "oldValue": "PB_SUBMITTED",
+          "newValue": "submitted_by_spu",
+          "changeReason": "verify by SPU: Application verified by SPU - submitted to COPS and EAMVU Head",
+          "timestamp": "2025-10-23T13:01:20.319Z",
+          "oldHash": "3a2085d6ea8cf6ba05798d607905b30bd2b586880d0c7f323bff64fdd83f4b1f",
+          "newHash": "892a2a7e1f22c22de6fe22de5d277e5c5605ef6cc54bceed2040f171b35ede19",
+          "changeHash": "35060810246df005f090a623900abb9c55856a16bcc21e360bda990d181c98c9",
+          "sensitivity": "LOW",
+          "riskScore": 1,
+          "requiresApproval": false
+        }
+      ],
+      "departmentContext": {
+        "workflowStage": "VERIFY",
+        "applicationType": "CashPlus",
+        "department": "SPU",
+        "resolveComment": "",
+        "businessReason": "Application verified by SPU - submitted to COPS and EAMVU Head",
+        "workflowAction": "verify"
+      },
+      "previousHash": "genesis",
+      "compositeHash": "bedfa9f702ab1a4e91cd7d8266a2834712db6919668a5d2a448124fcbdfef79e",
+      "sequence": 1,
+      "blockchain": {
+        "txId": null,
+        "blockNumber": null,
+        "chainHash": null,
+        "verificationStatus": "FAILED",
+        "error": ""
+      }
+    }
+  ],
+  "lastUpdated": "2025-10-23T13:01:20.322Z"
+}

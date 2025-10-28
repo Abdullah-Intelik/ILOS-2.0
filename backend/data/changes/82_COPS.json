@@ -1,0 +1,90 @@
+{
+  "chainKey": "82_COPS",
+  "changes": [
+    {
+      "id": "fbd7b871-6651-4cee-aa0d-e5049ada207a",
+      "losId": "82",
+      "department": "COPS",
+      "officer": "COPS_officer",
+      "timestamp": "2025-10-24T08:03:25.344Z",
+      "changeType": "FIELD_MODIFICATION",
+      "fieldChanges": [
+        {
+          "fieldName": "status",
+          "fieldPath": "application.workflow.status",
+          "oldValue": "submitted_by_spu",
+          "newValue": "submitted_by_cops",
+          "changeReason": "approve by COPS: Application approved by COPS - waiting for EAMVU approval",
+          "timestamp": "2025-10-24T08:03:25.344Z",
+          "oldHash": "892a2a7e1f22c22de6fe22de5d277e5c5605ef6cc54bceed2040f171b35ede19",
+          "newHash": "db040e23edcf7fd74b6e1dbd2a4c6da8156b34aa9f8454ca46e9adbfd108e9c6",
+          "changeHash": "ea2d3e00b2f4f77ed5bfba16d61b7790330375663d9845508764c68d53e0a404",
+          "sensitivity": "LOW",
+          "riskScore": 1,
+          "requiresApproval": false
+        }
+      ],
+      "departmentContext": {
+        "workflowStage": "APPROVE",
+        "applicationType": "CashPlus",
+        "department": "COPS",
+        "resolveComment": "",
+        "businessReason": "Application approved by COPS - waiting for EAMVU approval",
+        "workflowAction": "approve"
+      },
+      "previousHash": "genesis",
+      "compositeHash": "377d3613604e5bf1451f1e9a8634bad7bf13d438ca3908a9ca5ce6bdc41b3a16",
+      "sequence": 1,
+      "blockchain": {
+        "txId": null,
+        "blockNumber": null,
+        "chainHash": null,
+        "verificationStatus": "FAILED",
+        "error": ""
+      }
+    },
+    {
+      "id": "7636ab32-7eec-40fd-8ec1-70d9e4f41547",
+      "losId": "82",
+      "department": "COPS",
+      "officer": "COPS_officer",
+      "timestamp": "2025-10-24T08:07:27.869Z",
+      "changeType": "FIELD_MODIFICATION",
+      "fieldChanges": [
+        {
+          "fieldName": "status",
+          "fieldPath": "application.workflow.status",
+          "oldValue": "application_completed",
+          "newValue": "loan_disbursed",
+          "changeReason": "finalize by COPS: Loan disbursed by COPS",
+          "timestamp": "2025-10-24T08:07:27.869Z",
+          "oldHash": "a192307900a06f135b23e535098321b03a5a473b2a22f8998c48b096372d6f0c",
+          "newHash": "f043e5498c0fc7b0a64dcb25f65df6ca6f6d469c156db63e6b9f4f389e8c8e76",
+          "changeHash": "8666ae62240c0a8c35a77978a8799e2729b4cffb4a9fdc2573662ea9f6e1b35d",
+          "sensitivity": "LOW",
+          "riskScore": 1,
+          "requiresApproval": false
+        }
+      ],
+      "departmentContext": {
+        "workflowStage": "FINALIZE",
+        "applicationType": "CashPlus",
+        "department": "COPS",
+        "resolveComment": "",
+        "businessReason": "Loan disbursed by COPS",
+        "workflowAction": "finalize"
+      },
+      "previousHash": "377d3613604e5bf1451f1e9a8634bad7bf13d438ca3908a9ca5ce6bdc41b3a16",
+      "compositeHash": "193faa1e053981e34a18c31527c908e34499de7c27e74f4299d793f4e7eae277",
+      "sequence": 2,
+      "blockchain": {
+        "txId": null,
+        "blockNumber": null,
+        "chainHash": null,
+        "verificationStatus": "FAILED",
+        "error": ""
+      }
+    }
+  ],
+  "lastUpdated": "2025-10-24T08:07:27.870Z"
+}

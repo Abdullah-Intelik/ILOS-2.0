@@ -59,9 +59,9 @@ export const PlatinumBankingDetailsForm = () => {
     <section className="mb-10">
       <h3 className="text-2xl rounded-lg text-white font-semibold mb-4 p-4 bg-primary text-primary-foreground">5. Banking Details</h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 border border-gray-200 rounded-xl p-6 mb-6 bg-gray-50" >
-        {/* Existing UBL Customer */}
+        {/* Existing Customer */}
         <div>
-          <label className="block text-sm font-medium mb-1">Existing UBL Customer?</label>
+          <label className="block text-sm font-medium mb-1">Existing Customer?</label>
           <div className="flex gap-6 mt-2">
             <label className="flex items-center gap-2">
               <input 
@@ -81,24 +81,24 @@ export const PlatinumBankingDetailsForm = () => {
             </label>
           </div>
         </div>
-        {/* UBL Account Number */}
+        {/* Account Number */}
         <div>
-          <label className="block text-sm font-medium mb-1">UBL Account Number</label>
+          <label className="block text-sm font-medium mb-1">Account Number</label>
           <input 
             type="text" 
             className="w-full rounded-xl border border-gray-300 px-4 py-2 bg-white" 
-            placeholder="UBL Account Number" 
+            placeholder="Account Number" 
             value={bankingDetails.ublAccountNumber || ''}
             onChange={(e) => handleBankingChange("ublAccountNumber", e.target.value)}
           />
         </div>
-        {/* UBL Branch */}
+        {/* Branch */}
         <div>
-          <label className="block text-sm font-medium mb-1">UBL Branch</label>
+          <label className="block text-sm font-medium mb-1">Branch</label>
           <input 
             type="text" 
             className="w-full rounded-xl border border-gray-300 px-4 py-2 bg-white" 
-            placeholder="UBL Branch" 
+            placeholder="Branch" 
             value={bankingDetails.branchName || ''}
             onChange={(e) => handleBankingChange("branchName", e.target.value)}
           />

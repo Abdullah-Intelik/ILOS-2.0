@@ -109,8 +109,8 @@ type FullCustomerData = {
   };
   bankingDetails?: { 
     accountNumber?: string;
-    isUblCustomer?: string | boolean;
-    ublAccountNumber?: string;
+    isExistingCustomer?: string | boolean;
+    accountNumber?: string;
     bankName?: string;
     branchName?: string;
     accountType?: string;
@@ -525,11 +525,11 @@ export default function PlatinumCreditCardPage() {
     }
 
     // Banking validation
-    if (!customerData?.bankingDetails?.isUblCustomer) {
-      errors.push("UBL Customer status is required");
+    if (!customerData?.bankingDetails?.isExistingCustomer) {
+      errors.push("Existing customer status is required");
     }
-    if (customerData?.bankingDetails?.isUblCustomer === 'Yes' && !customerData?.bankingDetails?.ublAccountNumber) {
-      errors.push("UBL Account Number is required for UBL customers");
+    if (customerData?.bankingDetails?.isExistingCustomer === 'Yes' && !customerData?.bankingDetails?.accountNumber) {
+      errors.push("Account Number is required for existing customers");
     }
 
     // Declaration validation
@@ -704,7 +704,7 @@ export default function PlatinumCreditCardPage() {
         company_name: employmentDetails.companyName || employmentDetails.organization || "",
         employment_status: employmentDetails.employmentStatus || "",
         length_of_service: toNumber(employmentDetails.currentExperience),
-        ubl_employee_id: employmentDetails.employeeNumber || "",
+        employee_id: employmentDetails.employeeNumber || "",
         business_type: employmentDetails.businessType || employmentDetails.business || "",
         business_nature: employmentDetails.businessNature || "",
         office_address: employmentDetails.officeAddress?.fullAddress || "",
@@ -732,9 +732,9 @@ export default function PlatinumCreditCardPage() {
         estatement_email: platinumDetails.estatementEmail || personalDetails.email || "",
         
         // Banking details
-        is_ubl_customer: toBoolean(bankingDetails.isUblCustomer),
-        ubl_account_number: bankingDetails.ublAccountNumber || bankingDetails.accountNumber || "",
-        ubl_branch: bankingDetails.branchName || "",
+        is_existing_customer: toBoolean(bankingDetails.isExistingCustomer),
+        account_number: bankingDetails.accountNumber || "",
+        branch: bankingDetails.branchName || "",
         
         // Signature and Date
         applicant_signature: null, // Binary data needs to be handled differently
@@ -1071,7 +1071,7 @@ export default function PlatinumCreditCardPage() {
         accountNumber: '1234567890123',
         branchCode: 'LHR001',
         accountType: 'Salary Account',
-        isUblCustomer: 'No'
+        isExistingCustomer: 'No'
       },
       
       // Platinum Card Details

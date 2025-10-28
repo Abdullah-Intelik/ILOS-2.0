@@ -1,0 +1,90 @@
+{
+  "chainKey": "82_EAMVU",
+  "changes": [
+    {
+      "id": "c86863c7-9902-4703-acfd-ad40041f10af",
+      "losId": "82",
+      "department": "EAMVU",
+      "officer": "EAMVU_officer",
+      "timestamp": "2025-10-24T08:03:46.051Z",
+      "changeType": "FIELD_MODIFICATION",
+      "fieldChanges": [
+        {
+          "fieldName": "status",
+          "fieldPath": "application.workflow.status",
+          "oldValue": "submitted_by_cops",
+          "newValue": "assigned_to_eavmu_officer",
+          "changeReason": "assign by EAMVU: Application assigned to Ahmad Hassan (101)",
+          "timestamp": "2025-10-24T08:03:46.051Z",
+          "oldHash": "db040e23edcf7fd74b6e1dbd2a4c6da8156b34aa9f8454ca46e9adbfd108e9c6",
+          "newHash": "eaa677be9b96cccaa121131f7c754c91afdd9d8c8fadd3df4ae25fe15fcc71c0",
+          "changeHash": "ee480b47058a381d7df7196fc84cb7c8b899764a027d1ce654b2587bda02ad60",
+          "sensitivity": "LOW",
+          "riskScore": 1,
+          "requiresApproval": false
+        }
+      ],
+      "departmentContext": {
+        "workflowStage": "ASSIGN",
+        "applicationType": "CashPlus",
+        "department": "EAMVU",
+        "resolveComment": "",
+        "businessReason": "Application assigned to Ahmad Hassan (101)",
+        "workflowAction": "assign"
+      },
+      "previousHash": "genesis",
+      "compositeHash": "cb50fa8c2ea8101e6838c21f030e112cccc969d7c695bd723a3f265b0c117e88",
+      "sequence": 1,
+      "blockchain": {
+        "txId": null,
+        "blockNumber": null,
+        "chainHash": null,
+        "verificationStatus": "FAILED",
+        "error": ""
+      }
+    },
+    {
+      "id": "543f7df4-2072-4a19-b97a-21207737d770",
+      "losId": "82",
+      "department": "EAMVU",
+      "officer": "EAMVU_officer",
+      "timestamp": "2025-10-24T08:05:16.921Z",
+      "changeType": "FIELD_MODIFICATION",
+      "fieldChanges": [
+        {
+          "fieldName": "status",
+          "fieldPath": "application.workflow.status",
+          "oldValue": "returned_by_eavmu_officer",
+          "newValue": "submitted_to_ciu",
+          "changeReason": "approve by EAMVU: Application approved by EAMVU HEAD after officer review - Both COPS and EAMVU approved, submitted to CIU",
+          "timestamp": "2025-10-24T08:05:16.921Z",
+          "oldHash": "2a071cc26352f9330273aa0426f304ac8f184e22a5c24db613313d02f17f3a9e",
+          "newHash": "b8fa0a515c6181c8286aeb767a4d2e4408a80316280b7f7140e3656de39708c0",
+          "changeHash": "d8a4b8777cdcdc43760819d1373b62c57c2a990fe9cf72ab8e522a687cc4a9c9",
+          "sensitivity": "LOW",
+          "riskScore": 1,
+          "requiresApproval": false
+        }
+      ],
+      "departmentContext": {
+        "workflowStage": "APPROVE",
+        "applicationType": "CashPlus",
+        "department": "EAMVU",
+        "resolveComment": "",
+        "businessReason": "Application approved by EAMVU HEAD after officer review - Both COPS and EAMVU approved, submitted to CIU",
+        "workflowAction": "approve"
+      },
+      "previousHash": "cb50fa8c2ea8101e6838c21f030e112cccc969d7c695bd723a3f265b0c117e88",
+      "compositeHash": "514a6b4f13aee28a858fc8e12fa89598c208a28d62bc56285dfc6641dd061b38",
+      "sequence": 2,
+      "blockchain": {
+        "txId": null,
+        "blockNumber": null,
+        "chainHash": null,
+        "verificationStatus": "FAILED",
+        "error": ""
+      }
+    }
+  ],
+  "lastUpdated": "2025-10-24T08:05:16.923Z"
+}

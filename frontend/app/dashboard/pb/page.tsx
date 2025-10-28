@@ -46,7 +46,7 @@ const statsData = [
 
 const recentApplicants = [
   {
-    id: "UBL-2024-001234",
+    id: "LOS-2024-001234",
     name: "Mubashir",
     segment: "Preferred",
     status: "Submitted to SPU",
@@ -54,7 +54,7 @@ const recentApplicants = [
     amount: "PKR 2,500,000",
   },
   {
-    id: "UBL-2024-001235",
+    id: "LOS-2024-001235",
     name: "Abdul wasay ali",
     segment: "Mass",
     status: "Draft",
@@ -62,7 +62,7 @@ const recentApplicants = [
     amount: "PKR 800,000",
   },
   {
-    id: "UBL-2024-001236",
+    id: "LOS-2024-001236",
     name: "Hassan Raza",
     segment: "SME",
     status: "Returned from SPU",
@@ -70,7 +70,7 @@ const recentApplicants = [
     amount: "PKR 5,000,000",
   },
   {
-    id: "UBL-2024-001237",
+    id: "LOS-2024-001237",
     name: "Ayesha Malik",
     segment: "Preferred",
     status: "Approved",
@@ -78,7 +78,7 @@ const recentApplicants = [
     amount: "PKR 1,200,000",
   },
   {
-    id: "UBL-2024-001238",
+    id: "LOS-2024-001238",
     name: "Zain Ahmed",
     segment: "Mass",
     status: "Disbursed",

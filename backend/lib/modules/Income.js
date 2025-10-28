@@ -13,7 +13,7 @@ class IncomeModule {
         const grossIncome = parseFloat(app.gross_monthly_income) || 0;
         let netIncome = parseFloat(app.total_income) || 0;
         const tenure = parseFloat(app.length_of_employment) || 0;
-        const isETB = app.is_ubl_customer === true || app.is_ubl_customer === "true";
+        const isETB = app.is_existing_customer === true || app.is_existing_customer === "true";
         
         // FIX: Add 50K fallback if net income is 0 or missing
         if (netIncome <= 0) {

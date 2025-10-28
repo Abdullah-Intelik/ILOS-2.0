@@ -751,8 +751,8 @@ export const CustomerProvider: React.FC<CustomerProviderProps> = ({ children }) 
                 bankName: detailData.clientBanks?.bank_name || '',
                 branchName: detailData.clientBanks?.branch || '',
                 accountType: 'Current', // Default assumption
-                isUblCustomer: detailData.clientBanks?.bank_name === 'UBL' ? 'Yes' : 'No', // Fixed property name
-                ublAccountNumber: detailData.clientBanks?.bank_name === 'UBL' ? detailData.clientBanks?.actt_no : '',
+                isExistingCustomer: detailData.clientBanks?.bank_name ? 'Yes' : 'No', // Check if customer has bank account
+                accountNumber: detailData.clientBanks?.actt_no || '',
               } : {},
               nextOfKin: detailData?.relationship ? {
                 name: detailData.relationship.relate_customer_name || '',

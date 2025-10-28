@@ -168,7 +168,7 @@ export default function AmeenDrivePage() {
           monthlyIncome: '150000',
           otherIncome: '0',
           totalMonthlyIncome: '150000',
-          bankName: 'UBL',
+          bankName: 'Partner Bank',
           accountNumber: '1234567890',
           accountType: 'Current'
         },
@@ -789,7 +789,7 @@ export default function AmeenDrivePage() {
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8 space-y-6">
-      <h2 className="text-3xl text-center  font-bold text-primary">  HBL Ameen Drive Application</h2>
+      <h2 className="text-3xl text-center  font-bold text-primary">Ameen Drive Application</h2>
 
       {/* Mandatory Fields Note */}
       <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
@@ -867,7 +867,7 @@ export default function AmeenDrivePage() {
               )}
               <div>
                 <h2 className="text-2xl font-bold text-gray-900">
-                  HBL Ameen Drive Application
+                  Ameen Drive Application
                 </h2>
                 <div className="flex items-center gap-4 mt-2">
                   <span className="text-lg font-semibold text-gray-700">

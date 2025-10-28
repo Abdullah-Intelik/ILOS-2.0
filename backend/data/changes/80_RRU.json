@@ -1,0 +1,48 @@
+{
+  "chainKey": "80_RRU",
+  "changes": [
+    {
+      "id": "7b0b8d4b-0a65-43d0-a315-35e5ad6a8780",
+      "losId": "80",
+      "department": "RRU",
+      "officer": "RRU_officer",
+      "timestamp": "2025-10-24T07:22:05.478Z",
+      "changeType": "FIELD_MODIFICATION",
+      "fieldChanges": [
+        {
+          "fieldName": "status",
+          "fieldPath": "application.workflow.status",
+          "oldValue": "rejected_by_ciu",
+          "newValue": "resolved_by_rru",
+          "changeReason": "resolve by RRU: Application resolved by RRU",
+          "timestamp": "2025-10-24T07:22:05.478Z",
+          "oldHash": "098164f6bfc965f349fb378776663a9a3239a8979bcf5a030e45d0d562e01de6",
+          "newHash": "8ed85db2cf2475b6e34746fa812ce626d2f516b6ac375cee3a7643a8d12622eb",
+          "changeHash": "a8f86273d299b26fc2d34c361ffee92b29999ef91c1756da4db063c92a35a4a2",
+          "sensitivity": "LOW",
+          "riskScore": 1,
+          "requiresApproval": false
+        }
+      ],
+      "departmentContext": {
+        "workflowStage": "RESOLVE",
+        "applicationType": "CashPlus",
+        "department": "RRU",
+        "resolveComment": "",
+        "businessReason": "Application resolved by RRU",
+        "workflowAction": "resolve"
+      },
+      "previousHash": "genesis",
+      "compositeHash": "b5b5f0cd57de489989d3cec34738045d4d0ef43dc552376b18d4339913cd9784",
+      "sequence": 1,
+      "blockchain": {
+        "txId": null,
+        "blockNumber": null,
+        "chainHash": null,
+        "verificationStatus": "FAILED",
+        "error": ""
+      }
+    }
+  ],
+  "lastUpdated": "2025-10-24T07:22:05.482Z"
+}

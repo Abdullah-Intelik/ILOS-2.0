@@ -248,7 +248,7 @@ router.post('/calculate', async (req, res) => {
     const total_income = parseFloat(applicationData.total_income || applicationData.net_monthly_income || applicationData.monthly_income || 0);
     const net_monthly_income = total_income; // Alias for consistency
     const length_of_employment = parseFloat(applicationData.length_of_employment || applicationData.years_of_employment || applicationData.experience_years || 0);
-    const is_ubl_customer = applicationData.is_ubl_customer === true || applicationData.is_ubl_customer === 'true';
+    const is_existing_customer = applicationData.is_existing_customer === true || applicationData.is_existing_customer === 'true';
     const salary_transfer_flag = applicationData.salary_transfer_flag === true || applicationData.salary_transfer_flag === 'true';
     const employment_type = (employment_status || 'permanent').toLowerCase();
     
@@ -305,7 +305,7 @@ router.post('/calculate', async (req, res) => {
       total_income,
       net_monthly_income,
       length_of_employment,
-      is_ubl_customer,
+      is_existing_customer,
       salary_transfer_flag,
       
       // Loan fields (for DBR)
@@ -354,7 +354,7 @@ router.post('/calculate', async (req, res) => {
     console.log('  • Gross Monthly Income: PKR', engineInput.gross_monthly_income?.toLocaleString() || '0');
     console.log('  • Total Income (Net): PKR', engineInput.total_income?.toLocaleString() || '0');
     console.log('  • Net Monthly Income: PKR', engineInput.net_monthly_income?.toLocaleString() || '0');
-    console.log('  • UBL Customer (ETB):', engineInput.is_ubl_customer ? 'YES' : 'NO');
+    console.log('  • Existing Customer (ETB):', engineInput.is_existing_customer ? 'YES' : 'NO');
     console.log('  • Salary Transfer Flag:', engineInput.salary_transfer_flag ? 'YES' : 'NO');
     
     console.log('\n💵 LOAN FIELDS (for DBR Module):');

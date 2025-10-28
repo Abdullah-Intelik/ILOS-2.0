@@ -27,8 +27,8 @@ export const CashplusBankingDetailsForm = () => {
       .filter(([k, v]) => !!v)
       .map(([k]) => k)
       .concat(
-        clientBanks.bank_name === "UBL" ? ["isUblCustomer"] : [],
-        clientBanks.actt_no ? ["ublAccountNumber"] : []
+        clientBanks.bank_name ? ["isExistingCustomer"] : [],
+        clientBanks.actt_no ? ["accountNumber"] : []
       )
   );
 
@@ -44,38 +44,38 @@ export const CashplusBankingDetailsForm = () => {
       <h3 className="text-2xl rounded-lg text-white font-semibold mb-4 p-4 bg-primary text-primary-foreground">6. Banking Details</h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 border border-gray-200 rounded-xl p-6 mb-6 bg-gray-50">
         <div>
-          <label className="block mb-2 font-medium">Are you a UBL Customer? *</label>
+          <label className="block mb-2 font-medium">Are you an Existing Customer? *</label>
           <div className="flex gap-4">
             <label className="flex items-center gap-2">
               <input
                 type="radio"
-                name="isUblCustomer"
+                name="isExistingCustomer"
                 value="Yes"
-                checked={bankingDetails.isUblCustomer === "Yes" || clientBanks.bank_name === "UBL"}
-                onChange={() => handleChange("isUblCustomer", "Yes")}
+                checked={bankingDetails.isExistingCustomer === "Yes" || !!clientBanks.bank_name}
+                onChange={() => handleChange("isExistingCustomer", "Yes")}
               />
               Yes
             </label>
             <label className="flex items-center gap-2">
               <input
                 type="radio"
-                name="isUblCustomer"
+                name="isExistingCustomer"
                 value="No"
-                checked={bankingDetails.isUblCustomer === "No" || (clientBanks.bank_name && clientBanks.bank_name !== "UBL")}
-                onChange={() => handleChange("isUblCustomer", "No")}
+                checked={bankingDetails.isExistingCustomer === "No" && !clientBanks.bank_name}
+                onChange={() => handleChange("isExistingCustomer", "No")}
               />
               No
             </label>
           </div>
         </div>
         <div>
-          <label className="block mb-2 font-medium">UBL Account Number</label>
+          <label className="block mb-2 font-medium">Account Number</label>
           <input
             type="text"
-            className={getFieldClasses("ublAccountNumber")}
-            placeholder="UBL Account Number"
-            value={bankingDetails.ublAccountNumber || clientBanks.actt_no || ""}
-            onChange={(e) => handleChange("ublAccountNumber", e.target.value)}
+            className={getFieldClasses("accountNumber")}
+            placeholder="Account Number"
+            value={bankingDetails.accountNumber || clientBanks.actt_no || ""}
+            onChange={(e) => handleChange("accountNumber", e.target.value)}
           />
           <span className="block text-xs text-gray-500 mt-1">
             Non-disclosure of this information may result in rejection of application.

@@ -20,7 +20,7 @@ Added comprehensive 7-item checklist above rejection buttons:
 2. **FRMU – Source UBL**: Check for API. If output shows Name & NIC then red flag for fraud and application forwarded to Risk & Compliance
 3. **Negative (Watch) List – Source UBL Excel**: If Name/CNIC appears then send to Compliance unit for approval
 4. **PEP List – Source international databases Excel**: If Name appears then send to Compliance unit for approval
-5. **$30K Credit Card List – Source SBP**: If Name/CNIC appears then send to Risk Policy for approval
+5. **High Value Credit Card List – Source SBP**: If Name/CNIC appears then send to Risk Policy for approval
 6. **Black List – Source UBL Excel**: If Name/CNIC appears then send to Risk Policy for approval
 7. **CTL – Source UBL**: Check for API. If output shows Name/CNIC then send application to Risk Policy for approval
 

@@ -172,9 +172,9 @@ export const PlatinumDeclarationBankSectionForm = () => {
             Note: To edit supplementary card details, use the Supplementary Card section.
           </p>
         </div>
-        {/* UBL Staff Declarations */}
+        {/* Staff Declarations */}
         <div className="mt-6">
-          <label className="block text-sm font-medium mb-1">UBL Staff Declarations</label>
+          <label className="block text-sm font-medium mb-1">Staff Declarations</label>
           <input 
             type="file" 
             className="w-full rounded-xl border border-gray-300 px-4 py-2"

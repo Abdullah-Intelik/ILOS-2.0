@@ -106,7 +106,7 @@ class ApplicationScoreModule {
         notes.push(`Industry: ${scores.industry}/100 (${(scores.industry * this.weights.industry).toFixed(2)} points)`);
 
         // 11. Portfolio Type Score (9%)
-        scores.portfolio_type = this.calculatePortfolioTypeScore(ilosData.is_ubl_customer);
+        scores.portfolio_type = this.calculatePortfolioTypeScore(ilosData.is_existing_customer);
         totalScore += scores.portfolio_type * this.weights.portfolio_type;
         notes.push(`Portfolio Type: ${scores.portfolio_type}/100 (${(scores.portfolio_type * this.weights.portfolio_type).toFixed(2)} points)`);
 

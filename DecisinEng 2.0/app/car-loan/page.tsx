@@ -1281,7 +1281,7 @@ export default function CarLoanDecisionEngine() {
                       <div><strong>Deposit Balance:</strong> {cbsDepositBalance}</div>
                       <div><strong>Highest DPD:</strong> {cbsHighestDPD}</div>
                       <div><strong>Bad Counts Industry:</strong> {cbsBadCountsIndustry}</div>
-                      <div><strong>Bad Counts UBL:</strong> {cbsBadCountsUBL}</div>
+                      <div><strong>Bad Counts Banking:</strong> {cbsBadCountsUBL}</div>
                       <div><strong>DPD 30+:</strong> {cbsDPD30Plus}</div>
                       <div><strong>DPD 60+:</strong> {cbsDPD60Plus}</div>
                       <div><strong>Defaults 12M:</strong> {cbsDefaults12M}</div>

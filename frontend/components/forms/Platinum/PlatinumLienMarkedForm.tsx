@@ -162,7 +162,6 @@ export const PlatinumLienMarkedForm = () => {
             onChange={(e) => handleInputChange("currency", e.target.value)}
           >
             <option value="PKR">PKR</option>
-            <option value="USD">USD</option>
             <option value="EUR">EUR</option>
             <option value="GBP">GBP</option>
             <option value="AED">AED</option>

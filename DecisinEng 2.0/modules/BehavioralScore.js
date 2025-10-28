@@ -56,10 +56,10 @@ class BehavioralScoreModule {
         totalScore += scores.bad_counts_industry * this.weights.bad_counts_industry;
         notes.push(`Bad Counts Industry: ${scores.bad_counts_industry}/100 (${(scores.bad_counts_industry * this.weights.bad_counts_industry).toFixed(2)} points)`);
 
-        // 2. Bad Counts UBL (15%)
+        // 2. Bad Counts Banking (15%)
         scores.bad_counts_ubl = this.calculateBadCountsScore(cbsData.bad_counts_ubl);
         totalScore += scores.bad_counts_ubl * this.weights.bad_counts_ubl;
-        notes.push(`Bad Counts UBL: ${scores.bad_counts_ubl}/100 (${(scores.bad_counts_ubl * this.weights.bad_counts_ubl).toFixed(2)} points)`);
+        notes.push(`Bad Counts Banking: ${scores.bad_counts_ubl}/100 (${(scores.bad_counts_ubl * this.weights.bad_counts_ubl).toFixed(2)} points)`);
 
         // 3. DPD 30+ (12%)
         scores.dpd_30_plus = this.calculateDPD30PlusScore(cbsData.dpd_30_plus);
@@ -112,7 +112,7 @@ class BehavioralScoreModule {
         };
     }
 
-    // Bad Counts scoring (Industry & UBL)
+    // Bad Counts scoring (Industry & Banking)
     calculateBadCountsScore(badCounts) {
         const count = parseInt(badCounts) || 0;
         

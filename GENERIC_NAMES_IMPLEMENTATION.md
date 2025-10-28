@@ -7,11 +7,7 @@ All bank-specific and company-specific names have been removed from the autofill
 
 ### Bank Names
 **Before:**
-- UBL (United Bank Limited)
-- HBL (Habib Bank Limited)
-- MCB (Muslim Commercial Bank)
-- ABL (Allied Bank Limited)
-- Standard Chartered
+- Generic company/organization names (removed all specific bank references)
 - Etc.
 
 **After:**
@@ -44,8 +40,8 @@ All bank-specific and company-specific names have been removed from the autofill
 
 ### Form Titles
 **Before:**
-- "HBL Credit Card Application"
-- "UBL Platinum Credit Card Application"
+- "Credit Card Application"
+- "Platinum Credit Card Application"
 
 **After:**
 - "Credit Card Application"
@@ -70,7 +66,7 @@ Changes:
 - Changed insurance from "Adamjee Insurance" to "Insurance Company A"
 - Changed employer from "Systems Limited" to "Tech Corporation Ltd"
 - Updated all bank names to generic (Bank A, Bank B, etc.)
-- Changed "UBL" to "Partner Bank"
+- Changed specific bank names to generic terms
 
 ### 3. Credit Card Form
 **File:** `frontend/app/dashboard/applicant/creditcard/credit-card/page.tsx`
@@ -79,8 +75,8 @@ Changes:
 - Changed employer from "Engro Corporation" to "ABC Corporation"
 - Changed previous employer from "Lucky Cement" to "XYZ Industries"
 - Updated office address from specific location to "Business Tower, Commercial Area"
-- Changed banking partner from "UBL" to "Partner Bank"
-- Updated form title from "HBL Credit Card Application" to "Credit Card Application"
+- Changed banking partner to generic terms
+- Updated form title to "Credit Card Application"
 
 ### 4. Platinum Credit Card Form
 **File:** `frontend/app/dashboard/applicant/creditcard/platinum-credit-card/page.tsx`
@@ -89,9 +85,9 @@ Changes:
 - Changed employer from "Packages Limited" to "Global Manufacturing Ltd"
 - Changed previous employer from "Nestle Pakistan" to "International Corp"
 - Updated all bank names in obligations to generic (Bank A-F)
-- Changed banking partner from "UBL" to "Partner Bank"
-- Updated form title from "UBL Platinum Credit Card Application" to "Platinum Credit Card Application"
-- Updated main heading from "HBL Platinum Credit Card Application" to "Platinum Credit Card Application"
+- Changed banking partner to generic terms
+- Updated form title to "Platinum Credit Card Application"
+- Updated main heading to "Platinum Credit Card Application"
 
 ## Generic Bank Naming Convention
 
@@ -130,7 +126,7 @@ When adding new test data or scenarios:
 ✅ Use generic location descriptions
 
 ### DON'T:
-❌ Use real bank names (HBL, UBL, MCB, etc.)
+❌ Use real bank names
 ❌ Use real company names (Engro, Nestle, Lucky, etc.)
 ❌ Use specific brand names (Toyota, Honda are acceptable as they're vehicle makes)
 ❌ Hard-code bank branding in form titles

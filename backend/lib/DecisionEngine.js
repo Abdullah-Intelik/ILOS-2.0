@@ -688,7 +688,7 @@
         console.log('📊 BEHAVIORAL SCORECARD CALCULATION');
         console.log('='.repeat(80));
         
-        const isETB = app.is_ubl_customer === true || app.is_ubl_customer === 'true';
+        const isETB = app.is_existing_customer === true || app.is_existing_customer === 'true';
         const behScoreModule = new this.BehavioralScoreModule();
         const result = behScoreModule.calculate(cbsData, isETB);
         
@@ -710,14 +710,14 @@
         console.log('  • Gross Monthly Income:', app.gross_monthly_income, '(type:', typeof app.gross_monthly_income, ')');
         console.log('  • Total Income (Net):', app.total_income, '(type:', typeof app.total_income, ')');
         console.log('  • Length of Employment:', app.length_of_employment, '(type:', typeof app.length_of_employment, ')');
-        console.log('  • UBL Customer:', app.is_ubl_customer, '(type:', typeof app.is_ubl_customer, ')');
+        console.log('  • Existing Customer:', app.is_existing_customer, '(type:', typeof app.is_existing_customer, ')');
         console.log('  • Employment Type:', app.employment_type, '(type:', typeof app.employment_type, ')');
         console.log('  • Salary Transfer Flag:', app.salary_transfer_flag, '(type:', typeof app.salary_transfer_flag, ')');
 
         const grossIncome = parseFloat(app.gross_monthly_income) || 0;
         const netIncome = parseFloat(app.total_income) || 0;
         const tenure = parseFloat(app.length_of_employment) || 0;
-        const isETB = app.is_ubl_customer === true || app.is_ubl_customer === "true";
+        const isETB = app.is_existing_customer === true || app.is_existing_customer === "true";
 
         // manual inputs
         const employmentType = (app.employment_type || "permanent").toLowerCase();
@@ -727,7 +727,7 @@
         console.log('  • Gross Income (parsed):', grossIncome);
         console.log('  • Net Income (parsed):', netIncome);
         console.log('  • Tenure (parsed):', tenure, 'years');
-        console.log('  • UBL Customer (processed):', isETB);
+        console.log('  • Existing Customer (processed):', isETB);
         console.log('  • Employment Type (processed):', employmentType);
         console.log('  • Salary Transfer Flag (processed):', salaryTransferFlag);
         
@@ -894,7 +894,7 @@
         const cityResult = this.scoreCity(applicationData);
         
         // Determine if customer is ETB or NTB
-        const isETB = applicationData.is_ubl_customer === true || applicationData.is_ubl_customer === "true";
+        const isETB = applicationData.is_existing_customer === true || applicationData.is_existing_customer === "true";
         console.log('🔍 CUSTOMER TYPE:', isETB ? 'ETB (Existing-to-Bank)' : 'NTB (New-to-Bank)');
         
         // Adjust weights based on customer type
@@ -1092,7 +1092,7 @@
                 employmentType: applicationData.employment_type || 'permanent',
                 salaryTransferFlag: applicationData.salary_transfer_flag,
                 tenure: parseFloat(applicationData.length_of_employment) || 0,
-                isETB: applicationData.is_ubl_customer === true || applicationData.is_ubl_customer === 'true',
+                isETB: applicationData.is_existing_customer === true || applicationData.is_existing_customer === 'true',
                 stabilityRatio: (parseFloat(applicationData.total_income) || 0) / (parseFloat(applicationData.gross_monthly_income) || 1),
                 thresholdMet: incomeResult.notes.some(note => note.includes('threshold met')),
                 breakdown: {
@@ -1150,7 +1150,7 @@
                         employmentType: applicationData.employment_type || 'permanent',
                         salaryTransferFlag: applicationData.salary_transfer_flag,
                         tenure: parseFloat(applicationData.length_of_employment) || 0,
-                        isETB: applicationData.is_ubl_customer === true || applicationData.is_ubl_customer === 'true'
+                        isETB: applicationData.is_existing_customer === true || applicationData.is_existing_customer === 'true'
                     }
                 },
                 spu: { 

@@ -464,7 +464,7 @@ export default function CreditCardDecisionEngine() {
         - Calculated: ${isETB ? 'YES' : 'NO'}
         ${isETB ? `
         - Bad Counts Industry: ${decision.moduleScores?.behavioral_score?.details?.breakdown?.bad_counts_industry || 0}/100
-        - Bad Counts UBL: ${decision.moduleScores?.behavioral_score?.details?.breakdown?.bad_counts_ubl || 0}/100
+        - Bad Counts Banking: ${decision.moduleScores?.behavioral_score?.details?.breakdown?.bad_counts_ubl || 0}/100
         - DPD 30+: ${decision.moduleScores?.behavioral_score?.details?.breakdown?.dpd_30_plus || 0}/100
         - DPD 60+: ${decision.moduleScores?.behavioral_score?.details?.breakdown?.dpd_60_plus || 0}/100
         - Defaults 12M: ${decision.moduleScores?.behavioral_score?.details?.breakdown?.defaults_12m || 0}/100
@@ -1096,7 +1096,7 @@ export default function CreditCardDecisionEngine() {
                     color: '#4a5568',
                     marginBottom: '8px'
                   }}>
-                    Bad Counts UBL:
+                    Bad Counts Banking:
                   </label>
                   <input 
                     type="number" 
@@ -1383,7 +1383,7 @@ export default function CreditCardDecisionEngine() {
                       <span className="data-value">{applicationData?.tenure || '-'}</span>
                     </div>
                     <div className="data-row">
-                      <span className="data-label">UBL Customer:</span>
+                      <span className="data-label">Existing Customer:</span>
                       <span className="data-value">{applicationData?.ublCustomer || '-'}</span>
                     </div>
                   </div>

@@ -732,7 +732,7 @@ const AutoLoanPage = () => {
 
   return (
     <form onSubmit={handleSubmit} className="max-w-5xl mx-auto px-4 py-8 space-y-6">
-      <h2 className="text-3xl text-center font-bold text-primary">HBL Auto Loan Application</h2>
+      <h2 className="text-3xl text-center font-bold text-primary">Auto Loan Application</h2>
 
       {/* Mandatory Fields Note */}
       <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
@@ -867,7 +867,7 @@ const AutoLoanPage = () => {
                 <CreditCard className="w-8 h-8 text-blue-600" />
               )}
               <div>
-                <h2 className="text-2xl font-bold text-gray-900">HBL Auto Loan Application</h2>
+                <h2 className="text-2xl font-bold text-gray-900">Auto Loan Application</h2>
                 <div className="flex items-center gap-4 mt-2">
                   <span className="text-lg font-semibold text-gray-700">
                     Customer ID: {customerData.customerId}

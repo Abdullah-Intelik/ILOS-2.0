@@ -795,8 +795,8 @@ Accuracy: ${Math.round(locationData.accuracy)}m
           </View>
           
           <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>UBL Account Number:</Text>
-            <Text style={styles.infoValue}>{data.ubl_account_number || 'N/A'}</Text>
+            <Text style={styles.infoLabel}>Account Number:</Text>
+            <Text style={styles.infoValue}>{data.account_number || 'N/A'}</Text>
           </View>
         </View>
       </View>

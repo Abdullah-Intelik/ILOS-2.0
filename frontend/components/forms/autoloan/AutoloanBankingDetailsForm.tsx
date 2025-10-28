@@ -124,7 +124,7 @@ export const BankingDetailsForm: React.FC<Props> = ({
               <input
                 type="text"
                 name="repayment_currency_type_detail"
-                placeholder="e.g., USD, EUR"
+                placeholder="e.g., PKR, USD"
                 className="w-full md:w-72 rounded-xl border border-gray-300 bg-gray-50 px-4 py-2"
                 onChange={(e) =>
                   // If you want to persist the detail, either:
@@ -232,7 +232,7 @@ export const BankingDetailsForm: React.FC<Props> = ({
             {((other.currency_type ?? "") === "" || otherIsForeign) && (
               <input
                 type="text"
-                placeholder="e.g., USD, EUR"
+                placeholder="e.g., PKR, USD"
                 className="w-full md:w-72 rounded-xl border border-gray-300 bg-gray-50 px-4 py-2"
                 value={other.currency_type && other.currency_type !== "Local" ? other.currency_type : ""}
                 onChange={(e) => updateOther("currency_type", e.target.value)}
