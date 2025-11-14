@@ -406,6 +406,11 @@ interface CustomerData {
     branch?: string;
     version?: string;
     created_at?: string;
+    // New generic fields
+    isUblCustomer?: string | boolean; // Deprecated - use isExistingCustomer
+    ublAccountNumber?: string; // Deprecated - use accountNumber
+    isExistingCustomer?: string | boolean; // New generic field
+    accountNumber?: string; // New generic field
   };
   employmentDetails?: {
     employmentStatus?: string;
@@ -440,11 +445,13 @@ interface CustomerData {
     companyPhone?: string;
   };
   bankingDetails?: {
-    isUblCustomer?: string;
-    ublAccountNumber?: string;
+    isUblCustomer?: string; // Deprecated - use isExistingCustomer
+    ublAccountNumber?: string; // Deprecated - use accountNumber
+    isExistingCustomer?: string | boolean; // New generic field (replaces isUblCustomer)
+    accountNumber?: string; // New generic field (replaces ublAccountNumber)
+    actt_no?: string; // Backwards compatibility with old database field
     bankName?: string;
     branchName?: string;
-    accountNumber?: string;
     accountType?: string;
     accountOpeningDate?: string;
     iban?: string;
@@ -480,8 +487,15 @@ interface CustomerData {
     account?: string;
     loanPurpose?: string;
     loanPurposeOther?: string;
+    requestedAmount?: string | number;
+    tenure?: string | number;
   };
   exposures?: {
+    // Simple Yes/No flags
+    hasExistingCards?: string;  // 'Yes' | 'No'
+    hasExistingLoans?: string;  // 'Yes' | 'No'
+    
+    // Detailed tables (legacy)
     creditCardsClean?: Array<{
       sr_no?: string;
       bank_name?: string;
@@ -491,6 +505,20 @@ interface CustomerData {
       sr_no?: string;
       bank_name?: string;
       approved_limit?: string | number;
+    }>;
+    personalLoansClean?: Array<{
+      sr_no?: string;
+      bank_name?: string;
+      approved_limit?: string | number;
+      outstanding_amount?: string | number;
+      as_of?: string;
+    }>;
+    personalLoansSecured?: Array<{
+      sr_no?: string;
+      bank_name?: string;
+      approved_limit?: string | number;
+      outstanding_amount?: string | number;
+      as_of?: string;
     }>;
     personalLoansExisting?: Array<{
       sr_no?: string;
@@ -506,6 +534,12 @@ interface CustomerData {
       nature?: string;
       current_outstanding?: string | number;
     }>;
+    appliedLimits?: Array<{
+      sr_no?: string;
+      bank_name?: string;
+      facility_under_process?: string;
+      nature_of_facility?: string;
+    }>;
     personalLoansUnderProcess?: Array<{
       sr_no?: string;
       bank_name?: string;
@@ -518,6 +552,7 @@ interface CustomerData {
     name?: string;
     cnic?: string;
     relationship?: string;
+    address?: string;  // Full address as a single string
     houseNo?: string;
     street?: string;
     area?: string;
@@ -559,6 +594,42 @@ interface CustomerData {
     alternateTelephone?: string;
     cnic?: string;
   };
+
+  // Document Upload Gateway Data
+  ocrData?: {
+    cnic?: any;
+    salarySlip?: any;
+    reference1?: any;
+    reference2?: any;
+  };
+  
+  ecibData?: any;
+  
+  documentVerification?: {
+    cnicVerified?: boolean;
+    salaryVerified?: boolean;
+    ecibUploaded?: boolean;
+    verificationDate?: string;
+  };
+  
+  preQualification?: {
+    maxLoanAmount?: number;
+    availableEMI?: number;
+    dtiRatio?: number;
+    riskLevel?: string;
+    overdues?: number;
+    requiresOverdueClearance?: boolean;
+  };
+  
+  riskLevel?: 'LOW' | 'MEDIUM' | 'HIGH';
+  
+  // Mobile Submission Data
+  mobileSubmissionLosId?: string;
+  isMobileSubmission?: boolean;
+  
+  // Auto-fill metadata
+  isAutoFilled?: boolean;
+  autoFillSource?: string;
 
 }
 
@@ -682,7 +753,32 @@ export const CustomerProvider: React.FC<CustomerProviderProps> = ({ children }) 
         if (customerResponse.isExisting) {
           try {
             const detailResponse = await fetch(`${getBaseUrl()}/cif/${customerResponse.customerId}`);
-            const detailData = detailResponse.ok ? await detailResponse.json() : null;
+            const detailResponseData = detailResponse.ok ? await detailResponse.json() : null;
+            
+            // ✅ NEW: Handle new backend response format { success, data, source }
+            const detailData = detailResponseData?.data || detailResponseData;
+            const dataSource = detailResponseData?.source || 'unknown';
+            
+            // 🔍 DEBUG: Log CIF API data with improved formatting
+            console.log('\n🔍 ==================== CIF API RESPONSE ====================');
+            console.log('📊 Data Source:', dataSource); // 'party_details' or 'cbs'
+            console.log('📦 Full Response:', detailResponseData);
+            console.log('📋 Extracted Data:', detailData);
+            console.log('\n👤 PERSONAL:');
+            console.log('   Name:', detailData?.fullname);
+            console.log('   Mobile:', detailData?.phone?.phone_no);
+            console.log('   Email:', detailData?.email?.address);
+            console.log('\n🏢 EMPLOYMENT:');
+            console.log('   Employer:', detailData?.employment?.employer_name);
+            console.log('   Designation:', detailData?.employment?.designation);
+            console.log('   Employment Type:', detailData?.employment?.employment_type);
+            console.log('   Tenure (months):', detailData?.employment?.employment_tenure_months);
+            console.log('   Office Address:', detailData?.employment?.office_address);
+            console.log('\n💰 INCOME:');
+            console.log('   Monthly Income in party_details:', detailData?.employment?.monthly_income);
+            console.log('   ⚠️  NOTE: Income will NOT be pre-filled from party_details');
+            console.log('   ✅ Only Salary Slip OCR will populate monthly income field');
+            console.log('========================================================\n');
             
             setCustomerData({
               isETB: customerResponse.isExisting,
@@ -699,7 +795,7 @@ export const CustomerProvider: React.FC<CustomerProviderProps> = ({ children }) 
                 motherName: detailData.individualInfo?.maiden_name || '',
                 dateOfBirth: detailData.individualInfo?.date_of_birth || '',
                 gender: detailData.individualInfo?.sex === 'M' ? 'Male' : detailData.individualInfo?.sex === 'F' ? 'Female' : '',
-                maritalStatus: detailData.individualInfo?.maritial_status === 'M' ? 'Married' : detailData.individualInfo?.maritial_status === 'S' ? 'Single' : '',
+                maritalStatus: detailData.individualInfo?.maritial_status?.toUpperCase() === 'MARRIED' || detailData.individualInfo?.maritial_status === 'M' ? 'Married' : detailData.individualInfo?.maritial_status?.toUpperCase() === 'SINGLE' || detailData.individualInfo?.maritial_status === 'S' ? 'Single' : '',
                 mobileNumber: detailData.phone?.phone_no || '',
                 email: detailData.email?.address || '',
                 ntn: detailData.dirDetails?.ntn || '',
@@ -741,18 +837,37 @@ export const CustomerProvider: React.FC<CustomerProviderProps> = ({ children }) 
                 }
               } : {},
               employmentDetails: detailData ? {
-                employmentStatus: 'Employed', // Default assumption for existing customers
+                // ✅ NEW: Map employment data from party_details or CBS
+                employmentStatus: detailData.employment?.employment_type || 'Employed',
+                employmentType: detailData.employment?.employment_type || '',
+                companyName: detailData.employment?.employer_name || '',
+                designation: detailData.employment?.designation || '',
+                currentExperience: detailData.employment?.employment_tenure_months 
+                  ? Math.floor(detailData.employment.employment_tenure_months / 12).toString()
+                  : '',
+                employmentTenure: detailData.employment?.employment_tenure_months || 0,
+                officeAddress: detailData.employment?.office_address || '',
+                // Legacy fields
                 industry: detailData.industry || '',
                 business: detailData.business || '',
-                // Remove occupationCode from here as it's defined in personalDetails
               } : {},
+              // ✅ Income: NEVER pre-fill from party_details - OCR data has ABSOLUTE PRIORITY
+              // Only OCR from salary slip should populate this field
+              incomeDetails: customerData?.incomeDetails || {},
               bankingDetails: detailData ? {
                 accountNumber: detailData.clientBanks?.actt_no || '',
                 bankName: detailData.clientBanks?.bank_name || '',
                 branchName: detailData.clientBanks?.branch || '',
                 accountType: 'Current', // Default assumption
                 isExistingCustomer: detailData.clientBanks?.bank_name ? 'Yes' : 'No', // Check if customer has bank account
-                accountNumber: detailData.clientBanks?.actt_no || '',
+              } : {},
+              clientBanks: detailData?.clientBanks ? {
+                customer_id: detailData.clientBanks.customer_id || '',
+                position: detailData.clientBanks.position || '',
+                actt_no: detailData.clientBanks.actt_no || '',
+                bank_name: detailData.clientBanks.bank_name || '',
+                branch: detailData.clientBanks.branch || '',
+                accountNumber: detailData.clientBanks.actt_no || '',
               } : {},
               nextOfKin: detailData?.relationship ? {
                 name: detailData.relationship.relate_customer_name || '',
@@ -821,7 +936,16 @@ export const CustomerProvider: React.FC<CustomerProviderProps> = ({ children }) 
   };
 
   const updateCustomerData = (data: Partial<CustomerData>) => {
-    setCustomerData(prev => prev ? { ...prev, ...data } : null);
+    setCustomerData(prev => {
+      // If prev is null, use the new data as the base
+      // Otherwise, merge prev and new data
+      if (!prev) {
+        console.log('📱 CustomerContext: Initializing with new data (prev was null)');
+        return data as CustomerData;
+      }
+      console.log('📱 CustomerContext: Merging with existing data');
+      return { ...prev, ...data };
+    });
   };
 
   const clearCustomerData = () => {

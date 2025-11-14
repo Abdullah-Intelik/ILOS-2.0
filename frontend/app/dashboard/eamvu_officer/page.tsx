@@ -15,7 +15,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { LayoutDashboard, ClipboardList, FileSearch, CheckCircle, Eye, ThumbsUp, ThumbsDown, MapPin, Camera, FileText, User, MessageSquare, CheckSquare, AlertCircle, Clock, Banknote, Building, Phone, Mail, Calendar, Shield, TrendingUp, Users, Activity } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import DocumentExplorer from "@/components/document-explorer";
-import { DynamicFieldDisplay } from "@/components/dynamic-field-display";
+import { MinimalFieldDisplay } from "@/components/minimal-field-display";
 
 export default function EAMVUOfficerDashboard() {
   const [assignedApplications, setAssignedApplications] = useState<any[]>([])
@@ -62,34 +62,22 @@ export default function EAMVUOfficerDashboard() {
     },
   ];
 
-  // Fetch available agents from backend
-  const fetchAgents = async () => {
-    try {
-      // Call backend directly (backend endpoint is available and seeded)
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/agents`, { cache: 'no-store' })
-      if (response.ok) {
-        const agentsData = await response.json()
-        console.log('🔄 Agents Data:', agentsData);
-        setAvailableAgents(agentsData)
-      } else {
-        setAvailableAgents([])
-      }
-    } catch (error) {
-      console.error('Error fetching agents:', error)
-      setAvailableAgents([])
-    }
-  }
-
+  // Hardcode Ahmed Hassan (ID: 101) for now - Backend V2.0 doesn't have agents endpoint yet
   useEffect(() => {
-    // Fetch agents and check if agent is already selected in localStorage
-    fetchAgents()
-    const storedAgent = localStorage.getItem('currentEAMVUAgent')
-    if (storedAgent) {
-      setCurrentAgent(storedAgent)
-      fetchAssignedApplications(storedAgent)
-    } else {
-      setShowAgentSelector(true)
-    }
+    const defaultAgent = '101'; // Ahmed Hassan
+    const agentData = [{ agent_id: 101, name: 'Ahmed Hassan', role: 'eamvu_officer', status: 'active' }];
+    
+    setCurrentAgent(defaultAgent);
+    setAvailableAgents(agentData);
+    
+    // Set initial agent in localStorage
+    localStorage.setItem('currentEAMVUAgent', defaultAgent);
+    
+    // Fetch applications
+    fetchAssignedApplications(defaultAgent);
+    
+    // Don't show agent selector - auto-select the only agent
+    setShowAgentSelector(false);
   }, [])
 
   // Auto-select first agent if available and none selected
@@ -119,55 +107,35 @@ export default function EAMVUOfficerDashboard() {
     try {
       setLoading(true)
       
-      // First, get all EAMVU applications (this endpoint works)
-      const eamvuResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/applications/department/EAMVU`)
+      // First, get all EAMVU applications (Backend V2.0)
+      const eamvuResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/v1/applications/department/EAMVU/paginated?page=1&pageSize=100`)
       const eamvuData = await eamvuResponse.json()
       
       if (!eamvuResponse.ok) {
         throw new Error('Failed to fetch EAMVU applications')
       }
       
-      console.log('✅ Fetched EAMVU applications:', eamvuData.length)
+      const applications = eamvuData.data || []
+      console.log('✅ Fetched EAMVU applications:', applications.length)
       
-      // Get agent assignments to know which applications are assigned to this specific agent
-      const assignmentsResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/applications/test/assignments`)
-      const assignmentsData = await assignmentsResponse.json()
+      // Filter applications assigned to this agent (Backend V2.0 uses assigned_to field)
+      const assignedApplications = applications
+        .filter((app: any) => app.assigned_to === parseInt(agentId))
+        .map((app: any) => ({
+          ...app,
+          // Map Backend V2.0 field names to frontend expected names
+          applicant_name: app.applicantName || 'N/A',
+          loan_type: app.product || app.productType || 'N/A',
+          loan_amount: app.amount || 0,
+          application_type: app.productType || app.product || 'N/A',
+          assigned_at: app.updatedAt || app.submittedAt || new Date().toISOString(),
+          assigned_by: 'System'
+        }));
       
-      if (!assignmentsResponse.ok) {
-        throw new Error('Failed to fetch agent assignments')
-      }
+      console.log(`✅ Found ${assignedApplications.length} applications assigned to agent ${agentId}`)
+      console.log('📋 Mapped applications:', assignedApplications);
       
-      console.log('✅ Fetched agent assignments:', assignmentsData.assignments)
-      
-      // Get assignments for this specific agent
-      const agentAssignments = assignmentsData.assignments.filter((assignment: any) => 
-        String(assignment.agent_id) === String(agentId) && assignment.assignment_status === 'active'
-      )
-      
-      console.log('✅ Agent assignments for', agentId, ':', agentAssignments)
-      
-      // Filter EAMVU applications to only show those assigned to this specific agent
-      // Merge assignment metadata (assigned_at, assigned_by) into the EAMVU apps
-      const assignedApplications = eamvuData
-        .map((app: any) => {
-          const match = agentAssignments.find((assignment: any) => {
-            const assignedLos = Number(assignment.los_id)
-            const appLos = Number(String(app.los_id).replace('LOS-', ''))
-            return assignedLos === appLos
-          })
-          if (!match) return null
-          return {
-            ...app,
-            assigned_at: match.assigned_at,
-            assigned_by: match.assigned_by || 'EAMVU_HEAD',
-            assignment_status: match.assignment_status,
-          }
-        })
-        .filter(Boolean)
-      
-      console.log('✅ Filtered applications for agent', agentId, ':', assignedApplications.length)
-      console.log('📋 Assigned applications:', assignedApplications)
-      
+      // Backend V2.0 already has all assignment data in the application object
       setAssignedApplications(assignedApplications)
       
     } catch (error) {
@@ -199,23 +167,30 @@ export default function EAMVUOfficerDashboard() {
   const handleViewApplicationDetails = async (application: any) => {
     try {
       console.log('🔄 Fetching comprehensive form data for application:', application.los_id);
-      const losId = application.los_id.replace('LOS-', ''); // Extract numeric part
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/applications/form/${losId}`, { 
+      // Backend V2.0 returns los_id as number, not string "LOS-XX"
+      const losId = typeof application.los_id === 'number' 
+        ? application.los_id 
+        : String(application.los_id).replace('LOS-', ''); // Extract numeric part
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/v1/applications/form/${losId}`, { 
         method: 'GET', 
         headers: { 'Content-Type': 'application/json' } 
       });
       if (!response.ok) { 
         throw new Error('Failed to fetch form data'); 
       }
-      const data = await response.json();
-      console.log('✅ Form data fetched successfully:', data);
+      const response_data = await response.json();
+      console.log('✅ Form data fetched successfully:', response_data);
+      
+      // Backend V2.0 returns flat structure: { success: true, data: {...} }
+      // Convert to old format: { formData: {...} }
+      const flatData = response_data.data || response_data;
       
       // Improved age calculation
       let age = 0; 
-      if (data.formData.date_of_birth) { 
-        console.log('Raw date_of_birth:', data.formData.date_of_birth);
+      if (flatData.date_of_birth) { 
+        console.log('Raw date_of_birth:', flatData.date_of_birth);
         
-        const dob = new Date(data.formData.date_of_birth); 
+        const dob = new Date(flatData.date_of_birth); 
         const today = new Date(); 
         
         console.log('Parsed DOB:', dob);
@@ -223,7 +198,7 @@ export default function EAMVUOfficerDashboard() {
         
         // Check if the date is valid
         if (isNaN(dob.getTime())) {
-          console.error('Invalid date of birth:', data.formData.date_of_birth);
+          console.error('Invalid date of birth:', flatData.date_of_birth);
           age = 0;
         } else {
           age = today.getFullYear() - dob.getFullYear(); 
@@ -237,14 +212,27 @@ export default function EAMVUOfficerDashboard() {
           console.log('Calculated age:', age);
         }
       } else {
-        console.log('No date_of_birth found in formData');
+        console.log('No date_of_birth found in data');
       }
 
-      // Add age to the data 
-      data.formData.age = age; 
-      console.log('✅ Form data with age calculated:', data); 
+      // Create formData object with age
+      const formData = { ...flatData, age };
+      console.log('✅ Form data with age calculated:', formData); 
       
-      setSelectedApplication({ ...application, formData: data.formData });
+      // Fetch references from Backend V2.0
+      try {
+        const refsResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/v1/applications/${losId}/references`);
+        if (refsResponse.ok) {
+          const refsData = await refsResponse.json();
+          formData.references = refsData.data || [];
+          console.log('✅ Fetched references:', formData.references);
+        }
+      } catch (error) {
+        console.error('⚠️ Failed to fetch references:', error);
+        formData.references = [];
+      }
+      
+      setSelectedApplication({ ...application, formData });
       setShowApplicationDetails(true);
       setActiveTab("overview");
       
@@ -283,7 +271,9 @@ export default function EAMVUOfficerDashboard() {
     try {
       setUploadingDoc(true)
       const formData = new FormData()
-      const losIdNumeric = selectedApplication.los_id.replace('LOS-', '')
+      const losIdNumeric = typeof selectedApplication.los_id === 'number'
+        ? selectedApplication.los_id
+        : String(selectedApplication.los_id).replace('LOS-', '')
       const loanTypeSlug = mapLoanTypeToSlug(selectedApplication.loan_type)
       formData.append('file', file)
       formData.append('loanType', loanTypeSlug)
@@ -330,25 +320,30 @@ export default function EAMVUOfficerDashboard() {
 
       console.log('🔄 Completing investigation with data:', {
         losId,
-        status: 'assigned_to_eavmu_officer',
-        applicationType: getApplicationType(applicationType),
-        department: 'EAMVU_OFFICER',
-        action: 'complete',
-        agentId: currentAgent
+        status: 'eavmu_approved',
+        comments: investigationNotes
       })
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/applications/update-status-workflow`, {
-        method: 'POST',
+      // Backend V2.0: PATCH /api/v1/applications/:losId/status
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/v1/applications/${losId}/status`, {
+        method: 'PATCH',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          losId: losId,
-          status: 'assigned_to_eavmu_officer', // Current status
-          applicationType: getApplicationType(applicationType),
-          department: 'EAMVU_OFFICER',
-          action: 'complete',
-          agentId: currentAgent
+          status: 'eavmu_approved', // Move to CIU stage
+          comments: investigationNotes || 'Investigation completed by EAVMU Officer',
+          userId: parseInt(currentAgent), // Add user ID for EAVMU officer
+          department: 'EAVMU',
+          action: 'verify',
+          eavmuVerification: {
+            overall_result: 'Approved',
+            residence_verified: true,
+            workplace_verified: true,
+            verification_notes: investigationNotes || 'Investigation completed by EAVMU Officer',
+            documents_uploaded: true,
+            verification_method: 'field_visit'
+          }
         })
       })
       
@@ -357,15 +352,19 @@ export default function EAMVUOfficerDashboard() {
       if (response.ok) {
         toast({
           title: "Success",
-          description: "Investigation completed and returned to EAMVU HEAD"
+          description: "Investigation completed and forwarded to CIU"
         })
+        
+        // Clear investigation notes
+        setInvestigationNotes('')
+        setSelectedApplication(null)
         
         // Refresh applications
         fetchAssignedApplications(currentAgent)
       } else {
         toast({
           title: "Error",
-          description: data.error || "Failed to complete investigation",
+          description: data.message || data.error || "Failed to complete investigation",
           variant: "destructive"
         })
       }
@@ -398,25 +397,30 @@ export default function EAMVUOfficerDashboard() {
 
       console.log('🔄 Rejecting application with data:', {
         losId,
-        status: 'assigned_to_eavmu_officer',
-        applicationType: getApplicationType(applicationType),
-        department: 'EAMVU_OFFICER',
-        action: 'reject',
-        agentId: currentAgent
+        status: 'eavmu_rejected',
+        comments: investigationNotes
       })
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/applications/update-status-workflow`, {
-        method: 'POST',
+      // Backend V2.0: PATCH /api/v1/applications/:losId/status
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/v1/applications/${losId}/status`, {
+        method: 'PATCH',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          losId: losId,
-          status: 'assigned_to_eavmu_officer',
-          applicationType: getApplicationType(applicationType),
-          department: 'EAMVU_OFFICER',
+          status: 'eavmu_rejected', // Reject application
+          comments: investigationNotes || 'Application rejected by EAVMU Officer',
+          userId: parseInt(currentAgent), // Add user ID for EAVMU officer
+          department: 'EAVMU',
           action: 'reject',
-          agentId: currentAgent
+          eavmuVerification: {
+            overall_result: 'Rejected',
+            residence_verified: false,
+            workplace_verified: false,
+            verification_notes: investigationNotes || 'Application rejected by EAVMU Officer',
+            documents_uploaded: false,
+            verification_method: 'field_visit'
+          }
         })
       })
       
@@ -424,16 +428,20 @@ export default function EAMVUOfficerDashboard() {
       
       if (response.ok) {
         toast({
-          title: "Success",
-          description: "Application rejected and returned to EAMVU HEAD"
+          title: "Application Rejected",
+          description: "Application has been rejected"
         })
+        
+        // Clear investigation notes
+        setInvestigationNotes('')
+        setSelectedApplication(null)
         
         // Refresh applications
         fetchAssignedApplications(currentAgent)
       } else {
         toast({
           title: "Error",
-          description: data.error || "Failed to reject application",
+          description: data.message || data.error || "Failed to reject application",
           variant: "destructive"
         })
       }
@@ -732,358 +740,176 @@ export default function EAMVUOfficerDashboard() {
         </CardContent>
       </Card>
 
-      {/* Application Details Dialog */}
+      {/* Application Details Dialog - Matching PB Design */}
       {selectedApplication && (
         <Dialog open={!!selectedApplication} onOpenChange={() => setSelectedApplication(null)}>
-          <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-            <DialogHeader>
+          <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden">
+            <DialogHeader className="sticky top-0 bg-white z-10 pb-4 border-b">
               <DialogTitle>Application Details - {selectedApplication.los_id}</DialogTitle>
               <DialogDescription>
-                Comprehensive application information and investigation tools
+                Complete application information and investigation tools
               </DialogDescription>
             </DialogHeader>
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="overview">Overview</TabsTrigger>
-                <TabsTrigger value="checklist">Checklist</TabsTrigger>
-                <TabsTrigger value="comments">Comments</TabsTrigger>
-                <TabsTrigger value="workflow">Workflow</TabsTrigger>
-              </TabsList>
-              <TabsContent value="overview">
-                {selectedApplication.formData ? (
-                  <div className="space-y-6">
-                    {/* Basic Information */}
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label>LOS ID</Label>
-                        <p className="font-mono text-sm">{selectedApplication.los_id}</p>
+            {selectedApplication.formData && (
+              <div className="overflow-y-auto max-h-[calc(90vh-120px)] space-y-6 pr-2">
+                {/* Basic Information Section - 3 Column Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <User className="h-5 w-5" />
+                        Applicant Information
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="grid grid-cols-2 gap-2 text-sm">
+                        <span className="font-medium">Full Name:</span>
+                        <span>{selectedApplication.formData.first_name} {selectedApplication.formData.middle_name || ''} {selectedApplication.formData.last_name}</span>
+                        <span className="font-medium">CNIC:</span>
+                        <span className="font-mono">{selectedApplication.formData.cnic}</span>
+                        <span className="font-medium">Age:</span>
+                        <span>{selectedApplication.formData.age} years</span>
+                        <span className="font-medium">Monthly Income:</span>
+                        <span>PKR {selectedApplication.formData.monthly_income?.toLocaleString() || 'N/A'}</span>
+                        <span className="font-medium">Email:</span>
+                        <span className="text-xs">{selectedApplication.formData.email || 'N/A'}</span>
+                        <span className="font-medium">Mobile:</span>
+                        <span>{selectedApplication.formData.mobile || selectedApplication.formData.customer_mobile || 'N/A'}</span>
                       </div>
-                      <div>
-                        <Label>Applicant Name</Label>
-                        <p>{selectedApplication.applicant_name}</p>
-                      </div>
-                      <div>
-                        <Label>Loan Type</Label>
-                        <p>{selectedApplication.loan_type}</p>
-                      </div>
-                      <div>
-                        <Label>Loan Amount</Label>
-                        <p>PKR {selectedApplication.loan_amount?.toLocaleString()}</p>
-                      </div>
-                      <div>
-                        <Label>Priority</Label>
-                        <p className="capitalize">{selectedApplication.priority}</p>
-                      </div>
-                      <div>
-                        <Label>Status</Label>
-                        <p>{getStatusBadge(selectedApplication.status)}</p>
-                      </div>
-                      <div>
-                        <Label>Branch</Label>
-                        <p>{selectedApplication.branch}</p>
-                      </div>
-                      <div>
-                        <Label>Assigned Date</Label>
-                        <p>{new Date(selectedApplication.created_at).toLocaleDateString()}</p>
-                      </div>
-                  </div>
+                    </CardContent>
+                  </Card>
 
-                    {/* Dynamic Field Display - Shows ALL database fields automatically */}
-                    <DynamicFieldDisplay 
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <Banknote className="h-5 w-5" />
+                        Loan Details
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="grid grid-cols-2 gap-2 text-sm">
+                        <span className="font-medium">Loan Type:</span>
+                        <span>{selectedApplication.loan_type}</span>
+                        <span className="font-medium">Amount:</span>
+                        <span className="font-semibold text-green-600">
+                          PKR {selectedApplication.loan_amount?.toLocaleString() || selectedApplication.formData.requested_amount?.toLocaleString() || 'N/A'}
+                        </span>
+                        <span className="font-medium">Tenure:</span>
+                        <span>{selectedApplication.formData.tenure_months || selectedApplication.formData.tenure || 'N/A'} months</span>
+                        <span className="font-medium">Purpose:</span>
+                        <span>{selectedApplication.formData.purpose || 'N/A'}</span>
+                        <span className="font-medium">Status:</span>
+                        <span>{getStatusBadge(selectedApplication.status)}</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <Activity className="h-5 w-5" />
+                        Investigation Status
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="space-y-2">
+                        <div className="text-sm space-y-1">
+                          <div className="flex justify-between">
+                            <span className="font-medium">Assigned To:</span>
+                            <span>Ahmed Hassan</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="font-medium">Assigned Date:</span>
+                            <span>{new Date(selectedApplication.created_at || Date.now()).toLocaleDateString()}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="font-medium">LOS ID:</span>
+                            <span className="font-mono">{selectedApplication.los_id}</span>
+                          </div>
+                        </div>
+                        <div className="mt-2 p-2 bg-blue-50 rounded-lg">
+                          <div className="text-xs font-medium text-blue-800">Current Stage:</div>
+                          <div className="text-sm text-blue-700">{selectedApplication.status}</div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Form Data Section */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <FileText className="h-5 w-5" />
+                      Application Form Data
+                    </CardTitle>
+                    <CardDescription>
+                      Essential fields from streamlined form
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <MinimalFieldDisplay 
                       data={selectedApplication.formData}
-                      title="Complete Application Data"
-                      excludeFields={['password', 'password_hash']}
+                      title="Application Data"
+                      productType="cashplus"
                     />
+                    
+                    {/* Raw Data (for debugging) */}
+                    <details className="mt-4">
+                      <summary className="cursor-pointer text-sm font-medium text-gray-600">View Raw Data</summary>
+                      <div className="mt-2 bg-gray-50 p-4 rounded-lg">
+                        <pre className="text-xs overflow-x-auto whitespace-pre-wrap">
+                          {JSON.stringify(selectedApplication.formData, null, 2)}
+                        </pre>
+                      </div>
+                    </details>
+                  </CardContent>
+                </Card>
 
+                {/* Investigation Actions Section */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <CheckCircle className="h-5 w-5" />
+                      Investigation Actions
+                    </CardTitle>
+                    <CardDescription>
+                      Complete investigation and document findings
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
                     <div>
-                      <div className="grid grid-cols-2 gap-3 text-sm">
-                        <div><span className="font-medium">Employer Name:</span> {selectedApplication.formData.employer_name || 'Not provided'}</div>
-                        <div><span className="font-medium">Designation:</span> {selectedApplication.formData.designation || 'Not provided'}</div>
-                        <div><span className="font-medium">Grade Level:</span> {selectedApplication.formData.grade_level || 'Not provided'}</div>
-                        <div><span className="font-medium">Department:</span> {selectedApplication.formData.department || 'Not provided'}</div>
-                        <div><span className="font-medium">Office Phone 1:</span> {selectedApplication.formData.office_tel1 || 'Not provided'}</div>
-                        <div><span className="font-medium">Office Phone 2:</span> {selectedApplication.formData.office_tel2 || 'Not provided'}</div>
-                        <div><span className="font-medium">Office Fax:</span> {selectedApplication.formData.office_fax || 'Not provided'}</div>
-                        <div><span className="font-medium">Office Extension:</span> {selectedApplication.formData.office_ext || 'Not provided'}</div>
-                        <div><span className="font-medium">Office Area:</span> {selectedApplication.formData.office_area || 'Not provided'}</div>
-                        <div><span className="font-medium">Office City:</span> {selectedApplication.formData.office_city || 'Not provided'}</div>
-                        <div><span className="font-medium">Office Street:</span> {selectedApplication.formData.office_street || 'Not provided'}</div>
-                        <div><span className="font-medium">Office House No:</span> {selectedApplication.formData.office_house_no || 'Not provided'}</div>
-                        <div><span className="font-medium">Office Landmark:</span> {selectedApplication.formData.office_landmark || 'Not provided'}</div>
-                        <div><span className="font-medium">Office Postal Code:</span> {selectedApplication.formData.office_postal_code || 'Not provided'}</div>
-                        <div><span className="font-medium">SM Employee No:</span> {selectedApplication.formData.sm_employee_no || 'Not provided'}</div>
-                        <div><span className="font-medium">SO Employee No:</span> {selectedApplication.formData.so_employee_no || 'Not provided'}</div>
-                        <div><span className="font-medium">PB BM Employee No:</span> {selectedApplication.formData.pb_bm_employee_no || 'Not provided'}</div>
-                      </div>
-                    </div>
-
-                    {/* Loan Information */}
-                    <div>
-                      <h4 className="font-semibold mb-3 text-red-600">Loan Information</h4>
-                      <div className="grid grid-cols-2 gap-3 text-sm">
-                        <div><span className="font-medium">Amount Requested:</span> PKR {selectedApplication.formData.amount_requested?.toLocaleString()}</div>
-                        <div><span className="font-medium">Purpose of Loan:</span> {selectedApplication.formData.purpose_of_loan || 'Not provided'}</div>
-                        <div><span className="font-medium">Tenure:</span> {selectedApplication.formData.tenure || 'Not provided'} years</div>
-                        <div><span className="font-medium">Min Amount Acceptable:</span> {selectedApplication.formData.min_amount_acceptable ? `PKR ${selectedApplication.formData.min_amount_acceptable.toLocaleString()}` : 'Not provided'}</div>
-                        <div><span className="font-medium">Max Affordable Installment:</span> {selectedApplication.formData.max_affordable_installment ? `PKR ${selectedApplication.formData.max_affordable_installment.toLocaleString()}` : 'Not provided'}</div>
-                      </div>
-                    </div>
-
-                    {/* Financial Information */}
-                    <div>
-                      <h4 className="font-semibold mb-3 text-indigo-600">Financial Information</h4>
-                      <div className="grid grid-cols-2 gap-3 text-sm">
-                        <div><span className="font-medium">Gross Monthly Salary:</span> {selectedApplication.formData.gross_monthly_salary ? `PKR ${selectedApplication.formData.gross_monthly_salary.toLocaleString()}` : 'Not provided'}</div>
-                        <div><span className="font-medium">Net Monthly Income:</span> {selectedApplication.formData.net_monthly_income ? `PKR ${selectedApplication.formData.net_monthly_income.toLocaleString()}` : 'Not provided'}</div>
-                        <div><span className="font-medium">Other Monthly Income:</span> {selectedApplication.formData.other_monthly_income ? `PKR ${selectedApplication.formData.other_monthly_income.toLocaleString()}` : 'Not provided'}</div>
-                        <div><span className="font-medium">Other Income Sources:</span> {selectedApplication.formData.other_income_sources || 'Not provided'}</div>
-                        <div><span className="font-medium">Monthly Rent:</span> {selectedApplication.formData.monthly_rent ? `PKR ${selectedApplication.formData.monthly_rent.toLocaleString()}` : 'Not provided'}</div>
-                        <div><span className="font-medium">Account Number:</span> {selectedApplication.formData.account_number || 'Not provided'}</div>
-                        <div><span className="font-medium">Is Existing Customer:</span> {selectedApplication.formData.is_existing_customer ? 'Yes' : 'No'}</div>
-                        <div><span className="font-medium">Customer ID:</span> {selectedApplication.formData.customer_id || 'Not provided'}</div>
-                        <div><span className="font-medium">Accommodation Type:</span> {selectedApplication.formData.accommodation_type || 'Not provided'}</div>
-                        <div><span className="font-medium">Dependants:</span> {selectedApplication.formData.dependants || 'Not provided'}</div>
-                        <div><span className="font-medium">Experience (Current):</span> {selectedApplication.formData.exp_current_years || 'Not provided'} years</div>
-                        <div><span className="font-medium">Experience (Previous):</span> {selectedApplication.formData.exp_prev_years || 'Not provided'} years</div>
-                        <div><span className="font-medium">Previous Employer:</span> {selectedApplication.formData.prev_employer_name || 'Not provided'}</div>
-                      </div>
-                    </div>
-
-                    {/* Credit Cards Clean */}
-                    {selectedApplication.formData.credit_cards_clean && selectedApplication.formData.credit_cards_clean.length > 0 && (
-                      <div>
-                        <h4 className="font-semibold mb-3 text-emerald-600">Clean Credit Cards</h4>
-                        <div className="space-y-3">
-                          {selectedApplication.formData.credit_cards_clean.map((card: any, index: number) => (
-                            <div key={card.id} className="border rounded-lg p-3 bg-green-50">
-                              <div className="grid grid-cols-2 gap-2 text-sm">
-                                <div><span className="font-medium">Bank Name:</span> {card.bank_name}</div>
-                                <div><span className="font-medium">Approved Limit:</span> PKR {card.approved_limit?.toLocaleString()}</div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Credit Cards Secured */}
-                    {selectedApplication.formData.credit_cards_secured && selectedApplication.formData.credit_cards_secured.length > 0 && (
-                      <div>
-                        <h4 className="font-semibold mb-3 text-amber-600">Secured Credit Cards</h4>
-                        <div className="space-y-3">
-                          {selectedApplication.formData.credit_cards_secured.map((card: any, index: number) => (
-                            <div key={card.id} className="border rounded-lg p-3 bg-yellow-50">
-                              <div className="grid grid-cols-2 gap-2 text-sm">
-                                <div><span className="font-medium">Bank Name:</span> {card.bank_name}</div>
-                                <div><span className="font-medium">Approved Limit:</span> PKR {card.approved_limit?.toLocaleString()}</div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Personal Loans Secured */}
-                    {selectedApplication.formData.personal_loans_secured && selectedApplication.formData.personal_loans_secured.length > 0 && (
-                      <div>
-                        <h4 className="font-semibold mb-3 text-red-600">Secured Personal Loans</h4>
-                        <div className="space-y-3">
-                          {selectedApplication.formData.personal_loans_secured.map((loan: any, index: number) => (
-                            <div key={loan.id} className="border rounded-lg p-3 bg-red-50">
-                              <div className="grid grid-cols-2 gap-2 text-sm">
-                                <div><span className="font-medium">Bank Name:</span> {loan.bank_name}</div>
-                                <div><span className="font-medium">Approved Limit:</span> PKR {loan.approved_limit?.toLocaleString()}</div>
-                                <div><span className="font-medium">Outstanding Amount:</span> PKR {loan.outstanding_amount?.toLocaleString()}</div>
-                                <div><span className="font-medium">As of Date:</span> {loan.as_of}</div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Other Facilities */}
-                    {selectedApplication.formData.other_facilities && selectedApplication.formData.other_facilities.length > 0 && (
-                      <div>
-                        <h4 className="font-semibold mb-3 text-blue-600">Other Banking Facilities</h4>
-                        <div className="space-y-3">
-                          {selectedApplication.formData.other_facilities.map((facility: any, index: number) => (
-                            <div key={facility.id} className="border rounded-lg p-3 bg-blue-50">
-                              <div className="grid grid-cols-2 gap-2 text-sm">
-                                <div><span className="font-medium">Nature:</span> {facility.nature}</div>
-                                <div><span className="font-medium">Bank Name:</span> {facility.bank_name}</div>
-                                <div><span className="font-medium">Approved Limit:</span> PKR {facility.approved_limit?.toLocaleString()}</div>
-                                <div><span className="font-medium">Current Outstanding:</span> PKR {facility.current_outstanding?.toLocaleString()}</div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* References */}
-                    {selectedApplication.formData.references && selectedApplication.formData.references.length > 0 && (
-                      <div>
-                        <h4 className="font-semibold mb-3 text-teal-600">References</h4>
-                        <div className="space-y-3">
-                          {selectedApplication.formData.references.map((ref: any, index: number) => (
-                            <div key={ref.id} className="border rounded-lg p-3 bg-gray-50">
-                              <div className="font-medium text-sm mb-2">Reference {index + 1}</div>
-                              <div className="grid grid-cols-2 gap-2 text-sm">
-                                <div><span className="font-medium">Name:</span> {ref.name || 'Not provided'}</div>
-                                <div><span className="font-medium">Relationship:</span> {ref.relationship || 'Not provided'}</div>
-                                <div><span className="font-medium">Mobile:</span> {ref.mobile || 'Not provided'}</div>
-                                <div><span className="font-medium">CNIC:</span> {ref.cnic || 'Not provided'}</div>
-                                <div><span className="font-medium">Address:</span> {ref.street}, {ref.city}</div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Investigation Notes Section */}
-                    <div className="space-y-4">
-                      <Label>Investigation Notes</Label>
+                      <Label htmlFor="investigation-notes">Investigation Notes</Label>
                       <Textarea
+                        id="investigation-notes"
                         value={investigationNotes}
                         onChange={(e) => setInvestigationNotes(e.target.value)}
-                        placeholder="Enter your investigation findings, verification status, field visit notes, etc..."
-                        rows={6}
+                        placeholder="Enter your investigation findings and notes here..."
+                        rows={5}
+                        className="mt-2"
                       />
                     </div>
-
-                    {/* Action Buttons */}
-                    <div className="flex justify-between">
-                      <div className="flex gap-2">
-                        <Button 
-                          variant="outline"
-                          onClick={() => setShowDocuments(true)}
-                        >
-                          <FileText className="h-4 w-4 mr-2" />
-                          View Documents
-                        </Button>
-                        <input
-                          ref={fileInputRef}
-                          type="file"
-                          accept="application/pdf,image/*,.doc,.docx,.xls,.xlsx,.txt"
-                          hidden
-                          onChange={(e) => {
-                            const file = e.target.files?.[0]
-                            if (file) handleUploadEamvuDoc(file)
-                          }}
-                        />
-                        <Button variant="outline" onClick={() => fileInputRef.current?.click()} disabled={uploadingDoc}>
-                          {uploadingDoc ? 'Uploading…' : 'Upload to EAMVU Docs'}
-                        </Button>
-                        <Button variant="outline">
-                          <MapPin className="h-4 w-4 mr-2" />
-                          Field Visit
-                        </Button>
-                        <Button variant="outline">
-                          <Camera className="h-4 w-4 mr-2" />
-                          Add Photos
-                        </Button>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button 
-                          variant="default" 
-                          onClick={() => handleCompleteInvestigation(extractLosId(selectedApplication.los_id), selectedApplication.application_type)}
-                        >
-                          <CheckCircle className="h-4 w-4 mr-2" />
-                          Complete Investigation
-                        </Button>
-                        <Button 
-                          variant="destructive"
-                          onClick={() => handleRejectApplication(extractLosId(selectedApplication.los_id), selectedApplication.application_type)}
-                          disabled={!investigationNotes.trim()}
-                        >
-                          <ThumbsDown className="h-4 w-4 mr-2" />
-                          Reject Application
-                        </Button>
-                      </div>
+                    <div className="flex gap-3">
+                      <Button
+                        onClick={() => handleCompleteInvestigation(String(selectedApplication.los_id).replace('LOS-', ''), selectedApplication.application_type)}
+                        className="flex-1"
+                      >
+                        <CheckCircle className="h-4 w-4 mr-2" />
+                        Complete Investigation
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        onClick={() => handleRejectApplication(String(selectedApplication.los_id).replace('LOS-', ''), selectedApplication.application_type)}
+                        className="flex-1"
+                      >
+                        <ThumbsDown className="h-4 w-4 mr-2" />
+                        Reject Application
+                      </Button>
                     </div>
-                  </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <Clock className="h-8 w-8 animate-spin mx-auto mb-4 text-muted-foreground" />
-                    <p className="text-muted-foreground">Loading comprehensive application data...</p>
-                  </div>
-                )}
-              </TabsContent>
-              <TabsContent value="checklist">
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">Application Checklist</h3>
-                                     <div className="grid grid-cols-2 gap-2">
-                     {Object.entries(selectedApplication.checklist || {}).map(([key, value]) => (
-                       <div key={key} className="flex items-center space-x-2">
-                         <Checkbox id={key} checked={Boolean(value)} disabled />
-                         <Label htmlFor={key}>{key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</Label>
-                       </div>
-                     ))}
-                   </div>
-                  <Progress value={getCompletionPercentage(selectedApplication)} className="mt-4" />
-                  <p className="text-sm text-muted-foreground">
-                    {getCompletionPercentage(selectedApplication)}% of checklist completed
-                  </p>
-                </div>
-              </TabsContent>
-              <TabsContent value="comments">
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">Investigation Comments</h3>
-                  {selectedApplication.comments && selectedApplication.comments.length > 0 ? (
-                    <ul className="space-y-2">
-                      {selectedApplication.comments.map((comment: any, index: number) => (
-                        <li key={index} className="bg-gray-50 p-2 rounded-md">
-                          <p className="font-medium">{comment.comment_by}:</p>
-                          <p>{comment.comment_text}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {new Date(comment.created_at).toLocaleDateString()}
-                          </p>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p>No comments yet for this application.</p>
-                  )}
-                  <div className="mt-4">
-                    <Label>Add New Comment</Label>
-                    <Textarea
-                      value={investigationNotes}
-                      onChange={(e) => setInvestigationNotes(e.target.value)}
-                      placeholder="Enter your comment..."
-                      rows={3}
-                    />
-                    <Button 
-                      variant="outline" 
-                      onClick={() => handleAddInvestigationNotes(extractLosId(selectedApplication.los_id), investigationNotes)}
-                      className="mt-2"
-                      disabled={!investigationNotes.trim()}
-                    >
-                      Add Comment
-                    </Button>
-                  </div>
-                </div>
-              </TabsContent>
-              <TabsContent value="workflow">
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">Application Workflow</h3>
-                  <div className="bg-gray-100 p-4 rounded-md">
-                    <p className="font-medium">Current Stage: {getWorkflowStage(selectedApplication).current}</p>
-                    <Progress value={getWorkflowStage(selectedApplication).progress} className="mt-2" />
-                    <p className="text-sm text-muted-foreground">
-                      Progress: {getWorkflowStage(selectedApplication).progress.toFixed(0)}%
-                    </p>
-                    <p className="mt-2">Next Stage: {getWorkflowStage(selectedApplication).next}</p>
-                  </div>
-                </div>
-              </TabsContent>
-            </Tabs>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setSelectedApplication(null)}>
-                Close
-              </Button>
-            </DialogFooter>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
           </DialogContent>
         </Dialog>
       )}

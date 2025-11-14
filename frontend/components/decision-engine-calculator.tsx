@@ -9,6 +9,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { parseEcibData, formatForDecisionEngine, extractLegacyMetrics } from "@/utils/ecibDataParser"
 import { 
   Calculator, 
   Upload, 
@@ -30,6 +31,7 @@ import {
   Award
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import { getApiUrl } from "@/lib/losIdHelper"
 
 interface DecisionEngineCalculatorProps {
   losId: string
@@ -92,42 +94,160 @@ export default function DecisionEngineCalculator({
   const [savingDecision, setSavingDecision] = useState(false)
   const [notes, setNotes] = useState("")
 
+  // Auto-load application data on mount
+  useEffect(() => {
+    if (losId) {
+      loadApplicationData()
+    }
+  }, [losId])
+
   // Load application data
   const loadApplicationData = async () => {
     try {
       setLoading(true)
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/decision/application-data/${losId}`)
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
       
-      if (!response.ok) {
+      // Backend V2.0: Get form data with documents
+      const formResponse = await fetch(`${apiUrl}/api/v1/applications/form/${losId}`)
+      if (!formResponse.ok) {
         throw new Error('Failed to load application data')
       }
 
-      const data = await response.json()
-      setApplicationData(data)
+      const formData = await formResponse.json()
+      setApplicationData(formData.data)
       
       // Log loaded data for debugging
       console.log('═'.repeat(80))
       console.log('📥 APPLICATION DATA LOADED:')
       console.log('═'.repeat(80))
-      console.log('LOS ID:', data.los_id)
-      console.log('Application Type:', data.application_type)
-      console.log('Application Data:', data.application_data)
-      console.log('ILOS Flags:', data.ilos_flags)
+      console.log('LOS ID:', losId)
+      console.log('Full Data Structure:', formData.data)
+      console.log('CNIC:', formData.data?.cnic)
+      console.log('Income:', formData.data?.gross_monthly_income)
+      console.log('DOB:', formData.data?.date_of_birth)
+      console.log('City:', formData.data?.curr_city || formData.data?.city)
+      console.log('Documents:', formData.data?.documents)
       console.log('═'.repeat(80))
-      
-      // Check if decision already exists
-      if (data.has_existing_decision && data.existing_decision) {
-        setSavedDecision(data.existing_decision)
-        toast({
-          title: "Existing Decision Found",
-          description: `Previous decision: ${data.existing_decision.decision} (Score: ${data.existing_decision.final_score})`,
-        })
-      }
 
       toast({
-        title: "Success",
-        description: "Application data loaded successfully",
+        title: "✅ Application Data Loaded",
+        description: "Checking for eCIB document in FileZilla...",
       })
+
+      // ALWAYS try to fetch eCIB from FileZilla directory (ignore database metadata)
+      // This is the most reliable way since documents are physically stored there
+      if (formData.success) {
+        // Map product_type to FileZilla folder structure
+        const productTypeMap: Record<string, string> = {
+          'personal_loan': 'cashplus',
+          'cashplus': 'cashplus',
+          'auto_loan': 'autoloan',
+          'autoloan': 'autoloan',
+          'commercial_vehicle': 'commercialvehicle',
+          'smeasaan': 'smeasaan',
+          'ameendrive': 'ameendrive'
+        }
+        
+        const rawProductType = formData.data.product_type || 'cashplus'
+        const productType = productTypeMap[rawProductType.toLowerCase()] || rawProductType.toLowerCase()
+        
+        console.log('🔍 Checking for eCIB in FileZilla')
+        console.log('   Raw product type:', rawProductType, '→ Mapped to:', productType)
+        
+        try {
+          setUploadingEcib(true)
+          toast({
+            title: "🔄 Checking for eCIB...",
+            description: "Looking for existing eCIB document",
+          })
+
+          // First, check if eCIB file exists via list-files API
+          const listFilesUrl = `http://localhost:8086/list-files?loan_type=${productType}&los_id=${losId}`
+          console.log('   Checking files at:', listFilesUrl)
+          
+          const listResponse = await fetch(listFilesUrl)
+          if (!listResponse.ok) {
+            throw new Error('FileZilla server not available')
+          }
+
+          const filesData = await listResponse.json()
+          const ecibFile = filesData.files?.find((f: any) => 
+            f.name.toLowerCase().includes('ecib') && f.name.toLowerCase().endsWith('.pdf')
+          )
+
+          if (!ecibFile) {
+            throw new Error('No eCIB file found')
+          }
+
+          console.log('✅ Found eCIB file:', ecibFile.name)
+          
+          toast({
+            title: "🔄 Auto-Processing eCIB",
+            description: "OCR analysis in progress... This may take a few seconds",
+          })
+
+          // Fetch the actual file content via Document Server's /files/ endpoint
+          const fileReadUrl = `http://localhost:8086/files/${productType}/los-${losId}/${encodeURIComponent(ecibFile.name)}`
+          console.log('   Fetching file from:', fileReadUrl)
+          
+          const fileResponse = await fetch(fileReadUrl)
+          
+          if (!fileResponse.ok) {
+            throw new Error(`Could not read eCIB file: ${fileResponse.statusText}`)
+          }
+
+          const pdfBlob = await fileResponse.blob()
+          const pdfFile = new File([pdfBlob], ecibFile.name, { type: 'application/pdf' })
+
+          // Upload to OCR service
+          const formDataUpload = new FormData()
+          formDataUpload.append('ecib_pdf', pdfFile)
+          formDataUpload.append('losId', losId)
+
+          const ocrResponse = await fetch(`${apiUrl}/api/decision/upload-ecib`, {
+            method: 'POST',
+            body: formDataUpload
+          })
+
+          if (!ocrResponse.ok) {
+            throw new Error('eCIB OCR processing failed')
+          }
+
+          const ocrResult = await ocrResponse.json()
+          
+          // Parse new eCIB format (array of sections) or fallback to old format
+          let processedEcibData = ocrResult.ecib_data;
+          if (Array.isArray(ocrResult.ecib_data)) {
+            console.log('📊 Parsing new eCIB format...');
+            const parsed = parseEcibData(ocrResult.ecib_data);
+            processedEcibData = formatForDecisionEngine(parsed);
+            console.log('✅ Parsed eCIB:', processedEcibData);
+          }
+          
+          setEcibData(processedEcibData)
+          setEcibFileName(ocrResult.file_name)
+
+          console.log('✅ eCIB Auto-Uploaded and Processed:', ocrResult)
+
+          toast({
+            title: "✅ eCIB Auto-Uploaded",
+            description: `Processed in ${ocrResult.processing_time} • Auto-calculating decision...`,
+          })
+
+          setUploadingEcib(false)
+
+          // Auto-calculate decision after 1 second
+          setTimeout(() => {
+            calculateDecision()
+          }, 1000)
+
+        } catch (ecibError: any) {
+          console.log('ℹ️ No eCIB found in FileZilla for LOS-', losId)
+          setUploadingEcib(false)
+          // Silently fail - user can manually upload if needed
+        }
+      }
+
     } catch (error: any) {
       toast({
         title: "Error",
@@ -159,14 +279,15 @@ export default function DecisionEngineCalculator({
       // Show processing toast
       toast({
         title: "Processing ECIB PDF",
-        description: "OCR analysis in progress... This may take 30-60 seconds",
+        description: "OCR analysis in progress... This may take 5-10 seconds",
       })
       
       const formData = new FormData()
       formData.append('ecib_pdf', file)
       formData.append('losId', losId)
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/decision/upload-ecib`, {
+      const apiUrl = getApiUrl()
+      const response = await fetch(`${apiUrl}/api/decision/upload-ecib`, {
         method: 'POST',
         body: formData
       })
@@ -177,7 +298,17 @@ export default function DecisionEngineCalculator({
       }
 
       const result = await response.json()
-      setEcibData(result.ecib_data)
+      
+      // Parse new eCIB format (array of sections) or fallback to old format
+      let processedEcibData = result.ecib_data;
+      if (Array.isArray(result.ecib_data)) {
+        console.log('📊 Parsing new eCIB format from manual upload...');
+        const parsed = parseEcibData(result.ecib_data);
+        processedEcibData = formatForDecisionEngine(parsed);
+        console.log('✅ Parsed eCIB:', processedEcibData);
+      }
+      
+      setEcibData(processedEcibData)
       setEcibFileName(result.file_name)
 
       // Log ECIB data to console for debugging
@@ -222,18 +353,16 @@ export default function DecisionEngineCalculator({
 
       const payload = {
         losId,
-        applicationData: {
-          ...applicationData.application_data,
-          application_type: applicationData.application_type,
-          ...applicationData.ilos_flags
-        },
+        applicationData: applicationData, // Send complete application data directly
         ecibData,
         ecibFileName,
         calculatedBy: 'CIU_OFFICER',
         notes
       }
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/decision/calculate`, {
+      // Use Backend V2.0 for decision calculation
+      const apiUrl = getApiUrl()
+      const response = await fetch(`${apiUrl}/api/decision/calculate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -344,7 +473,8 @@ export default function DecisionEngineCalculator({
         notes
       }
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/decision/save`, {
+      const apiUrl = getApiUrl()
+      const response = await fetch(`${apiUrl}/api/decision/save`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(dbRecord)
@@ -412,8 +542,17 @@ export default function DecisionEngineCalculator({
     }
   }
 
-  // Get score color
+  // Get score badge classes with proper contrast
   const getScoreColor = (score: number) => {
+    if (score >= 80) return "bg-emerald-100 text-emerald-800 border-emerald-200"
+    if (score >= 60) return "bg-green-100 text-green-800 border-green-200"
+    if (score >= 40) return "bg-amber-100 text-amber-800 border-amber-200"
+    if (score >= 20) return "bg-orange-100 text-orange-800 border-orange-200"
+    return "bg-red-100 text-red-800 border-red-200"
+  }
+
+  // Get text color for large score display (not badges)
+  const getScoreTextColor = (score: number) => {
     if (score >= 80) return "text-emerald-600"
     if (score >= 60) return "text-green-600"
     if (score >= 40) return "text-amber-600"
@@ -421,13 +560,26 @@ export default function DecisionEngineCalculator({
     return "text-red-600"
   }
 
-  // Load data on mount - ALWAYS load from API to get correct format
+  // Load data on mount - Use provided applicationData if available
   useEffect(() => {
-    if (!loading && !applicationData) {
-      console.log('🔄 Auto-loading application data for LOS-' + losId)
-      loadApplicationData()
+    if (applicationData && Object.keys(applicationData).length > 0) {
+      console.log('✅ Using provided application data for LOS-' + losId)
+      setApplicationData(applicationData)
+      
+      // Check if eCIB was already uploaded in PB stage
+      if (applicationData.documents?.ecib) {
+        console.log('✅ eCIB already uploaded in PB stage - auto-loading')
+        setEcibFileName(applicationData.documents.ecib.fileName || 'ecib.pdf')
+        setEcibData(applicationData.documents.ecib.ocrData || applicationData.documents.ecib)
+        toast({
+          title: "eCIB Found",
+          description: "eCIB report was already uploaded in PB stage",
+        })
+      }
+    } else {
+      console.log('⚠️ No application data provided - decision engine will use manual inputs')
     }
-  }, [losId]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [losId, applicationData]) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="space-y-6">
@@ -467,11 +619,11 @@ export default function DecisionEngineCalculator({
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div>
                 <Label className="text-xs text-gray-500">Applicant Name</Label>
-                <p className="font-medium">
+                <p className="font-medium text-gray-900">
                   {(() => {
-                    const fullName = applicationData.application_data?.full_name || applicationData.application_data?.applicant_name
-                    const firstName = applicationData.application_data?.first_name || applicationData.application_data?.applicant_first_name
-                    const lastName = applicationData.application_data?.last_name || applicationData.application_data?.applicant_last_name
+                    const fullName = applicationData.applicant_name || applicationData.full_name || applicationData.application_data?.full_name
+                    const firstName = applicationData.first_name || applicationData.application_data?.first_name
+                    const lastName = applicationData.last_name || applicationData.application_data?.last_name
                     
                     if (fullName) {
                       return fullName
@@ -485,50 +637,52 @@ export default function DecisionEngineCalculator({
               </div>
               <div>
                 <Label className="text-xs text-gray-500">CNIC</Label>
-                <p className="font-medium">{applicationData.application_data?.nic_or_passport || applicationData.application_data?.cnic || applicationData.application_data?.nic || applicationData.application_data?.applicant_cnic || <span className="text-gray-400 italic">Not provided</span>}</p>
+                <p className="font-medium text-gray-900">{applicationData.cnic || applicationData.applicant_cnic || applicationData.application_data?.cnic || <span className="text-gray-400 italic">Not provided</span>}</p>
               </div>
               <div>
                 <Label className="text-xs text-gray-500">Application Type</Label>
-                <p className="font-medium">{applicationData.application_type || <span className="text-gray-400 italic">Unknown</span>}</p>
+                <p className="font-medium text-gray-900">{applicationData.product_type || applicationData.application_type || <span className="text-gray-400 italic">Unknown</span>}</p>
               </div>
               <div>
                 <Label className="text-xs text-gray-500">Monthly Income</Label>
-                <p className="font-medium">
+                <p className="font-medium text-gray-900">
                   {(() => {
-                    const income = applicationData.application_data?.total_income || 
-                                   applicationData.application_data?.gross_monthly_income || 
-                                   applicationData.application_data?.net_monthly_income || 
-                                   applicationData.application_data?.monthly_income
+                    const income = applicationData.gross_monthly_income || 
+                                   applicationData.total_income || 
+                                   applicationData.net_monthly_income || 
+                                   applicationData.monthly_income ||
+                                   applicationData.application_data?.total_income
                     return income ? `PKR ${parseFloat(income).toLocaleString()}` : <span className="text-gray-400 italic">Not provided</span>
                   })()}
                 </p>
               </div>
               <div>
                 <Label className="text-xs text-gray-500">Loan/Card Limit</Label>
-                <p className="font-medium">
+                <p className="font-medium text-gray-900">
                   {(() => {
-                    const amount = applicationData.application_data?.amount_requested || 
-                                   applicationData.application_data?.loan_amount || 
-                                   applicationData.application_data?.proposed_loan_amount ||
-                                   applicationData.application_data?.desired_limit
+                    const amount = applicationData.requested_amount || 
+                                   applicationData.proposed_loan_amount || 
+                                   applicationData.amount_requested || 
+                                   applicationData.loan_amount ||
+                                   applicationData.application_data?.amount_requested
                     return amount ? `PKR ${parseFloat(amount).toLocaleString()}` : <span className="text-gray-400 italic">Not specified</span>
                   })()}
                 </p>
               </div>
               <div>
                 <Label className="text-xs text-gray-500">City</Label>
-                <p className="font-medium">{applicationData.application_data?.curr_city || applicationData.application_data?.city || applicationData.application_data?.permanent_city || applicationData.application_data?.perm_city || <span className="text-gray-400 italic">Not provided</span>}</p>
+                <p className="font-medium text-gray-900">{applicationData.curr_city || applicationData.permanent_city || applicationData.city || applicationData.application_data?.city || <span className="text-gray-400 italic">Not provided</span>}</p>
               </div>
               <div>
                 <Label className="text-xs text-gray-500">Employment</Label>
-                <p className="font-medium">{applicationData.application_data?.employment_status || applicationData.application_data?.occupation || applicationData.application_data?.employment_type || <span className="text-gray-400 italic">Not provided</span>}</p>
+                <p className="font-medium text-gray-900">{applicationData.employment_type || applicationData.employment_status || applicationData.occupation || applicationData.application_data?.employment_status || <span className="text-gray-400 italic">Not provided</span>}</p>
               </div>
               <div>
                 <Label className="text-xs text-gray-500">EAMVU Status</Label>
-                {applicationData.ilos_flags?.eavmu_submitted ? (
-                  <Badge className="bg-green-100 text-green-800">Approved</Badge>
+                {applicationData.eavmu_submitted || applicationData.ilos_flags?.eavmu_submitted ? (
+                  <Badge className="bg-green-100 text-green-800 font-medium">Approved</Badge>
                 ) : (
-                  <Badge className="bg-gray-100 text-gray-800">Pending</Badge>
+                  <Badge className="bg-amber-100 text-amber-800 font-medium">Pending</Badge>
                 )}
               </div>
             </div>
@@ -536,63 +690,72 @@ export default function DecisionEngineCalculator({
         </Card>
       )}
 
-      {/* ECIB Upload Card */}
-      <Card className="border-teal-100">
-        <CardHeader className="bg-teal-50/50">
-          <CardTitle className="text-lg text-teal-800 flex items-center gap-2">
-            <FileText className="w-5 h-5" />
-            ECIB Report Upload
-          </CardTitle>
-          <CardDescription>
-            Upload ECIB PDF for enhanced credit analysis (Optional)
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="pt-6">
-          <div className="flex items-center gap-4">
-            <div className="flex-1">
-              <Label htmlFor="ecib-upload" className="cursor-pointer">
-                <div className="border-2 border-dashed border-teal-200 rounded-lg p-6 hover:border-teal-400 transition-colors">
-                  <div className="flex flex-col items-center gap-2">
-                    {uploadingEcib ? (
-                      <>
-                        <Loader2 className="w-8 h-8 animate-spin text-teal-600" />
-                        <p className="text-sm text-teal-600 font-medium">Processing OCR...</p>
-                        <p className="text-xs text-gray-500">This may take 30-60 seconds</p>
-                      </>
-                    ) : (
-                      <>
-                        <Upload className="w-8 h-8 text-teal-600" />
-                        <p className="text-sm text-gray-600">
-                          {ecibFileName || "Click to upload ECIB PDF"}
-                        </p>
-                        {ecibFileName && (
-                          <p className="text-xs text-teal-600">✓ Ready for calculation</p>
-                        )}
-                      </>
-                    )}
+      {/* ECIB Upload Card - Only show if not already uploaded */}
+      {!ecibData ? (
+        <Card className="border-teal-100">
+          <CardHeader className="bg-teal-50/50">
+            <CardTitle className="text-lg text-teal-800 flex items-center gap-2">
+              <FileText className="w-5 h-5" />
+              ECIB Report Upload
+            </CardTitle>
+            <CardDescription>
+              Upload ECIB PDF for enhanced credit analysis (Optional)
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-4">
+              <div className="flex-1">
+                <Label htmlFor="ecib-upload" className="cursor-pointer">
+                  <div className="border-2 border-dashed border-teal-200 rounded-lg p-6 hover:border-teal-400 transition-colors">
+                    <div className="flex flex-col items-center gap-2">
+                      {uploadingEcib ? (
+                        <>
+                          <Loader2 className="w-8 h-8 animate-spin text-teal-600" />
+                          <p className="text-sm text-teal-600 font-medium">Processing OCR...</p>
+                          <p className="text-xs text-gray-500">This may take 5-10 seconds</p>
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="w-8 h-8 text-teal-600" />
+                          <p className="text-sm text-gray-600">
+                            {ecibFileName || "Click to upload ECIB PDF"}
+                          </p>
+                          {ecibFileName && (
+                            <p className="text-xs text-teal-600">✓ Ready for calculation</p>
+                          )}
+                        </>
+                      )}
+                    </div>
                   </div>
-                </div>
-                <Input
-                  id="ecib-upload"
-                  type="file"
-                  accept="application/pdf"
-                  className="hidden"
-                  onChange={handleEcibUpload}
-                  disabled={uploadingEcib}
-                />
-              </Label>
-            </div>
-            {ecibData && (
-              <div className="flex-shrink-0">
-                <Badge className="bg-green-100 text-green-800">
-                  <CheckCircle className="w-3 h-3 mr-1" />
-                  ECIB Uploaded
-                </Badge>
+                  <Input
+                    id="ecib-upload"
+                    type="file"
+                    accept="application/pdf"
+                    className="hidden"
+                    onChange={handleEcibUpload}
+                    disabled={uploadingEcib}
+                  />
+                </Label>
               </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card className="border-green-100 bg-green-50/30">
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-3">
+              <CheckCircle className="w-5 h-5 text-green-600" />
+              <div className="flex-1">
+                <p className="text-sm font-medium text-green-800">eCIB Already Uploaded</p>
+                <p className="text-xs text-green-600">Loaded from PB documents - {ecibFileName || 'eCIB.pdf'}</p>
+              </div>
+              <Badge className="bg-green-100 text-green-800">
+                ✓ Auto-Loaded
+              </Badge>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Calculate Button */}
       <div className="flex gap-4">
@@ -648,7 +811,7 @@ export default function DecisionEngineCalculator({
               <div className="space-y-6">
                 {/* Score Display */}
                 <div className="text-center">
-                  <div className={`text-6xl font-bold ${getScoreColor(decisionResult.final_score)}`}>
+                  <div className={`text-6xl font-bold ${getScoreTextColor(decisionResult.final_score)}`}>
                     {decisionResult.final_score.toFixed(2)}
                   </div>
                   <p className="text-gray-500 mt-2">Final Score (out of 100)</p>
@@ -686,85 +849,102 @@ export default function DecisionEngineCalculator({
             <CardContent className="pt-6">
               <div className="space-y-4">
                 {/* DBR Module */}
-                <div className="space-y-2">
+                <div className="space-y-2 p-4 rounded-lg bg-gray-50/50 border border-gray-100">
                   <div className="flex justify-between items-center">
-                    <div>
-                      <Label className="text-sm font-medium">Debt Burden Ratio (DBR)</Label>
-                      <p className="text-xs text-gray-500">Weight: 55%</p>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <Label className="text-sm font-semibold text-gray-900">Debt Burden Ratio (DBR)</Label>
+                        <span className="text-xs text-gray-500 font-normal">• Weight: 55%</span>
+                      </div>
                     </div>
-                    <Badge className={getScoreColor(decisionResult.modules.dbr.score)}>
+                    <Badge className={`${getScoreColor(decisionResult.modules.dbr.score)} text-sm px-3 py-1`}>
                       {decisionResult.modules.dbr.score}/100
                     </Badge>
                   </div>
-                  <Progress value={decisionResult.modules.dbr.score} className="h-2" />
-                  <p className="text-xs text-gray-600">{decisionResult.modules.dbr.notes.join(', ')}</p>
+                  <Progress value={decisionResult.modules.dbr.score} className="h-2.5" />
+                  <details className="text-xs text-gray-600 mt-2">
+                    <summary className="cursor-pointer hover:text-gray-900 font-medium">View Details</summary>
+                    <ul className="mt-2 space-y-1 pl-4 list-disc">
+                      {decisionResult.modules.dbr.notes.map((note: string, idx: number) => (
+                        <li key={idx}>{note}</li>
+                      ))}
+                    </ul>
+                  </details>
                 </div>
 
                 {/* Age Module */}
-                <div className="space-y-2">
+                <div className="space-y-2 p-4 rounded-lg bg-gray-50/50 border border-gray-100">
                   <div className="flex justify-between items-center">
-                    <div>
-                      <Label className="text-sm font-medium">Age</Label>
-                      <p className="text-xs text-gray-500">Weight: 5%</p>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <Label className="text-sm font-semibold text-gray-900">Age</Label>
+                        <span className="text-xs text-gray-500 font-normal">• Weight: 5%</span>
+                      </div>
                     </div>
-                    <Badge className={getScoreColor(decisionResult.modules.age.score)}>
+                    <Badge className={`${getScoreColor(decisionResult.modules.age.score)} text-sm px-3 py-1`}>
                       {decisionResult.modules.age.score}/100
                     </Badge>
                   </div>
-                  <Progress value={decisionResult.modules.age.score} className="h-2" />
+                  <Progress value={decisionResult.modules.age.score} className="h-2.5" />
                   {decisionResult.modules.age.notes && decisionResult.modules.age.notes.length > 0 && (
-                    <p className="text-xs text-gray-600">{decisionResult.modules.age.notes.join(', ')}</p>
+                    <p className="text-xs text-gray-600 mt-2">{decisionResult.modules.age.notes.join(', ')}</p>
                   )}
                 </div>
 
                 {/* City Module */}
-                <div className="space-y-2">
+                <div className="space-y-2 p-4 rounded-lg bg-gray-50/50 border border-gray-100">
                   <div className="flex justify-between items-center">
-                    <div>
-                      <Label className="text-sm font-medium">City</Label>
-                      <p className="text-xs text-gray-500">Weight: 5%</p>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <Label className="text-sm font-semibold text-gray-900">City</Label>
+                        <span className="text-xs text-gray-500 font-normal">• Weight: 5%</span>
+                      </div>
                     </div>
-                    <Badge className={getScoreColor(decisionResult.modules.city.score)}>
+                    <Badge className={`${getScoreColor(decisionResult.modules.city.score)} text-sm px-3 py-1`}>
                       {decisionResult.modules.city.score}/100
                     </Badge>
                   </div>
-                  <Progress value={decisionResult.modules.city.score} className="h-2" />
+                  <Progress value={decisionResult.modules.city.score} className="h-2.5" />
                   {decisionResult.modules.city.notes && decisionResult.modules.city.notes.length > 0 && (
-                    <p className="text-xs text-gray-600">{decisionResult.modules.city.notes.join(', ')}</p>
+                    <p className="text-xs text-gray-600 mt-2">{decisionResult.modules.city.notes.join(', ')}</p>
                   )}
                 </div>
 
                 {/* Income Module */}
-                <div className="space-y-2">
+                <div className="space-y-2 p-4 rounded-lg bg-gray-50/50 border border-gray-100">
                   <div className="flex justify-between items-center">
-                    <div>
-                      <Label className="text-sm font-medium">Income</Label>
-                      <p className="text-xs text-gray-500">Weight: 10%</p>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <Label className="text-sm font-semibold text-gray-900">Income</Label>
+                        <span className="text-xs text-gray-500 font-normal">• Weight: 10%</span>
+                      </div>
                     </div>
-                    <Badge className={getScoreColor(decisionResult.modules.income.score)}>
+                    <Badge className={`${getScoreColor(decisionResult.modules.income.score)} text-sm px-3 py-1`}>
                       {decisionResult.modules.income.score}/100
                     </Badge>
                   </div>
-                  <Progress value={decisionResult.modules.income.score} className="h-2" />
+                  <Progress value={decisionResult.modules.income.score} className="h-2.5" />
                   {decisionResult.modules.income.notes && decisionResult.modules.income.notes.length > 0 && (
-                    <p className="text-xs text-gray-600">{decisionResult.modules.income.notes.join(', ')}</p>
+                    <p className="text-xs text-gray-600 mt-2">{decisionResult.modules.income.notes.join(', ')}</p>
                   )}
                 </div>
 
                 {/* SPU Module */}
-                <div className="space-y-2">
+                <div className="space-y-2 p-4 rounded-lg bg-gray-50/50 border border-gray-100">
                   <div className="flex justify-between items-center">
-                    <div>
-                      <Label className="text-sm font-medium">SPU Checks</Label>
-                      <p className="text-xs text-gray-500">Weight: 5%</p>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <Label className="text-sm font-semibold text-gray-900">SPU Checks</Label>
+                        <span className="text-xs text-gray-500 font-normal">• Weight: 5%</span>
+                      </div>
                     </div>
-                    <Badge className={getScoreColor(decisionResult.modules.spu.score)}>
+                    <Badge className={`${getScoreColor(decisionResult.modules.spu.score)} text-sm px-3 py-1`}>
                       {decisionResult.modules.spu.score}/100
                     </Badge>
                   </div>
-                  <Progress value={decisionResult.modules.spu.score} className="h-2" />
+                  <Progress value={decisionResult.modules.spu.score} className="h-2.5" />
                   {decisionResult.modules.spu.flags && decisionResult.modules.spu.flags.length > 0 && (
-                    <div className="flex gap-2 flex-wrap">
+                    <div className="flex gap-2 flex-wrap mt-2">
                       {decisionResult.modules.spu.flags.map((flag: string, idx: number) => (
                         <Badge key={idx} variant="destructive" className="text-xs">
                           {flag}
@@ -775,65 +955,81 @@ export default function DecisionEngineCalculator({
                 </div>
 
                 {/* EAMVU Module */}
-                <div className="space-y-2">
+                <div className="space-y-2 p-4 rounded-lg bg-gray-50/50 border border-gray-100">
                   <div className="flex justify-between items-center">
-                    <div>
-                      <Label className="text-sm font-medium">EAMVU Verification</Label>
-                      <p className="text-xs text-gray-500">Weight: 5%</p>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <Label className="text-sm font-semibold text-gray-900">EAMVU Verification</Label>
+                        <span className="text-xs text-gray-500 font-normal">• Weight: 5%</span>
+                      </div>
                     </div>
-                    <Badge className={getScoreColor(decisionResult.modules.eamvu.score)}>
+                    <Badge className={`${getScoreColor(decisionResult.modules.eamvu.score)} text-sm px-3 py-1`}>
                       {decisionResult.modules.eamvu.score}/100
                     </Badge>
                   </div>
-                  <Progress value={decisionResult.modules.eamvu.score} className="h-2" />
+                  <Progress value={decisionResult.modules.eamvu.score} className="h-2.5" />
                   {decisionResult.modules.eamvu.notes && decisionResult.modules.eamvu.notes.length > 0 && (
-                    <p className="text-xs text-gray-600">{decisionResult.modules.eamvu.notes.join(', ')}</p>
+                    <p className="text-xs text-gray-600 mt-2">{decisionResult.modules.eamvu.notes.join(', ')}</p>
                   )}
                 </div>
 
                 {/* Application Score (if available) */}
                 {decisionResult.modules.application_score && (
-                  <div className="space-y-2">
+                  <div className="space-y-2 p-4 rounded-lg bg-gradient-to-br from-blue-50 to-indigo-50/50 border border-blue-100">
                     <div className="flex justify-between items-center">
-                      <div>
-                        <Label className="text-sm font-medium">Application Scorecard</Label>
-                        <p className="text-xs text-gray-500">Weight: 15%</p>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <Label className="text-sm font-semibold text-gray-900">Application Scorecard</Label>
+                          <span className="text-xs text-blue-600 font-normal">• Weight: 15%</span>
+                        </div>
                       </div>
-                      <Badge className={getScoreColor(decisionResult.modules.application_score.score)}>
+                      <Badge className={`${getScoreColor(decisionResult.modules.application_score.score)} text-sm px-3 py-1`}>
                         {decisionResult.modules.application_score.score}/100
                       </Badge>
                     </div>
-                    <Progress value={decisionResult.modules.application_score.score} className="h-2" />
+                    <Progress value={decisionResult.modules.application_score.score} className="h-2.5" />
                     {decisionResult.modules.application_score.notes && decisionResult.modules.application_score.notes.length > 0 && (
-                      <p className="text-xs text-gray-600">{decisionResult.modules.application_score.notes.join(', ')}</p>
+                      <details className="text-xs text-gray-600 mt-2">
+                        <summary className="cursor-pointer hover:text-gray-900 font-medium">View Details</summary>
+                        <ul className="mt-2 space-y-1 pl-4 list-disc">
+                          {decisionResult.modules.application_score.notes.map((note: string, idx: number) => (
+                            <li key={idx}>{note}</li>
+                          ))}
+                        </ul>
+                      </details>
                     )}
                   </div>
                 )}
 
                 {/* Behavioral Score (if available) */}
                 {decisionResult.modules.behavioral_score && (
-                  <div className="space-y-2">
+                  <div className="space-y-2 p-4 rounded-lg bg-gradient-to-br from-purple-50 to-pink-50/50 border border-purple-100">
                     <div className="flex justify-between items-center">
-                      <div>
-                        <Label className="text-sm font-medium">Behavioral Scorecard</Label>
-                        <p className="text-xs text-gray-500">Weight: {decisionResult.modules.behavioral_score.score === 0 ? '0% (NTB)' : '5%'}</p>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <Label className="text-sm font-semibold text-gray-900">Behavioral Scorecard</Label>
+                          <span className="text-xs text-purple-600 font-normal">• Weight: {decisionResult.modules.behavioral_score.score === 0 ? '0% (NTB)' : '5%'}</span>
+                        </div>
                       </div>
-                      <Badge className={getScoreColor(decisionResult.modules.behavioral_score.score)}>
+                      <Badge className={`${getScoreColor(decisionResult.modules.behavioral_score.score)} text-sm px-3 py-1`}>
                         {decisionResult.modules.behavioral_score.score}/100
                       </Badge>
                     </div>
-                    <Progress value={decisionResult.modules.behavioral_score.score} className="h-2" />
+                    <Progress value={decisionResult.modules.behavioral_score.score} className="h-2.5" />
                     {decisionResult.modules.behavioral_score.notes && decisionResult.modules.behavioral_score.notes.length > 0 && (
-                      <div className="bg-gray-50 border border-gray-200 rounded-md p-2 mt-2">
-                        <p className="text-xs text-gray-600">
-                          {decisionResult.modules.behavioral_score.notes.join(', ')}
-                          {decisionResult.modules.behavioral_score.score === 0 && (
-                            <span className="block mt-1 text-blue-600 font-medium">
-                              ℹ️ Note: Behavioral scoring only applies to ETB (Existing To Bank) customers with existing banking history.
-                            </span>
-                          )}
-                        </p>
-                      </div>
+                      <details className="text-xs text-gray-600 mt-2">
+                        <summary className="cursor-pointer hover:text-gray-900 font-medium">View Details</summary>
+                        <ul className="mt-2 space-y-1 pl-4 list-disc">
+                          {decisionResult.modules.behavioral_score.notes.map((note: string, idx: number) => (
+                            <li key={idx}>{note}</li>
+                          ))}
+                        </ul>
+                        {decisionResult.modules.behavioral_score.score === 0 && (
+                          <p className="mt-2 text-blue-600 font-medium">
+                            ℹ️ Note: Behavioral scoring only applies to ETB (Existing To Bank) customers with existing banking history.
+                          </p>
+                        )}
+                      </details>
                     )}
                   </div>
                 )}

@@ -1,0 +1,116 @@
+{
+  "automation": {
+    "enabled": true,
+    "version": "1.0.0",
+    "description": "Automated ILOS workflow configuration"
+  },
+  "features": {
+    "autoSpuChecks": {
+      "enabled": true,
+      "description": "Automatically run SPU compliance checks on PB submission",
+      "endpoints": [
+        "PEP check",
+        "SBP blacklist",
+        "NADRA Verisys",
+        "Internal watchlist",
+        "Consumer companies list"
+      ],
+      "autoReject": true,
+      "autoRejectReason": "Found in compliance watchlist"
+    },
+    "autoAssignment": {
+      "enabled": true,
+      "description": "Automatically assign applications to available EAVMU officers",
+      "algorithm": "round-robin-load-balanced",
+      "queueingEnabled": true,
+      "maxQueueTime": 60,
+      "maxQueueTimeUnit": "minutes"
+    },
+    "autoForwarding": {
+      "enabled": true,
+      "description": "Auto-forward to CIU after EAVMU officer completes work",
+      "bypass": [
+        "EAVMU_HEAD",
+        "COPS"
+      ]
+    },
+    "autoDisbursement": {
+      "enabled": true,
+      "description": "Auto-disburse/issue card after CIU approval",
+      "bypass": [
+        "COPS_FINALIZATION"
+      ],
+      "productMappings": {
+        "CashPlus": "loan_disbursement",
+        "AutoLoan": "loan_disbursement",
+        "SMEASAAN": "loan_disbursement",
+        "CommercialVehicle": "loan_disbursement",
+        "AmeenDrive": "loan_disbursement",
+        "PlatinumCreditCard": "card_issuance",
+        "ClassicCreditCard": "card_issuance"
+      },
+      "fallbackToManual": true
+    }
+  },
+  "monitoring": {
+    "enabled": true,
+    "logLevel": "info",
+    "statsRetentionDays": 90,
+    "alertsEnabled": true,
+    "alerts": {
+      "queueBacklog": {
+        "threshold": 10,
+        "action": "notify"
+      },
+      "automationErrors": {
+        "threshold": 5,
+        "timeWindow": "1 hour",
+        "action": "notify"
+      },
+      "longQueueTime": {
+        "threshold": 60,
+        "unit": "minutes",
+        "action": "notify"
+      }
+    }
+  },
+  "fallback": {
+    "manualOverrideEnabled": true,
+    "description": "Allow manual intervention for edge cases",
+    "overrideRoles": [
+      "ADMIN",
+      "SPU_SUPERVISOR",
+      "EAVMU_HEAD",
+      "CIU_HEAD"
+    ]
+  },
+  "performance": {
+    "targetCompletionTime": 24,
+    "targetCompletionTimeUnit": "hours",
+    "maxConcurrentWorkflows": 100
+  },
+  "integrations": {
+    "cbsApi": {
+      "enabled": false,
+      "url": "http://localhost:5000/api/cbs",
+      "description": "Core Banking System integration for actual disbursement"
+    },
+    "cardManagementApi": {
+      "enabled": false,
+      "url": "http://localhost:5000/api/card-management",
+      "description": "Card Management System integration"
+    },
+    "blockchainService": {
+      "enabled": true,
+      "url": "http://localhost:5004",
+      "description": "Blockchain service for audit trail"
+    }
+  },
+  "queueProcessing": {
+    "enabled": true,
+    "schedule": "*/5 * * * *",
+    "description": "Process queued applications every 5 minutes",
+    "batchSize": 10
+  }
+}
+

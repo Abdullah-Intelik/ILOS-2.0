@@ -16,7 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Progress } from "@/components/ui/progress"
 import { useToast } from "@/hooks/use-toast"
 import DocumentExplorer from "@/components/document-explorer"
-import { DynamicFieldDisplay } from "@/components/dynamic-field-display"
+import { MinimalFieldDisplay } from "@/components/minimal-field-display"
 import { 
   Eye, 
   Plus, 
@@ -42,10 +42,12 @@ import {
   Copy,
   Paperclip,
   Flag,
-  FolderOpen
+  FolderOpen,
+  Smartphone
 } from "lucide-react"
 import Link from "next/link";
 import { fetchDepartmentPaginated } from "@/lib/api";
+import MobileSubmissionsComponent from "../mobile-submissions/page";
 
 
 
@@ -473,7 +475,7 @@ export default function MyApplicationsPage() {
       console.log('🔄 Starting to fetch applications...');
       
       // prefer Next API to avoid CORS/env differences
-      const res = await fetch(`${getBaseUrl()}/api/applications/department/PB/paginated?page=${page}&pageSize=${pageSize}`, { cache: 'no-store' });
+      const res = await fetch(`${getBaseUrl()}/api/v1/applications/department/PB/paginated?page=${page}&pageSize=${pageSize}`, { cache: 'no-store' });
       if (!res.ok) throw new Error('Failed to fetch applications');
       const result = await res.json();
       const data = result?.data || [];
@@ -494,14 +496,18 @@ export default function MyApplicationsPage() {
       
       // Ensure all application types are properly mapped
       const mappedApplications = data.map((app: any, index: number) => ({
-        id: app.los_id || app.id || `ILOS-${String(index + 1).padStart(6, '0')}`,
-        applicantName: app.applicantName || app.applicant_name || 'Unknown Applicant',
-        loanType: app.application_type || app.loanType || app.loan_type || 'Personal Loan',
-        amount: "PKR " + (app.loan_amount ? app.loan_amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : '-'),
+        id: app.id || `LOS-${app.los_id}` || `ILOS-${String(index + 1).padStart(6, '0')}`,
+        los_id: app.los_id,
+        applicantName: app.customer_name || app.applicantName || app.applicant_name || 'Unknown Applicant', // Backend V2.0 uses 'customer_name'
+        loanType: app.product_type || app.application_type || app.loanType || app.loan_type || 'Personal Loan', // Backend V2.0 uses 'product_type'
+        // Backend V2.0 returns: amount, requested_amount (not loan_amount)
+        amount: "PKR " + ((app.amount || app.requested_amount || app.loan_amount) ? 
+          (app.amount || app.requested_amount || app.loan_amount).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : '-'),
         status: app.status || 'draft',
         priority: app.priority || 'medium',
-        submittedDate: app.created_at || app.submittedDate || app.submitted_date || new Date().toISOString(),
-        lastUpdate: app.updated_at || app.lastUpdate || app.last_update || app.created_at || new Date().toISOString(),
+        // Backend V2.0 returns proper timestamps
+        submittedDate: app.created_at || app.submitted_at || app.submittedAt || app.submittedDate || app.submitted_date,
+        lastUpdate: app.updated_at || app.updatedAt || app.lastUpdate || app.last_update || app.created_at,
         completionPercentage: calculateProgressPercentage(app.status || 'draft'),
         branch: app.branch || 'Main Branch',
         // Mock data for fields not in database
@@ -778,7 +784,7 @@ export default function MyApplicationsPage() {
       console.log(application);
       const losIdstr = application.id.replace('LOS-', '');
       const losId = parseInt(losIdstr);
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/applications/form/${losId}`, {
+      const response = await fetch(`${getBaseUrl()}/api/v1/applications/form/${losId}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -789,44 +795,83 @@ export default function MyApplicationsPage() {
         throw new Error('Failed to fetch form data');
       }
       
-      const data = await response.json();
-    // Improved age calculation
-    let age = 0; 
-    if (data.formData.date_of_birth) { 
-      console.log('Raw date_of_birth:', data.formData.date_of_birth);
+      const result = await response.json();
       
-      const dob = new Date(data.formData.date_of_birth); 
-      const today = new Date(); 
+      // Backend V2.0 returns flat structure: { success: true, data: {...} }
+      const appData = result.data;
       
-      console.log('Parsed DOB:', dob);
-      console.log('Today:', today);
-      
-      // Check if the date is valid
-      if (isNaN(dob.getTime())) {
-        console.error('Invalid date of birth:', data.formData.date_of_birth);
-        age = 0;
-      } else {
-        age = today.getFullYear() - dob.getFullYear(); 
-        
-        // Check if birthday hasn't occurred this year yet
-        const monthDiff = today.getMonth() - dob.getMonth();
-        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) { 
-          age--; 
-        }
-        
-        console.log('Calculated age:', age);
+      if (!appData) {
+        throw new Error('No application data returned');
       }
-    } else {
-      console.log('No date_of_birth found in formData');
-    }
+      
+      console.log('✅ Raw application data from Backend V2.0:', appData);
+    
+      // Calculate age from date_of_birth
+      let age = 0; 
+      if (appData.date_of_birth) { 
+        console.log('Raw date_of_birth:', appData.date_of_birth);
+        
+        const dob = new Date(appData.date_of_birth); 
+        const today = new Date(); 
+        
+        console.log('Parsed DOB:', dob);
+        console.log('Today:', today);
+        
+        // Check if the date is valid
+        if (isNaN(dob.getTime())) {
+          console.error('Invalid date of birth:', appData.date_of_birth);
+          age = 0;
+        } else {
+          age = today.getFullYear() - dob.getFullYear(); 
+          
+          // Check if birthday hasn't occurred this year yet
+          const monthDiff = today.getMonth() - dob.getMonth();
+          if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) { 
+            age--; 
+          }
+          
+          console.log('Calculated age:', age);
+        }
+      } else {
+        console.log('⚠️ No date_of_birth found in application data');
+      }
 
-    // Add age to the data 
-    data.formData.age = age; 
-    console.log('✅ Form data fetched successfully:', data); 
+      // Add age to the data 
+      appData.age = age; 
+      
+      console.log('✅ Form data processed successfully (V2.0):', {
+        los_id: appData.los_id,
+        cnic: appData.cnic,
+        name: appData.customer_name,
+        first_name: appData.first_name,
+        last_name: appData.last_name,
+        age: age,
+        gender: appData.gender,
+        product_type: appData.product_type,
+        purpose: appData.purpose,
+        requested_amount: appData.requested_amount
+      });
+      
+      // Fetch references separately (Backend V2.0 doesn't include them by default)
+      try {
+        const referencesResponse = await fetch(`${getBaseUrl()}/api/v1/applications/${losId}/references`);
+        if (referencesResponse.ok) {
+          const refsResult = await referencesResponse.json();
+          const references = refsResult.data || refsResult || [];
+          appData.references = references;
+          console.log('📋 Loaded references:', references);
+        }
+      } catch (refError) {
+        console.warn('⚠️ Failed to load references:', refError);
+      }
+      
       // Update the selected application with the fetched form data
+      // Backend V2.0 uses flat structure, map to formData for compatibility
       setSelectedApplication({
         ...application,
-        formData: data.formData
+        ...appData,  // Spread all V2.0 fields
+        formData: appData,  // Also keep as formData for legacy components
+        loanType: appData.product_type || application.loanType // Ensure loanType is set for DocumentExplorer
       });
       
       toast({
@@ -1201,8 +1246,15 @@ export default function MyApplicationsPage() {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger className="w-full" value="applications">Applications</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger className="w-full" value="applications">
+            <FileText className="h-4 w-4 mr-2" />
+            Applications
+          </TabsTrigger>
+          <TabsTrigger className="w-full" value="mobile">
+            <Smartphone className="h-4 w-4 mr-2" />
+            📱 Mobile App Submissions
+          </TabsTrigger>
           {/* <TabsTrigger value="analytics">Analytics</TabsTrigger>
           <TabsTrigger value="documents">Documents</TabsTrigger> */}
         </TabsList>
@@ -1391,17 +1443,21 @@ export default function MyApplicationsPage() {
                                         <CardContent className="space-y-3">
                                             <div className="grid grid-cols-2 gap-2 text-sm">
                                               <span className="font-medium">Loan Type:</span>
-                                              <span>{selectedApplication.loanType}</span>
+                                              <span>{selectedApplication.product_type || selectedApplication.loanType}</span>
                                               <span className="font-medium">Amount:</span>
-                                              <span className="font-semibold text-green-600">{selectedApplication.amount}</span>
+                                              <span className="font-semibold text-green-600">
+                                                PKR {selectedApplication.requested_amount 
+                                                  ? Number(selectedApplication.requested_amount).toLocaleString() 
+                                                  : '-'}
+                                              </span>
                                               <span className="font-medium">Status:</span>
-                                              <span>{getStatusBadge(selectedApplication.formData.status)}</span>
+                                              <span>{getStatusBadge(selectedApplication.status)}</span>
                                               <span className="font-medium">Risk Level:</span>
-                                              <span>{getRiskLevelBadge(selectedApplication.formData.risk_level)}</span>
+                                              <span>{getRiskLevelBadge(selectedApplication.risk_level)}</span>
                                               <span className="font-medium">Priority:</span>
-                                              <span>{getPriorityBadge(selectedApplication.formData.priority)}</span>
+                                              <span>{getPriorityBadge(selectedApplication.priority)}</span>
                                               <span className="font-medium">Processing Time:</span>
-                                              <span>{selectedApplication.formData.estimated_processing_time}</span>
+                                              <span>{selectedApplication.estimated_processing_time || selectedApplication.processing_time_hours ? `${selectedApplication.processing_time_hours} hours` : 'N/A'}</span>
                                             </div>
                                         </CardContent>
                                       </Card>
@@ -1505,22 +1561,22 @@ export default function MyApplicationsPage() {
                                                                          {/* Form Data Section */}
                                      {selectedApplication.formData && (
                                        <Card>
-                                         <CardHeader>
-                                           <CardTitle className="text-lg flex items-center gap-2">
-                                             <FileText className="h-5 w-5" />
-                                             Application Form Data
-                                           </CardTitle>
-                                           <CardDescription>
-                                             Complete form data retrieved from database
-                                           </CardDescription>
-                                         </CardHeader>
-                                         <CardContent>
-                                           {/* Dynamic Field Display - Shows ALL database fields automatically */}
-                                           <DynamicFieldDisplay 
-                                             data={selectedApplication.formData}
-                                             title="Complete Application Data"
-                                             excludeFields={['password', 'password_hash']}
-                                           />
+                                        <CardHeader>
+                                          <CardTitle className="text-lg flex items-center gap-2">
+                                            <FileText className="h-5 w-5" />
+                                            Application Form Data
+                                          </CardTitle>
+                                          <CardDescription>
+                                            Essential fields from streamlined form (Industry Standard)
+                                          </CardDescription>
+                                        </CardHeader>
+                                        <CardContent>
+                                          {/* ✅ Minimal Field Display - Shows ONLY essential fields from research */}
+                                          <MinimalFieldDisplay 
+                                            data={selectedApplication.formData}
+                                            title="Application Data"
+                                            productType="cashplus"
+                                          />
 
                                            <div className="space-y-6 mt-6">
                                              {/* Raw Data (for debugging) */}
@@ -2044,6 +2100,10 @@ export default function MyApplicationsPage() {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="mobile" className="space-y-4">
+          <MobileSubmissionsComponent />
         </TabsContent>
       </Tabs>
     </div>

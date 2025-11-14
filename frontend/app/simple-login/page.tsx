@@ -6,7 +6,7 @@ export default function SimpleLogin() {
     localStorage.setItem('userRole', 'pb');
     
     // Redirect to dashboard
-    window.location.href = '/dashboard/pb';
+    window.location.href = '/dashboard/pb/applications';
   };
 
   return (

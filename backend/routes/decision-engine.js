@@ -130,7 +130,7 @@ router.post('/upload-ecib', upload.single('ecib_pdf'), async (req, res) => {
     console.log('═'.repeat(100));
     console.log(`📄 File: ${req.file.originalname}`);
     console.log(`📏 Size: ${(req.file.size / 1024).toFixed(2)} KB`);
-    console.log(`🔄 Processing with OCR AI (this may take 30-60 seconds)...`);
+    console.log(`🔄 Processing with OCR AI (this may take 5-10 seconds)...`);
     console.log('');
 
     // Create form data for OCR API

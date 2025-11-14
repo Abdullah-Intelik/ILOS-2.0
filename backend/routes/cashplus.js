@@ -5,6 +5,12 @@ const db = require('../db1');
 // Import blockchain hash functions
 const { createFormHashAfterSubmission } = require('./blockchain-hash');
 
+// Import field mapper for mobile app compatibility
+const { mapMobileAppFields } = require('../utils/fieldMapper');
+
+// Import mobile submission handler
+const { handleMobileSubmission, isMobileAppSubmission } = require('../utils/mobileSubmissionHandler');
+
 // --- Add this sanitizer at the top ---
 function sanitizeNumericFields(obj, numericKeys = []) {
   if (Array.isArray(obj)) {
@@ -179,9 +185,26 @@ router.get('/by-customer/:customer_id', async (req, res) => {
 
 // POST a new cashplus application (main + child tables)
 router.post('/', async (req, res) => {
+  console.log('🔵 POST /api/cashplus RECEIVED');
+  console.log('🔍 BEFORE mapping - mobileSubmissionLosId:', req.body.mobileSubmissionLosId);
+  
+  // --- MAP MOBILE APP FIELDS (camelCase) TO BACKEND FIELDS (snake_case) ---
+  req.body = mapMobileAppFields(req.body);
+  
+  console.log('🔍 AFTER mapping - mobileSubmissionLosId:', req.body.mobileSubmissionLosId);
+  
+  // --- LOG DOCUMENTS OBJECT FOR DEBUGGING ---
+  if (req.body.documents) {
+    console.log('📄 Documents object received:', Object.keys(req.body.documents).filter(k => req.body.documents[k]));
+  } else {
+    console.log('⚠️ No documents object in request body');
+  }
+  
   // --- SANITIZE NUMERIC AND BOOLEAN FIELDS ---
   req.body = sanitizeNumericFields(req.body, numericKeys);
   req.body = sanitizeBooleanFields(req.body, booleanKeys);
+  
+  console.log('🔍 AFTER sanitize - mobileSubmissionLosId:', req.body.mobileSubmissionLosId);
   
   // Special handling for smallint fields
   for (const key of smallintKeys) {
@@ -222,37 +245,117 @@ router.post('/', async (req, res) => {
     });
   }
 
+  // 📱 CHECK IF THIS IS A MOBILE APP SUBMISSION (Non-Instant Loan)
+  const isMobileSubmission = isMobileAppSubmission(req.body);
+  
+  if (isMobileSubmission) {
+    console.log('📱 Detected mobile app submission for CashPlus - will create pending_pb_completion status');
+  }
+
+  // 📱 CHECK IF THIS IS PB COMPLETING A MOBILE SUBMISSION
+  console.log('🔍 Backend: Checking for mobileSubmissionLosId in request body...');
+  console.log('📋 req.body.mobileSubmissionLosId:', req.body.mobileSubmissionLosId);
+  console.log('📋 req.body keys:', Object.keys(req.body).filter(k => k.includes('mobile') || k.includes('Mobile')));
+  
+  const mobileSubmissionLosId = req.body.mobileSubmissionLosId;
+  const isCompletingMobileSubmission = !!mobileSubmissionLosId;
+  
+  if (isCompletingMobileSubmission) {
+    console.log(`📝 PB is completing mobile submission LOS-${mobileSubmissionLosId} - will UPDATE existing application`);
+  } else {
+    console.log('ℹ️ No mobileSubmissionLosId found - will INSERT new application');
+  }
+
   const client = await db.connect();
   try {
     await client.query('BEGIN');
 
-    // 1. Insert main application
+    let application;
+    let applicationId;
+
+    // 1. Insert OR Update main application
     const fields = [
       "customer_id", "loan_type", "amount_requested", "min_amount_acceptable", "max_affordable_installment", "tenure",
       "is_ubl_existing_customer", "branch", "account", "purpose_of_loan", "purpose_of_loan_other",
       "title", "first_name", "middle_name", "last_name", "cnic", "ntn", "date_of_birth", "gender", "marital_status", "dependants",
       "education_qualification", "education_qualification_other", "father_or_husband_name", "mother_maiden_name", "employment_status", "address", "nearest_landmark", "city", "postal_code", "residing_since", "accommodation_type", "accommodation_type_other", "monthly_rent", "preferred_mailing_address",
       "permanent_house_no", "permanent_street", "permanent_city", "permanent_postal_code",
-      "tel_current", "tel_permanent", "mobile", "mobile_type", "other_contact",
+      "tel_current", "tel_permanent", "mobile", "email", "mobile_type", "other_contact",
       "company_name", "company_type", "company_type_other", "department", "designation", "grade_level", "exp_current_years", "prev_employer_name", "exp_prev_years",
       "office_house_no", "office_street", "office_area", "office_landmark", "office_city", "office_postal_code", "office_fax", "office_tel1", "office_tel2", "office_ext",
       "gross_monthly_salary", "other_monthly_income", "net_monthly_income", "other_income_sources",
       "is_ubl_customer", "ubl_account_number",
       "applicant_signature", "applicant_signature_date",
-      "application_source", "channel_code", "so_employee_no", "program_code", "pb_bm_employee_no", "branch_code", "sm_employee_no", "bm_signature_stamp"
+      "application_source", "channel_code", "so_employee_no", "program_code", "pb_bm_employee_no", "branch_code", "sm_employee_no", "bm_signature_stamp",
+      "documents" // ✅ Added documents field to store OCR data
     ];
-    const values = fields.map(field => req.body[field]);
-    const placeholders = fields.map((_, idx) => `$${idx + 1}`).join(', ');
-    const insertQuery = `
-      INSERT INTO cashplus_applications (${fields.join(', ')})
-      VALUES (${placeholders})
-      RETURNING *;
-    `;
-    const result = await client.query(insertQuery, values);
-    const application = result.rows[0];
-    const applicationId = application.id;
+    const values = fields.map(field => {
+      // Handle JSONB field (documents)
+      if (field === 'documents' && req.body[field]) {
+        return JSON.stringify(req.body[field]);
+      }
+      return req.body[field];
+    });
 
-    // 2. Insert into child tables
+    if (isCompletingMobileSubmission) {
+      // UPDATE existing application
+      const setClause = fields.map((field, idx) => `${field} = $${idx + 2}`).join(', ');
+      const updateQuery = `
+        UPDATE cashplus_applications
+        SET ${setClause}
+        WHERE id = $1
+        RETURNING *;
+      `;
+      const result = await client.query(updateQuery, [mobileSubmissionLosId, ...values]);
+      application = result.rows[0];
+      applicationId = mobileSubmissionLosId; // Use the existing ID
+      console.log(`✅ Updated existing application LOS-${applicationId} with PB-completed data`);
+    } else {
+      // INSERT new application
+      const placeholders = fields.map((_, idx) => `$${idx + 1}`).join(', ');
+      const insertQuery = `
+        INSERT INTO cashplus_applications (${fields.join(', ')})
+        VALUES (${placeholders})
+        RETURNING *;
+      `;
+      const result = await client.query(insertQuery, values);
+      application = result.rows[0];
+      applicationId = application.id;
+      console.log(`✅ Inserted new application LOS-${applicationId}`);
+    }
+
+    // 2. Insert into child tables (or replace if updating)
+    
+    // If updating, delete old child records first
+    if (isCompletingMobileSubmission) {
+      console.log(`🗑️ Deleting old child records for LOS-${applicationId}...`);
+      
+      // Delete from each child table, gracefully handling missing tables using SAVEPOINTS
+      const childTables = [
+        'cashplus_credit_cards_clean',
+        'cashplus_credit_cards_secured',
+        'cashplus_personal_loans_existing',
+        'cashplus_other_facilities',
+        'cashplus_personal_loans_under_process',
+        'cashplus_references',
+        'cashplus_documents_hash'
+      ];
+      
+      for (const table of childTables) {
+        try {
+          // Use SAVEPOINT to prevent transaction abort
+          await client.query(`SAVEPOINT delete_${table}`);
+          await client.query(`DELETE FROM ${table} WHERE application_id = $1`, [applicationId]);
+          await client.query(`RELEASE SAVEPOINT delete_${table}`);
+        } catch (deleteError) {
+          // Table might not exist, rollback to savepoint and continue
+          await client.query(`ROLLBACK TO SAVEPOINT delete_${table}`);
+          console.log(`⚠️ Could not delete from ${table}: ${deleteError.message}`);
+        }
+      }
+      
+      console.log(`✅ Old child records deleted`);
+    }
 
     // Clean credit cards
     if (Array.isArray(req.body.credit_cards_clean)) {
@@ -327,24 +430,86 @@ router.post('/', async (req, res) => {
    
     // Note: ilos_applications record is automatically created by database trigger
     
-    // Update application status to PB_SUBMITTED after successful submission
-    try {
-      await client.query(`SELECT update_status_by_los_id($1, 'PB_SUBMITTED')`, [applicationId]);
-      console.log(`✅ Status updated to PB_SUBMITTED for application ${applicationId}`);
-    } catch (statusError) {
-      console.error(`❌ Error updating status for application ${applicationId}:`, statusError.message);
-    }
+    // 📱 HANDLE MOBILE SUBMISSION vs WEB SUBMISSION
+    if (isMobileSubmission) {
+      // For mobile submissions, set status to pending_pb_completion
+      console.log(`📱 Mobile submission detected - setting status to pending_pb_completion`);
+      
+      try {
+        await client.query(`SELECT update_status_by_los_id($1, 'pending_pb_completion')`, [applicationId]);
+        console.log(`✅ Status updated to pending_pb_completion for mobile submission ${applicationId}`);
+      } catch (statusError) {
+        console.error(`❌ Error updating status for application ${applicationId}:`, statusError.message);
+      }
 
-    // Ensure a registry row exists (in case trigger didn’t fire for any reason)
-    try {
-      await client.query(
-        `INSERT INTO ilos_applications (los_id, loan_type, cnic, customer_id, status)
-         VALUES ($1, 'cashplus_applications', $2, $3, 'PB_SUBMITTED')
-         ON CONFLICT (los_id) DO NOTHING`,
-        [applicationId, application.cnic || null, application.customer_id || null]
-      );
-    } catch (e) {
-      console.error('⚠️ Fallback insert to ilos_applications failed:', e.message);
+      // Save mobile submission data and documents
+      try {
+        await client.query(`
+          INSERT INTO ilos_applications 
+          (los_id, loan_type, cnic, customer_id, status, submitted_from_mobile, mobile_submission_data, mobile_documents)
+          VALUES ($1, 'cashplus_applications', $2, $3, 'pending_pb_completion', true, $4, $5)
+          ON CONFLICT (los_id) DO UPDATE SET
+            status = 'pending_pb_completion',
+            submitted_from_mobile = true,
+            mobile_submission_data = $4,
+            mobile_documents = $5,
+            updated_at = NOW()
+        `, [
+          applicationId, 
+          application.cnic || null, 
+          application.customer_id || null,
+          JSON.stringify(req.body),
+          JSON.stringify(req.body.documents || {})
+        ]);
+        console.log(`✅ Mobile submission data saved for LOS-${applicationId}`);
+      } catch (e) {
+        console.error('⚠️ Failed to save mobile submission data:', e.message);
+      }
+
+      // ❌ DO NOT trigger automation for mobile submissions
+      console.log(`📱 Automation SKIPPED for mobile submission LOS-${applicationId} - awaiting PB completion`);
+      
+    } else {
+      // For web/PB submissions, use normal flow
+      if (isCompletingMobileSubmission) {
+        console.log(`📝 PB completed mobile submission LOS-${applicationId} - triggering automation`);
+      }
+      
+      try {
+        await client.query(`SELECT update_status_by_los_id($1, 'PB_SUBMITTED')`, [applicationId]);
+        console.log(`✅ Status updated to PB_SUBMITTED for application ${applicationId}`);
+      } catch (statusError) {
+        console.error(`❌ Error updating status for application ${applicationId}:`, statusError.message);
+      }
+
+      // Ensure a registry row exists (in case trigger didn't fire for any reason)
+      try {
+        await client.query(
+          `INSERT INTO ilos_applications (los_id, loan_type, cnic, customer_id, status)
+           VALUES ($1, 'cashplus_applications', $2, $3, 'PB_SUBMITTED')
+           ON CONFLICT (los_id) DO NOTHING`,
+          [applicationId, application.cnic || null, application.customer_id || null]
+        );
+      } catch (e) {
+        console.error('⚠️ Fallback insert to ilos_applications failed:', e.message);
+      }
+
+      // 🤖 AUTOMATION: Trigger automated workflow after PB submission
+      const { processNewApplication } = require('../services/automatedWorkflow');
+      console.log(`🤖 AUTOMATION ENABLED: Triggering automated workflow for LOS-${applicationId}`);
+      
+      // Trigger automation asynchronously (don't block the response)
+      setImmediate(async () => {
+        try {
+          const workflowResult = await processNewApplication(applicationId, {
+            cnic: application.cnic,
+            applicationType: 'CashPlus'
+          });
+          console.log(`✅ Automated workflow completed for LOS-${applicationId}:`, workflowResult);
+        } catch (error) {
+          console.error(`❌ Automated workflow failed for LOS-${applicationId}:`, error.message);
+        }
+      });
     }
 
     await client.query('COMMIT');
@@ -369,10 +534,24 @@ router.post('/', async (req, res) => {
     }
 
     // Return response with blockchain hash information
+    let responseMessage;
+    if (isMobileSubmission) {
+      responseMessage = 'Application submitted successfully. Our team will review and complete your application shortly.';
+    } else if (isCompletingMobileSubmission) {
+      responseMessage = `Application LOS-${applicationId} completed successfully and forwarded to automation.`;
+    } else {
+      responseMessage = 'Application submitted successfully.';
+    }
+    
     res.status(201).json({ 
       success: true, 
       application, 
       application_id: applicationId,
+      losId: applicationId, // For mobile app compatibility (camelCase)
+      status: isMobileSubmission ? 'pending_pb_completion' : 'PB_SUBMITTED', // Important for mobile app
+      requiresPbCompletion: isMobileSubmission,
+      wasUpdated: isCompletingMobileSubmission, // Indicate if this was an update
+      message: responseMessage,
       blockchain: {
         hashCreated: hashResult?.success || false,
         hashId: hashResult?.hashId,

@@ -1,6 +1,8 @@
 "use client";
 import React from "react";
 import { useCustomer } from "@/contexts/CustomerContext";
+import { FormSection } from "@/components/forms/common/FormSection";
+import { DollarSign } from "lucide-react";
 
 export const CashplusLoanPreferenceForm = () => {
   const { customerData, updateCustomerData } = useCustomer();
@@ -19,11 +21,16 @@ export const CashplusLoanPreferenceForm = () => {
   };
 
   return (
-    <section className="mb-10">
-      <h3 className="text-2xl rounded-lg text-white font-semibold mb-4 p-4 bg-primary text-primary-foreground">1. Loan Preference Details</h3>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 border border-gray-200 rounded-xl p-6 mb-6 bg-gray-50">
+    <FormSection
+      sectionNumber={2}
+      title="Loan Preference Details"
+      subtitle="Specify your loan requirements"
+      icon={<DollarSign className="h-5 w-5" />}
+      required
+    >
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div>
-          <label className="block mb-2">Loan Type *</label>
+          <label className="block mb-2 text-sm font-medium text-slate-700">Loan Type *</label>
           <div className="flex gap-4">
             <label className="flex items-center gap-2">
               <input 
@@ -48,40 +55,40 @@ export const CashplusLoanPreferenceForm = () => {
           </div>
         </div>
         <div>
-          <label className="block mb-2">Amount Requested *</label>
+          <label className="block mb-2 text-sm font-medium text-slate-700">Amount Requested *</label>
           <input 
             type="number" 
             name="amount_requested"
-            className="w-full border rounded-xl bg-white px-4 py-2" 
+            className="w-full border border-slate-300 px-4 py-2.5 text-sm text-slate-700 bg-white focus:outline-none focus:border-slate-700 focus:ring-1 focus:ring-slate-700" 
             placeholder="Amount Requested" 
             value={loanPreference.amountRequested || ""}
             onChange={(e) => handleChange("amountRequested", e.target.value)}
           />
         </div>
         <div>
-          <label className="block mb-2">Minimum Amount Acceptable *</label>
+          <label className="block mb-2 text-sm font-medium text-slate-700">Minimum Amount Acceptable *</label>
           <input 
             type="number" 
             name="min_amount_acceptable"
-            className="w-full border rounded-xl bg-white px-4 py-2" 
+            className="w-full border border-slate-300 px-4 py-2.5 text-sm text-slate-700 bg-white focus:outline-none focus:border-slate-700 focus:ring-1 focus:ring-slate-700" 
             placeholder="Minimum Acceptable" 
             value={loanPreference.minAmountAcceptable || ""}
             onChange={(e) => handleChange("minAmountAcceptable", e.target.value)}
           />
         </div>
         <div>
-          <label className="block mb-2">Max Affordable Installment *</label>
+          <label className="block mb-2 text-sm font-medium text-slate-700">Max Affordable Installment *</label>
           <input 
             type="number" 
             name="max_affordable_installment"
-            className="w-full border rounded-xl bg-white px-4 py-2" 
+            className="w-full border border-slate-300 px-4 py-2.5 text-sm text-slate-700 bg-white focus:outline-none focus:border-slate-700 focus:ring-1 focus:ring-slate-700" 
             placeholder="Max Affordable Installment" 
             value={loanPreference.maxAffordableInstallment || ""}
             onChange={(e) => handleChange("maxAffordableInstallment", e.target.value)}
           />
         </div>
         <div>
-          <label className="block mb-2">Tenure *</label>
+          <label className="block mb-2 text-sm font-medium text-slate-700">Tenure *</label>
           <div className="flex flex-wrap gap-3">
             {[1,2,3,4,5].map(y => (
               <label key={y} className="flex items-center gap-2">
@@ -98,6 +105,6 @@ export const CashplusLoanPreferenceForm = () => {
           </div>
         </div>
       </div>
-    </section>
+    </FormSection>
   );
 };

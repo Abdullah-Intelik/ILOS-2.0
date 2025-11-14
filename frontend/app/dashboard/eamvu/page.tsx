@@ -15,7 +15,7 @@ import { Search, Filter, Clock, CheckCircle, AlertTriangle, FileText, Eye, MapPi
 import { useToast } from "@/hooks/use-toast"
 import Link from "next/link"
 import DocumentExplorer from "@/components/document-explorer"
-import { DynamicFieldDisplay } from "@/components/dynamic-field-display"
+import { MinimalFieldDisplay } from "@/components/minimal-field-display"
 
 // Real data interface for EAMVU applications
 interface EAMVUApplication {
@@ -293,7 +293,7 @@ export default function EAMVUDashboardPage() {
       
       console.log('🔄 EAMVU: Starting to fetch applications...')
       
-      const response = await fetch(`/api/applications/department/EAMVU/paginated?page=${page}&pageSize=${pageSize}`, {
+      const response = await fetch(`/api/v1/applications/department/EAMVU/paginated/paginated?page=${page}&pageSize=${pageSize}`, {
         method: 'GET',
         headers: {
           'Cache-Control': 'no-cache',
@@ -782,10 +782,10 @@ export default function EAMVUDashboardPage() {
                                     </CardHeader>
                                     <CardContent>
                                       {/* Dynamic Field Display - Shows ALL database fields automatically */}
-                                      <DynamicFieldDisplay 
+                                      <MinimalFieldDisplay 
                                         data={selectedApplication.formData}
-                                        title="Complete Application Data"
-                                        excludeFields={['password', 'password_hash']}
+                                        title="Application Data"
+                                        productType="cashplus"
                                       />
 
                                       <div className="space-y-6 mt-6">

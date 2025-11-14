@@ -105,7 +105,7 @@ export default function SPUDocumentVerificationPage() {
              }
              
              // Use the direct file URL from the backend explorer
-             const fileUrl = `http://localhost:8081/explorer/smeasaan/los-${losId}/${encodeURIComponent(matchedDoc.name)}`
+             const fileUrl = `http://localhost:8086/explorer/smeasaan/los-${losId}/${encodeURIComponent(matchedDoc.name)}`
              
              // Open the file URL in a new tab
              const newWindow = window.open(fileUrl, '_blank')
@@ -144,7 +144,7 @@ export default function SPUDocumentVerificationPage() {
        }
        
        // Use the direct file URL from the backend explorer
-       const fileUrl = `http://localhost:8081/explorer/smeasaan/los-${losId}/${encodeURIComponent(foundDoc.name)}`
+       const fileUrl = `http://localhost:8086/explorer/smeasaan/los-${losId}/${encodeURIComponent(foundDoc.name)}`
        
        // Open the file URL in a new tab
        const newWindow = window.open(fileUrl, '_blank')

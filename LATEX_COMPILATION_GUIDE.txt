@@ -1,0 +1,183 @@
+===============================================
+ILOS 2.0 LaTeX Document - Compilation Guide
+===============================================
+
+FILE: ILOS_NEW_FEATURES_DOCUMENTATION.tex
+LOCATION: D:\ILOS 2.0\
+
+===============================================
+COMPILATION METHODS:
+===============================================
+
+METHOD 1: Using Overleaf (Online - Recommended)
+------------------------------------------------
+1. Go to https://www.overleaf.com
+2. Create free account (if needed)
+3. Click "New Project" → "Upload Project"
+4. Upload the .tex file
+5. Click "Recompile"
+6. Download PDF
+
+PROS: No software installation needed, automatic error handling
+
+
+METHOD 2: Using MiKTeX (Windows)
+---------------------------------
+1. Install MiKTeX from https://miktex.org/download
+2. Open Command Prompt
+3. Navigate to document folder:
+   cd "D:\ILOS 2.0"
+4. Compile:
+   pdflatex ILOS_NEW_FEATURES_DOCUMENTATION.tex
+   pdflatex ILOS_NEW_FEATURES_DOCUMENTATION.tex (run twice for TOC)
+5. Output: ILOS_NEW_FEATURES_DOCUMENTATION.pdf
+
+PROS: Offline compilation, full control
+
+
+METHOD 3: Using TeXworks (Included with MiKTeX)
+------------------------------------------------
+1. Install MiKTeX (comes with TeXworks)
+2. Open TeXworks
+3. File → Open → Select .tex file
+4. Select "pdfLaTeX" from dropdown
+5. Click green "Typeset" button
+6. PDF generates automatically
+
+PROS: GUI interface, easier for beginners
+
+
+METHOD 4: Using Visual Studio Code
+-----------------------------------
+1. Install VS Code
+2. Install "LaTeX Workshop" extension
+3. Open .tex file in VS Code
+4. Press Ctrl+Alt+B to build
+5. PDF opens automatically
+
+PROS: Modern editor, live preview
+
+
+===============================================
+REQUIRED LaTeX PACKAGES:
+===============================================
+
+The document uses these packages (auto-installed by MiKTeX/Overleaf):
+- inputenc (UTF-8 support)
+- geometry (page margins)
+- graphicx (images)
+- hyperref (clickable links)
+- longtable (multi-page tables)
+- booktabs (professional tables)
+- xcolor (colors)
+- enumitem (lists)
+- fancyhdr (headers/footers)
+- titlesec (section formatting)
+- tcolorbox (colored boxes)
+- listings (code blocks)
+
+
+===============================================
+TROUBLESHOOTING:
+===============================================
+
+ERROR: "File not found"
+FIX: Ensure all packages are installed. MiKTeX will prompt to install missing packages.
+
+ERROR: "! LaTeX Error: Missing \begin{document}"
+FIX: Check file encoding is UTF-8
+
+ERROR: Table of Contents not showing
+FIX: Run pdflatex TWICE (first run generates TOC, second includes it)
+
+ERROR: Hyperlinks not working
+FIX: Ensure hyperref package is installed
+
+
+===============================================
+OUTPUT SPECIFICATIONS:
+===============================================
+
+- Page Size: A4
+- Font Size: 12pt
+- Margins: 1 inch all sides
+- Total Pages: ~35-40 pages
+- File Size: ~500KB (PDF)
+- Color: Full color (teal theme)
+
+
+===============================================
+CUSTOMIZATION:
+===============================================
+
+TO CHANGE COLORS:
+Line 18: \definecolor{tealcolor}{RGB}{0,128,128}
+Change RGB values to your brand colors
+
+TO CHANGE MARGINS:
+Line 3: \usepackage[margin=1in]{geometry}
+Change 1in to desired margin
+
+TO CHANGE FONT SIZE:
+Line 1: \documentclass[12pt,a4paper]{article}
+Change 12pt to 10pt or 11pt
+
+TO ADD LOGO:
+Add after \begin{titlepage}:
+\includegraphics[width=5cm]{logo.png}
+
+
+===============================================
+CONVERTING TO OTHER FORMATS:
+===============================================
+
+LaTeX → PDF:
+Already done during compilation
+
+PDF → Word:
+Use: Adobe Acrobat Pro or online converter
+Website: https://www.ilovepdf.com/pdf_to_word
+
+LaTeX → HTML:
+Command: htlatex ILOS_NEW_FEATURES_DOCUMENTATION.tex
+
+LaTeX → DOCX (direct):
+Install Pandoc: https://pandoc.org/installing.html
+Command: pandoc -s ILOS_NEW_FEATURES_DOCUMENTATION.tex -o output.docx
+
+
+===============================================
+PROFESSIONAL PRINTING:
+===============================================
+
+For professional printing:
+1. Compile to PDF
+2. Use PDF/A format for archival
+3. Recommended settings:
+   - Print Quality: 300 DPI
+   - Color Mode: CMYK
+   - Binding: Left
+   - Duplex: Yes (two-sided)
+
+
+===============================================
+CONTACT:
+===============================================
+
+For LaTeX help:
+- Overleaf Documentation: https://www.overleaf.com/learn
+- TeX Stack Exchange: https://tex.stackexchange.com
+- LaTeX Wikibook: https://en.wikibooks.org/wiki/LaTeX
+
+
+===============================================
+DOCUMENT VERSION:
+===============================================
+
+LaTeX Template Version: 1.0
+Document Version: 2.0.0
+Created: November 12, 2025
+Status: FINAL
+
+===============================================
+

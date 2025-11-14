@@ -26,7 +26,7 @@ adb devices
 Write-Host ""
 
 Write-Host "[2/4] Setting up port forwarding for all devices..." -ForegroundColor Cyan
-Write-Host "  - Forwarding port 8081 -> 8082 (for default Metro connections)" -ForegroundColor Gray
+Write-Host "  - Forwarding port 8086 -> 8082 (for default Metro connections)" -ForegroundColor Gray
 Write-Host "  - Forwarding port 8082 -> 8082 (for configured Metro connections)" -ForegroundColor Gray
 Write-Host ""
 
@@ -39,7 +39,7 @@ $devices = adb devices | Select-String "device$" | ForEach-Object {
 foreach ($device in $devices) {
     if ($device -ne "List") {
         Write-Host "  Setting up ports for device: $device" -ForegroundColor Yellow
-        adb -s $device reverse tcp:8081 tcp:8082 2>$null
+        adb -s $device reverse tcp:8086 tcp:8082 2>$null
         adb -s $device reverse tcp:8082 tcp:8082 2>$null
     }
 }

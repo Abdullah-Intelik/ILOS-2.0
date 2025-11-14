@@ -42,10 +42,19 @@ const DocumentExplorer: React.FC<DocumentExplorerProps> = ({ losId, applicationT
     }
   }, [previewUrl])
 
-  // Map display loan type to server folder name
+  // Map display loan type to server folder name (Backend V2.0 compatible)
   const mapLoanTypeToSlug = (loanTypeLabel: string): string => {
     const raw = String(loanTypeLabel || '').trim()
     const lower = raw.toLowerCase()
+    
+    // Backend V2.0 product types
+    if (lower === 'personal_loan' || lower === 'personal loan') return 'cashplus'
+    if (lower === 'auto_loan' || lower === 'auto loan') return 'AutoLoan'
+    if (lower === 'islamic_finance') return 'ameendrive'
+    if (lower === 'sme_loan') return 'smeasaan'
+    if (lower === 'credit_card') return 'creditcard'
+    if (lower === 'instant_loan') return 'cashplus'
+    
     // Keyword-based mapping to be resilient to casing and variations
     if (lower.includes('cash') && lower.includes('plus')) return 'cashplus'
     if (lower.includes('auto')) return 'AutoLoan'
@@ -53,6 +62,7 @@ const DocumentExplorer: React.FC<DocumentExplorerProps> = ({ losId, applicationT
     if (lower.includes('commercial') && (lower.includes('vehicle') || lower.includes('sme'))) return 'commercialVehicle'
     if (lower.includes('ameendrive') || lower.includes('ameen drive')) return 'ameendrive'
     if (lower.includes('credit') && lower.includes('card')) return 'creditcard'
+    
     // Fallbacks for exact known labels
     const map: Record<string, string> = {
       'autoloan': 'AutoLoan',
@@ -62,7 +72,10 @@ const DocumentExplorer: React.FC<DocumentExplorerProps> = ({ losId, applicationT
       'ameendrive': 'ameendrive',
       'creditcard': 'creditcard',
     }
-    return map[lower] || 'temp'
+    
+    console.log(`🗂️ Mapping loan type: "${loanTypeLabel}" → "${map[lower] || 'cashplus'}"`)
+    
+    return map[lower] || 'cashplus' // Default to cashplus instead of temp
   }
 
   // Load files for the provided path. If LOS/app type are provided and path is root, prefer filtered API (old behavior);
@@ -80,28 +93,33 @@ const DocumentExplorer: React.FC<DocumentExplorerProps> = ({ losId, applicationT
         setCurrentPath(effectivePath)
       }
 
-      // Old behavior: when at LOS root and we know losId/app type, use filtered API
+      // Backend V2.0: when at LOS root, use new Document Server's list-files API
       if (losId && applicationType && /\/los-\d+$/.test(effectivePath)) {
         const numericLosId = String(losId).replace('LOS-', '').replace('los-', '')
-        const apiUrl = `/api/documents/${numericLosId}?applicationType=${applicationType}`
+        const folderSlug = mapLoanTypeToSlug(applicationType)
+        const apiUrl = `http://localhost:8086/list-files?loan_type=${folderSlug}&los_id=${numericLosId}`
+        console.log(`📂 Fetching files from Document Server: ${apiUrl}`)
         const res = await fetch(apiUrl)
-        if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`)
-        const data = await res.json()
-        if (data.exists && Array.isArray(data.documents)) {
-          const fileItems: FileItem[] = data.documents.map((doc: any) => ({
-            name: doc.name,
-            type: doc.type,
-            path: doc.path, // already in /explorer/... form and properly encoded by server
-            size: doc.size
-          }))
-          setFiles(fileItems)
-          return
+        if (res.ok) {
+          const data = await res.json()
+          if (Array.isArray(data.files) && data.files.length > 0) {
+            const fileItems: FileItem[] = data.files.map((doc: any) => ({
+              name: doc.name,
+              type: 'file' as const,
+              path: doc.url, // Full URL from Document Server
+              size: doc.size || 0
+            }))
+            setFiles(fileItems)
+            console.log(`✅ Loaded ${fileItems.length} files from Document Server`)
+            return
+          }
         }
         // Fallback to explorer if API returned nothing
+        console.log(`⚠️ No files found via list-files API, falling back to explorer`)
       }
 
       // Explorer listing (for subfolders or fallback)
-      const response = await fetch(`http://localhost:8081/explorer${encodeURI(effectivePath)}`);
+      const response = await fetch(`http://localhost:8086/explorer${encodeURI(effectivePath)}`);
       if (!response.ok) {
         if (response.status === 404) {
           // Treat missing folder as empty, no errors/toasts
@@ -203,11 +221,11 @@ const DocumentExplorer: React.FC<DocumentExplorerProps> = ({ losId, applicationT
       
       if (file.path.startsWith('/explorer/')) {
         // Use server-provided pre-encoded path as-is (legacy behavior)
-        downloadUrl = `http://localhost:8081${file.path}`
+        downloadUrl = `http://localhost:8086${file.path}`
       } else {
         const normalizedPathRaw = file.path.replace('/explorer', '')
         const normalizedPath = normalizedPathRaw.includes('%') ? decodeURIComponent(normalizedPathRaw) : normalizedPathRaw
-        downloadUrl = `http://localhost:8081/explorer${encodeURI(normalizedPath)}`;
+        downloadUrl = `http://localhost:8086/explorer${encodeURI(normalizedPath)}`;
       }
       
       console.log('Downloading file:', downloadUrl);
@@ -262,11 +280,11 @@ const DocumentExplorer: React.FC<DocumentExplorerProps> = ({ losId, applicationT
       
       if (file.path.startsWith('/explorer/')) {
         // Legacy behavior: trust server path and fetch directly
-        fileUrl = `http://localhost:8081${file.path}`
+        fileUrl = `http://localhost:8086${file.path}`
       } else {
         const normalizedPathRaw = file.path.replace('/explorer', '')
         const normalizedPath = normalizedPathRaw.includes('%') ? decodeURIComponent(normalizedPathRaw) : normalizedPathRaw
-        fileUrl = `http://localhost:8081/explorer${encodeURI(normalizedPath)}`;
+        fileUrl = `http://localhost:8086/explorer${encodeURI(normalizedPath)}`;
       }
       
       console.log('Fetching file for preview:', fileUrl);
@@ -318,11 +336,11 @@ const DocumentExplorer: React.FC<DocumentExplorerProps> = ({ losId, applicationT
         let fallbackUrl;
         
         if (file.path.startsWith('/explorer/')) {
-          fallbackUrl = `http://localhost:8081${file.path}`
+          fallbackUrl = `http://localhost:8086${file.path}`
         } else {
           const normalizedPathRaw2 = file.path.replace('/explorer', '')
           const normalizedPath2 = normalizedPathRaw2.includes('%') ? decodeURIComponent(normalizedPathRaw2) : normalizedPathRaw2
-          fallbackUrl = `http://localhost:8081/explorer${encodeURI(normalizedPath2)}`;
+          fallbackUrl = `http://localhost:8086/explorer${encodeURI(normalizedPath2)}`;
         }
         
         window.open(fallbackUrl, '_blank');
@@ -344,12 +362,17 @@ const DocumentExplorer: React.FC<DocumentExplorerProps> = ({ losId, applicationT
 
   // Build a reliable viewer URL from a FileItem
   const buildViewerUrl = (file: FileItem): string => {
+    // If path is already a full URL (from Document Server's /list-files API), use it directly
+    if (file.path.startsWith('http://') || file.path.startsWith('https://')) {
+      return file.path
+    }
+    // Legacy: paths from /explorer endpoint
     if (file.path.startsWith('/explorer/')) {
-      return `http://localhost:8081${file.path}`
+      return `http://localhost:8086${file.path}`
     }
     const normalizedPathRaw = file.path.replace('/explorer', '')
     const normalizedPath = normalizedPathRaw.includes('%') ? decodeURIComponent(normalizedPathRaw) : normalizedPathRaw
-    return `http://localhost:8081/explorer${encodeURI(normalizedPath)}`
+    return `http://localhost:8086/explorer${encodeURI(normalizedPath)}`
   }
 
   // Inline preview in right-side panel

@@ -31,16 +31,17 @@ export default function LoginPage() {
   const [role, setRole] = useState<UserRole>("pb");
   const [isLoading, setIsLoading] = useState(false);
 
-  // Default credentials for each role
+  // Default credentials for each role (Updated to match new 4-stage workflow)
   const defaultCredentials: Record<UserRole, { username: string; password: string }> = {
     pb: { username: "PB", password: "pb123400" },
+    eamvu_officer: { username: "EAMVU_OFFICER", password: "eamvu_officer123400" },
+    ciu: { username: "CIU", password: "ciu123400" },
+    rru: { username: "RRU", password: "rru123400" },
+    // Legacy roles (kept for backwards compatibility)
     spu: { username: "SPU", password: "spu123400" },
     spu_officer: { username: "SPU_OFFICER", password: "spu_officer123400" },
     cops: { username: "COPS", password: "cops123400" },
     eamvu: { username: "EAMVU", password: "eamvu123400" },
-    eamvu_officer: { username: "EAMVU_OFFICER", password: "eamvu_officer123400" },
-    ciu: { username: "CIU", password: "ciu123400" },
-    rru: { username: "RRU", password: "rru123400" },
     risk: { username: "RISK", password: "risk123400" },
     compliance: { username: "COMPLIANCE", password: "compliance123400" },
   };
@@ -227,27 +228,13 @@ export default function LoginPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="pb">Personal Banking (PB)</SelectItem>
-                    <SelectItem value="spu">
-                      Sales Processing Unit (SPU)
-                    </SelectItem>
-                    <SelectItem value="spu_officer">
-                      SPU Officer
-                    </SelectItem>
-                    <SelectItem value="cops">Consumer Operations (COPS)</SelectItem>
-                    <SelectItem value="eamvu">
-                      External Asset Management Head
-                    </SelectItem>
                     <SelectItem value="eamvu_officer">
-                      EAM Officer
+                      EAVMU Officer (Field Verification)
                     </SelectItem>
                     <SelectItem value="ciu">
                       Central Investigation Unit (CIU)
                     </SelectItem>
                     <SelectItem value="rru">Rejection Review Unit (RRU)</SelectItem>
-                    <SelectItem value="risk">Risk Management</SelectItem>
-                    <SelectItem value="compliance">
-                      Compliance Department
-                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>

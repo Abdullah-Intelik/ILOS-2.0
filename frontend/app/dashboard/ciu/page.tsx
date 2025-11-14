@@ -17,7 +17,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { useToast } from "@/hooks/use-toast"
 import DocumentExplorer from "@/components/document-explorer"
 import DecisionEngineCalculator from "@/components/decision-engine-calculator"
-import { DynamicFieldDisplay } from "@/components/dynamic-field-display"
+import { MinimalFieldDisplay } from "@/components/minimal-field-display"
+import { extractLosId, getApiUrl } from "@/lib/losIdHelper"
 
 // Real data interface for CIU applications
 interface CIUApplication {
@@ -90,6 +91,11 @@ function getStatusBadge(status: string) {
     case "application_rejected":
     case "Rejected by CIU":
       return <Badge variant="destructive">Rejected by CIU</Badge>
+    case "disbursed":
+    case "Disbursed":
+    case "DISBURSED":
+    case "loan_disbursed":
+      return <Badge className="bg-emerald-100 text-emerald-800 border-emerald-300">💰 Loan Disbursed</Badge>
     default:
       return <Badge variant="secondary">{status}</Badge>
   }
@@ -107,6 +113,41 @@ function getPriorityBadge(priority: string) {
       return <Badge variant="destructive">Critical</Badge>
     default:
       return <Badge variant="secondary">{priority}</Badge>
+  }
+}
+
+// Calculate application progress based on current status
+// Workflow: submitted (25%) → eavmu_assigned (50%) → eavmu_approved (75%) → CIU/disbursed (100%)
+function calculateProgress(status: string, current_stage: string) {
+  // If disbursed or rejected, it's 100% complete
+  if (status === 'disbursed' || status === 'rejected') {
+    return 100;
+  }
+  
+  // Calculate based on status
+  switch (status) {
+    case 'submitted':
+    case 'spu_approved': // Legacy
+      return 25;
+    case 'eavmu_assigned':
+      return 50;
+    case 'eavmu_approved':
+      return 75;
+    case 'ciu_approved':
+    case 'approved':
+      return 90;
+    case 'disbursed':
+      return 100;
+    case 'rejected':
+    case 'eavmu_rejected':
+    case 'ciu_rejected':
+      return 100;
+    default:
+      // Fallback to stage-based calculation
+      if (current_stage === 'CIU') return 75;
+      if (current_stage === 'EAVMU_OFFICER') return 50;
+      if (current_stage === 'PB') return 25;
+      return 25;
   }
 }
 
@@ -128,27 +169,89 @@ export default function CIUDashboardPage() {
   const [spuChecklistLoading, setSpuChecklistLoading] = useState<boolean>(false)
   const { toast } = useToast()
 
+  // Fetch applications from Backend V2.0
+  useEffect(() => {
+    const fetchApplications = async () => {
+      try {
+        setLoading(true)
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
+        console.log('🔍 CIU: Fetching from:', `${apiUrl}/api/v1/applications/department/CIU/paginated`)
+        const response = await fetch(
+          `${apiUrl}/api/v1/applications/department/CIU/paginated?page=${page}&pageSize=${pageSize}`
+        )
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch applications')
+        }
+        
+        const result = await response.json()
+        console.log('✅ CIU Applications fetched:', result)
+        
+        const apps = result.data || []
+        
+        // Map Backend V2.0 field names to frontend expected names
+        const mappedApps = apps.map((app: any) => ({
+          ...app,
+          applicant_name: app.customer_name || app.applicantName || 'Unknown',
+          loan_type: app.product_type || app.product || 'personal_loan',
+          loan_amount: app.amount || app.requested_amount || 0
+        }))
+        
+        setApplicationsData(mappedApps)
+        setTotal(result.total || 0)
+        setLoading(false)
+      } catch (error) {
+        console.error('❌ Error fetching CIU applications:', error)
+        toast({
+          title: "Error",
+          description: "Failed to connect to server",
+          variant: "destructive"
+        })
+        setLoading(false)
+      }
+    }
+    
+    fetchApplications()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, pageSize]) // toast excluded from deps to prevent infinite re-renders
+
   // Function to handle viewing application form data
   const handleViewApplication = async (application: any) => {
     try {
       console.log('🔄 Fetching form data for application:', application.los_id);
-      const losId = application.los_id.replace('LOS-', ''); // Extract numeric part
-      const response = await fetch(`/api/applications/form/${losId}`, { 
+      // Backend V2.0 returns los_id as number, not string "LOS-XX"
+      const losId = typeof application.los_id === 'number' 
+        ? application.los_id 
+        : String(application.los_id).replace('LOS-', ''); // Extract numeric part
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/v1/applications/form/${losId}`, { 
         method: 'GET', 
         headers: { 'Content-Type': 'application/json' } 
       });
       if (!response.ok) { 
         throw new Error('Failed to fetch form data'); 
       }
-      const data = await response.json();
-      console.log('✅ Form data fetched successfully:', data);
+      const result = await response.json();
+      console.log('✅ Form data fetched successfully:', result);
+      
+      // Backend V2.0 returns data in result.data, not result.formData
+      const formData = result.data || result.formData || {};
+      
+      // Debug: Log documents if they exist
+      if (formData.documents) {
+        console.log('📄 Documents found in form data:', Object.keys(formData.documents));
+        if (formData.documents.ecib) {
+          console.log('✅ eCIB document exists:', formData.documents.ecib);
+        }
+      } else {
+        console.log('⚠️ No documents field in form data');
+      }
       
       // Improved age calculation
       let age = 0; 
-      if (data.formData.date_of_birth) { 
-        console.log('Raw date_of_birth:', data.formData.date_of_birth);
+      if (formData.date_of_birth) { 
+        console.log('Raw date_of_birth:', formData.date_of_birth);
         
-        const dob = new Date(data.formData.date_of_birth); 
+        const dob = new Date(formData.date_of_birth); 
         const today = new Date(); 
         
         console.log('Parsed DOB:', dob);
@@ -156,7 +259,7 @@ export default function CIUDashboardPage() {
         
         // Check if the date is valid
         if (isNaN(dob.getTime())) {
-          console.error('Invalid date of birth:', data.formData.date_of_birth);
+          console.error('Invalid date of birth:', formData.date_of_birth);
           age = 0;
         } else {
           age = today.getFullYear() - dob.getFullYear(); 
@@ -174,10 +277,23 @@ export default function CIUDashboardPage() {
       }
 
       // Add age to the data 
-      data.formData.age = age; 
-      console.log('✅ Form data fetched successfully:', data); 
+      formData.age = age; 
+      console.log('✅ Form data with age:', formData); 
       
-      setSelectedApplication({ ...application, formData: data.formData });
+      // Fetch references from Backend V2.0
+      try {
+        const refsResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/v1/applications/${losId}/references`);
+        if (refsResponse.ok) {
+          const refsData = await refsResponse.json();
+          formData.references = refsData.data || [];
+          console.log('✅ Fetched references:', formData.references);
+        }
+      } catch (error) {
+        console.error('⚠️ Failed to fetch references:', error);
+        formData.references = [];
+      }
+      
+      setSelectedApplication({ ...application, formData });
       
       // Fetch all department comments for this application
       await fetchAllDepartmentComments(losId);
@@ -198,17 +314,39 @@ export default function CIUDashboardPage() {
     }
   };
 
-  const fetchSpuChecklist = async (losId: string) => {
+  const fetchSpuChecklist = async (losId: string | number) => {
     try {
       setSpuChecklistLoading(true)
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/applications/spu-checklist/${losId}`)
+      const numericLosId = extractLosId(losId)
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
+      // Backend V2.0 endpoint
+      const res = await fetch(`${apiUrl}/api/v1/applications/spu-checklist/${numericLosId}`)
+      
+      if (!res.ok) {
+        console.warn('⚠️ SPU checklist endpoint not available (404) - skipping')
+        setSpuChecklist([])
+        return
+      }
+      
       const data = await res.json()
-      if (res.ok && data?.success) {
-        setSpuChecklist(Array.isArray(data.checklist) ? data.checklist : [])
+      console.log('✅ SPU checklist fetched:', data)
+      if (data?.success && data.checklist) {
+        // Backend V2.0 returns a single object, not an array
+        const checklistData = data.checklist
+        // Convert to array format for display
+        const checklistArray = [
+          { check_type: 'PEP Check', result: checklistData.pep_check_result, comment: checklistData.pep_check_comments },
+          { check_type: 'SBP Blacklist', result: checklistData.sbp_blacklist_result, comment: checklistData.sbp_blacklist_comments },
+          { check_type: 'NADRA Verisys', result: checklistData.nadra_verisys_result, comment: checklistData.nadra_verisys_comments },
+          { check_type: 'Internal Watchlist', result: checklistData.internal_watchlist_result, comment: checklistData.internal_watchlist_comments },
+          { check_type: 'CCL', result: checklistData.ccl_result, comment: checklistData.ccl_comments },
+        ]
+        setSpuChecklist(checklistArray)
       } else {
         setSpuChecklist([])
       }
     } catch (err) {
+      console.warn('⚠️ Failed to fetch SPU checklist - feature not yet available', err)
       setSpuChecklist([])
     } finally {
       setSpuChecklistLoading(false)
@@ -226,42 +364,6 @@ export default function CIUDashboardPage() {
     return null
   }
 
-  // Fetch CIU applications from API
-  useEffect(() => {
-    const fetchApplications = async () => {
-      try {
-        setLoading(true)
-        const response = await fetch(`/api/applications/department/CIU/paginated?page=${page}&pageSize=${pageSize}`, { cache: 'no-store' })
-        const result = await response.json()
-        
-        if (response.ok) {
-          const data = result?.data || []
-          setApplicationsData(data)
-          setTotal(result?.total || 0)
-          console.log('✅ CIU: Fetched', data.length, 'applications (paginated)')
-        } else {
-          console.error('❌ CIU: Failed to fetch applications:', result)
-          toast({
-            title: "Error",
-            description: "Failed to fetch applications",
-            variant: "destructive"
-          })
-        }
-      } catch (error) {
-        console.error('❌ CIU: Error fetching applications:', error)
-        toast({
-          title: "Error",
-          description: "Failed to connect to server",
-          variant: "destructive"
-        })
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchApplications()
-  }, [toast, page, pageSize])
-
   // Handle comment updates
   const handleUpdateComment = async () => {
     if (!selectedApplication || !commentText.trim()) {
@@ -274,12 +376,13 @@ export default function CIUDashboardPage() {
     }
 
     try {
-      const losId = selectedApplication.los_id.replace('LOS-', '')
+      const losId = extractLosId(selectedApplication.los_id)
       const fieldName = 'ciu_comments' // Department-specific comment field
       
       console.log(`🔄 CIU: Updating comment for LOS ID: ${losId}, Field: ${fieldName}`)
 
-      const response = await fetch('/api/applications/update-comment', {
+      const apiUrl = getApiUrl()
+      const response = await fetch(`${apiUrl}/api/applications/update-comment`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -329,9 +432,12 @@ export default function CIUDashboardPage() {
     }
   }
 
-  const fetchAllDepartmentComments = async (losId: string) => {
+  const fetchAllDepartmentComments = async (losId: string | number) => {
     try {
-      const response = await fetch(`/api/applications/comments/${losId}`, {
+      const numericLosId = extractLosId(losId)
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
+      // Backend V2.0 endpoint
+      const response = await fetch(`${apiUrl}/api/v1/applications/${numericLosId}/comments`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -339,8 +445,7 @@ export default function CIUDashboardPage() {
       })
 
       if (!response.ok) {
-        const errorData = await response.json()
-        console.error('❌ Error fetching comments:', errorData)
+        console.warn('⚠️ Comments endpoint not available (404) - skipping')
         return
       }
 
@@ -350,12 +455,12 @@ export default function CIUDashboardPage() {
       if (data.success && data.comments) {
         setAllDepartmentComments(prev => ({
           ...prev,
-          [losId]: data.comments
+          [numericLosId]: data.comments
         }))
       }
 
     } catch (error) {
-      console.error('❌ Error fetching all department comments:', error)
+      console.warn('⚠️ Failed to fetch comments - feature not yet available')
     }
   }
 
@@ -364,20 +469,19 @@ export default function CIUDashboardPage() {
     if (!selectedApplication) return
     
     try {
-      // Update status in backend using workflow
-      const losId = selectedApplication.los_id?.replace('LOS-', '') || selectedApplication.id?.split('-')[1]
-      console.log('CIU Frontend accepting losId:', losId, 'applicationType:', selectedApplication.application_type)
-      const response = await fetch('/api/applications/update-status-workflow', {
-        method: 'POST',
+      // Backend V2.0: Update status to move to COPS
+      const losId = typeof selectedApplication.los_id === 'number'
+        ? selectedApplication.los_id
+        : String(selectedApplication.los_id || '').replace('LOS-', '') || selectedApplication.id?.split('-')[1]
+      console.log('CIU Frontend accepting losId:', losId)
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/v1/applications/${losId}/status`, {
+        method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          losId: losId,
-          status: selectedApplication.status, // Send current status, not target status
-          applicationType: selectedApplication.application_type,
-          department: 'CIU',
-          action: 'approve'
+          status: 'disbursed', // Auto-disburse directly from CIU (skip COPS)
+          comments: 'Application approved by CIU and auto-disbursed'
         })
       })
 
@@ -387,19 +491,25 @@ export default function CIUDashboardPage() {
         throw new Error(`Failed to update status: ${errorData}`)
       }
       
-      // Update application status in frontend
-      const updatedApplications = applicationsData.map(app => 
-        app.id === selectedApplication.id 
-          ? { ...app, status: "Accepted by CIU" }
-          : app
-      )
-      setApplicationsData(updatedApplications)
+      const result = await response.json()
       
-      toast({
-        title: "Application Accepted",
-        description: "Application has been accepted by CIU and status updated in database",
-      })
-      setSelectedApplication(null)
+      if (result.success) {
+        // Update application status to 'disbursed' instead of removing it
+        const updatedApplications = applicationsData.map(app => 
+          app.id === selectedApplication.id
+            ? { ...app, status: 'disbursed' }
+            : app
+        )
+        setApplicationsData(updatedApplications)
+        
+        toast({
+          title: "✅ Application Approved & Disbursed",
+          description: "Loan has been automatically disbursed to the customer",
+        })
+        setSelectedApplication(null)
+      } else {
+        throw new Error(result.message || 'Failed to approve application')
+      }
     } catch (error) {
       console.error('Error updating status:', error)
       toast({
@@ -415,20 +525,19 @@ export default function CIUDashboardPage() {
     if (!selectedApplication) return
     
     try {
-      // Update status in backend using workflow
-      const losId = selectedApplication.los_id?.replace('LOS-', '') || selectedApplication.id?.split('-')[1]
-      console.log('CIU Frontend rejecting losId:', losId, 'applicationType:', selectedApplication.application_type)
-      const response = await fetch('/api/applications/update-status-workflow', {
-        method: 'POST',
+      // Backend V2.0: Update status to reject
+      const losId = typeof selectedApplication.los_id === 'number'
+        ? selectedApplication.los_id
+        : String(selectedApplication.los_id || '').replace('LOS-', '') || selectedApplication.id?.split('-')[1]
+      console.log('CIU Frontend rejecting losId:', losId)
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/v1/applications/${losId}/status`, {
+        method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          losId: losId,
-          status: selectedApplication.status, // Send current status, not target status
-          applicationType: selectedApplication.application_type,
-          department: 'CIU',
-          action: 'reject'
+          status: 'ciu_rejected', // Reject application
+          comments: 'Application rejected by CIU'
         })
       })
 
@@ -438,20 +547,24 @@ export default function CIUDashboardPage() {
         throw new Error(`Failed to update status: ${errorData}`)
       }
       
-      // Update application status in frontend
-      const updatedApplications = applicationsData.map(app => 
-        app.id === selectedApplication.id 
-          ? { ...app, status: "Rejected by CIU" }
-          : app
-      )
-      setApplicationsData(updatedApplications)
+      const result = await response.json()
       
-      toast({
-        title: "Application Rejected",
-        description: "Application has been rejected by CIU and status updated in database",
-        variant: "destructive"
-      })
-      setSelectedApplication(null)
+      if (result.success) {
+        // Remove from CIU list as it's now rejected
+        const updatedApplications = applicationsData.filter(app => 
+          app.id !== selectedApplication.id
+        )
+        setApplicationsData(updatedApplications)
+        
+        toast({
+          title: "Application Rejected",
+          description: "Application has been rejected by CIU",
+          variant: "destructive"
+        })
+        setSelectedApplication(null)
+      } else {
+        throw new Error(result.message || 'Failed to reject application')
+      }
     } catch (error) {
       console.error('Error updating status:', error)
       toast({
@@ -654,7 +767,10 @@ export default function CIUDashboardPage() {
                                 Complete application information for CIU investigation
                               </DialogDescription>
                             </DialogHeader>
-                            {selectedApplication && (
+                            {selectedApplication && (() => {
+                              // Helper: Extract numeric LOS ID (Backend V2.0 compatibility)
+                              const numericLosId = extractLosId(selectedApplication.los_id);
+                              return (
                               <div className="overflow-y-auto max-h-[calc(90vh-120px)] space-y-6 pr-2">
                                 {/* Basic Information Section */}
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -714,16 +830,28 @@ export default function CIUDashboardPage() {
                                       </CardTitle>
                                     </CardHeader>
                                     <CardContent className="space-y-3">
-                                      <div className="space-y-2">
-                                        <div className="flex items-center justify-between">
-                                          <span className="text-sm font-medium">Completion</span>
-                                          <span className="text-sm font-bold">85%</span>
-                                        </div>
-                                        <Progress value={85} className="w-full" />
-                                        <div className="text-xs text-muted-foreground">
-                                          15% remaining
-                                        </div>
-                                      </div>
+                                      {(() => {
+                                        const progress = calculateProgress(selectedApplication.status, selectedApplication.formData?.current_stage || 'PB');
+                                        const remaining = 100 - progress;
+                                        const statusLabel = selectedApplication.status === 'disbursed' ? 'Disbursed ✅' : 
+                                                          selectedApplication.status === 'rejected' ? 'Rejected ❌' :
+                                                          selectedApplication.status === 'eavmu_approved' ? 'EAVMU Approved' :
+                                                          selectedApplication.status === 'eavmu_assigned' ? 'EAVMU Assigned' :
+                                                          selectedApplication.status === 'submitted' ? 'Submitted to PB' :
+                                                          selectedApplication.status;
+                                        return (
+                                          <div className="space-y-2">
+                                            <div className="flex items-center justify-between">
+                                              <span className="text-sm font-medium">Completion</span>
+                                              <span className="text-sm font-bold">{progress}%</span>
+                                            </div>
+                                            <Progress value={progress} className="w-full" />
+                                            <div className="text-xs text-muted-foreground">
+                                              {progress === 100 ? 'Complete' : `${remaining}% remaining`} - Status: {statusLabel}
+                                            </div>
+                                          </div>
+                                        );
+                                      })()}
                                     </CardContent>
                                   </Card>
                                 </div>
@@ -742,10 +870,10 @@ export default function CIUDashboardPage() {
                                     </CardHeader>
                                     <CardContent>
                                       {/* Dynamic Field Display - Shows ALL database fields automatically */}
-                                      <DynamicFieldDisplay 
+                                      <MinimalFieldDisplay 
                                         data={selectedApplication.formData}
-                                        title="Complete Application Data"
-                                        excludeFields={['password', 'password_hash']}
+                                        title="Application Data"
+                                        productType="cashplus"
                                       />
 
                                       {/* Comments Section and other important sections below */}
@@ -761,13 +889,17 @@ export default function CIUDashboardPage() {
                                             ) : spuChecklist && spuChecklist.length > 0 ? (
                                               <div className="space-y-2">
                                                 {spuChecklist.map((item: any, idx: number) => (
-                                                  <div key={idx} className="border rounded-lg p-2 bg-green-50 border-green-200">
+                                                  <div key={idx} className={`border rounded-lg p-2 ${item.result === 'PASS' ? 'bg-green-50 border-green-200' : item.result === 'FAIL' ? 'bg-red-50 border-red-200' : 'bg-gray-50 border-gray-200'}`}>
                                                     <div className="flex items-center justify-between text-xs">
-                                                      <span className="font-medium text-green-800">{item.check_type?.toUpperCase?.() || item.check_type}</span>
-                                                      <span className={`px-2 py-0.5 rounded ${item.is_checked ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-700'}`}>{item.is_checked ? 'Checked' : 'Unchecked'}</span>
+                                                      <span className="font-medium">{item.check_type}</span>
+                                                      <span className={`px-2 py-0.5 rounded font-semibold ${
+                                                        item.result === 'PASS' ? 'bg-green-100 text-green-800' : 
+                                                        item.result === 'FAIL' ? 'bg-red-100 text-red-800' : 
+                                                        'bg-gray-100 text-gray-700'
+                                                      }`}>{item.result || 'N/A'}</span>
                                                     </div>
-                                                    {item.comment_text && (
-                                                      <div className="mt-1 text-sm text-gray-700">{item.comment_text}</div>
+                                                    {item.comment && (
+                                                      <div className="mt-1 text-xs text-gray-600">{item.comment}</div>
                                                     )}
                                                     {item.check_type === 'ecib' && item.comment_text && (() => {
                                                       const m = tryExtractEcibMetrics(item.comment_text)
@@ -799,10 +931,10 @@ export default function CIUDashboardPage() {
                                               <div className="text-xs text-gray-500">No SPU checklist remarks</div>
                                             )}
                                           </div>
-                                          {allDepartmentComments[selectedApplication.los_id.replace('LOS-', '')] && 
-                                           allDepartmentComments[selectedApplication.los_id.replace('LOS-', '')].length > 0 ? (
+                                          {allDepartmentComments[numericLosId] && 
+                                           allDepartmentComments[numericLosId].length > 0 ? (
                                             <div className="space-y-3">
-                                              {allDepartmentComments[selectedApplication.los_id.replace('LOS-', '')].map((comment: any, index: number) => (
+                                              {allDepartmentComments[numericLosId].map((comment: any, index: number) => (
                                                 <div key={index} className={`border rounded-lg p-3 ${
                                                   comment.department === 'PB' ? 'bg-blue-50 border-blue-200' :
                                                   comment.department === 'SPU' ? 'bg-green-50 border-green-200' :
@@ -857,7 +989,7 @@ export default function CIUDashboardPage() {
                                 {/* Decision Engine Calculator with ECIB Integration */}
                                 {selectedApplication && (
                                   <DecisionEngineCalculator 
-                                    losId={selectedApplication.los_id.replace('LOS-', '')} 
+                                    losId={String(numericLosId)} 
                                     applicationData={selectedApplication.formData}
                                     onDecisionComplete={(decision) => {
                                       console.log('Decision completed:', decision)
@@ -905,11 +1037,11 @@ export default function CIUDashboardPage() {
                                   <CardContent>
                                     <div className="space-y-4">
                                       {/* Existing Comments Display */}
-                                      {selectedApplication && existingComments[selectedApplication.los_id.replace('LOS-', '')] && (
+                                      {selectedApplication && existingComments[numericLosId] && (
                                         <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
                                           <h4 className="font-medium text-blue-800 mb-2">Previous Comments:</h4>
                                           <p className="text-sm text-blue-700">
-                                            {existingComments[selectedApplication.los_id.replace('LOS-', '')]}
+                                            {existingComments[numericLosId]}
                                           </p>
                                         </div>
                                       )}
@@ -962,7 +1094,8 @@ export default function CIUDashboardPage() {
                                   </Button>
                                 </div>
                               </div>
-                            )}
+                              );
+                            })()}
                           </DialogContent>
                         </Dialog>
 

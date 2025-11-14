@@ -336,6 +336,13 @@ app.get('/api/test', (req, res) => {
 app.use('/api/applications', require('./routes/applications'));
 // Lightweight endpoints including /api/agents
 app.use('/api', require('./routes/applications-minimal'));
+// Customer mobile app routes
+app.use('/api/customer', require('./routes/customer'));
+// CBS customer creation (NTB → ETB conversion)
+app.use('/api/cbs-customer', require('./routes/cbsCustomer'));
+// PB routes for handling mobile app submissions
+app.use('/api/pb', require('./routes/pb'));
+console.log('✅ PB routes registered (mobile→PB flow)');
 app.use('/api/personal-details', require('./routes/personalDetails'));
 app.use('/api/current-address', require('./routes/currentAddress'));
 app.use('/api/permanent-address', require('./routes/permanentAddress'));
@@ -356,6 +363,7 @@ app.use('/api/smeasaan', require('./routes/smeasaan'));
 app.use('/api/commercialVehicle', require('./routes/commercialVehicle'));
 app.use('/api/classic_creditcard', require('./routes/classic_creditcard'));
 app.use('/api/platinum_creditcard', require('./routes/platinum_creditcard'));
+app.use('/api/instantloan', require('./routes/instantloan')); // ETB customers only, auto-approved
 // Removed duplicate applications route - already mounted above
 
 //EXTERNAL APIs
@@ -376,6 +384,19 @@ app.use('/api/department-changes', require('./routes/department-changes'));
 
 // Decision Engine Routes
 app.use('/api/decision-engine', require('./routes/decision-engine'));
+
+// 🤖 Automation System Routes
+console.log('🤖 Initializing Automation System...');
+app.use('/api/automation-stats', require('./routes/automation-stats'));
+console.log('✅ Automation routes registered');
+
+// Initialize Queue Processor
+try {
+  const queueProcessor = require('./services/queueProcessor');
+  console.log('✅ Queue processor initialized');
+} catch (error) {
+  console.error('⚠️ Queue processor initialization failed:', error.message);
+}
 
 // Database Change Detection Integration
 console.log('🔍 Initializing Database Change Detection...');

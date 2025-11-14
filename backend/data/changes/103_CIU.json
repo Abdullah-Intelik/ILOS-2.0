@@ -1,0 +1,48 @@
+{
+  "chainKey": "103_CIU",
+  "changes": [
+    {
+      "id": "f04a7bcf-8e30-4af5-b5ec-77ca7d3f41dd",
+      "losId": "103",
+      "department": "CIU",
+      "officer": "CIU_officer",
+      "timestamp": "2025-11-04T13:46:12.433Z",
+      "changeType": "FIELD_MODIFICATION",
+      "fieldChanges": [
+        {
+          "fieldName": "status",
+          "fieldPath": "application.workflow.status",
+          "oldValue": "submitted_to_ciu",
+          "newValue": "application_completed",
+          "changeReason": "approve by CIU: Application approved by CIU - Ready for COPS finalization (disbursement/card issuance)",
+          "timestamp": "2025-11-04T13:46:12.433Z",
+          "oldHash": "b8fa0a515c6181c8286aeb767a4d2e4408a80316280b7f7140e3656de39708c0",
+          "newHash": "a192307900a06f135b23e535098321b03a5a473b2a22f8998c48b096372d6f0c",
+          "changeHash": "f5fdcb0b60af25c5482b87d669ecb5732a70c9dc80fef350528852d955b13038",
+          "sensitivity": "LOW",
+          "riskScore": 1,
+          "requiresApproval": false
+        }
+      ],
+      "departmentContext": {
+        "workflowStage": "APPROVE",
+        "applicationType": "CashPlus",
+        "department": "CIU",
+        "resolveComment": "",
+        "businessReason": "Application approved by CIU - Ready for COPS finalization (disbursement/card issuance)",
+        "workflowAction": "approve"
+      },
+      "previousHash": "genesis",
+      "compositeHash": "32922336ab7a348e4ecf9eb66f08ff83a94843499a90a02f192b61602f186f05",
+      "sequence": 1,
+      "blockchain": {
+        "txId": null,
+        "blockNumber": null,
+        "chainHash": null,
+        "verificationStatus": "FAILED",
+        "error": ""
+      }
+    }
+  ],
+  "lastUpdated": "2025-11-04T13:46:12.435Z"
+}

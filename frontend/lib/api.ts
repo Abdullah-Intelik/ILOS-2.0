@@ -15,7 +15,7 @@ export const getBaseUrl = (): string => {
     return process.env.NEXT_PUBLIC_API_URL;
   }
   
-  // Default to localhost:5000 in development
+  // Default to Backend V2.0 (localhost:5000) - no /api/v1 prefix
   return 'http://localhost:5000';
 };
 

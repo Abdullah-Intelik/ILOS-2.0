@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
     // Upload to the uploadtoftp.js server
     // Forward subfolder (e.g., eavmu_docs) to upload server so it creates a subdirectory
     if (subfolder) uploadFormData.append('subfolder', subfolder)
-    const response = await fetch('http://localhost:8081/upload', {
+    const response = await fetch('http://localhost:8086/upload', {
       method: 'POST',
       body: uploadFormData,
       // Don't set Content-Type header - let the browser set it with the boundary

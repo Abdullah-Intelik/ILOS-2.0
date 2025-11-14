@@ -25,10 +25,10 @@ const getApiBaseUrl = () => {
 // Document server (FileZilla) - same as web app uses
 const getDocumentServerUrl = () => {
   if (isEmulator()) {
-    return 'http://10.0.2.2:8081'; // For Android emulator
+    return 'http://10.0.2.2:8086'; // For Android emulator (changed from 8081)
   }
   // With adb reverse, we can use localhost which works for both emulator and physical device
-  return 'http://localhost:8081'; // Works with adb reverse tcp:8081 tcp:8081
+  return 'http://localhost:8086'; // Works with adb reverse tcp:8086 tcp:8086 (changed from 8081)
 };
 
 const ENV = {
@@ -66,7 +66,7 @@ export const API_CONFIG = {
   // For physical device: uses computer's local IP (192.168.1.155)
   API_BASE_URL: getApiBaseUrl(),
   
-  // Document server URL (FileZilla/Port 8081) - same as web app
+  // Document server URL (FileZilla/Port 8086) - same as web app
   DOCUMENT_SERVER_URL: getDocumentServerUrl(),
   
   // Timeout settings
@@ -76,32 +76,27 @@ export const API_CONFIG = {
   DEBUG: true,
 };
 
-// API Endpoints
+// API Endpoints - Backend V2.0 (Matching EAVMU Officer Web Dashboard)
 export const API_ENDPOINTS = {
-  // Health & Status
-  HEALTH: '/health',
+  // Health Check
+  HEALTH: '/api/v1/health',
   
-  // Applications - Updated to match new backend structure
-  EAMVU_APPLICATIONS: '/api/applications/department/eamvu',
-  APPLICATION_DETAILS: (losId) => `/api/applications/form/${losId}`,
-  UPDATE_STATUS: '/api/applications/update-status',
-  UPDATE_COMMENT: '/api/applications/update-comment',
-  APPLICATION_COMMENTS: (losId) => `/api/applications/comments/${losId}`,
+  // Applications - EAVMU Department (Backend V2.0)
+  EAMVU_APPLICATIONS: '/api/v1/applications/department/EAVMUOFFICER/paginated',
   
-  // Agent Assignments - New endpoint
-  AGENT_ASSIGNMENTS: '/api/applications/test/assignments',
+  // Application Details
+  APPLICATION_DETAILS: (losId) => `/api/v1/applications/${losId}`,
   
-  // Customer & CIF
-  CUSTOMER_STATUS: '/getNTB_ETB',
-  CIF_DETAILS: (consumerId) => `/cif/${consumerId}`,
+  // Status Update (Main endpoint for approve/reject/verify)
+  UPDATE_STATUS: (losId) => `/api/v1/applications/${losId}/status`,
   
-  // Documents
+  // Comments
+  GET_COMMENTS: (losId) => `/api/v1/applications/${losId}/comments`,
+  ADD_COMMENT: (losId) => `/api/v1/applications/${losId}/comments`,
+  
+  // Documents (Document Server - Port 8086)
   APPLICATION_DOCUMENTS: (losId) => `/api/documents/${losId}`,
-  UPLOAD_DOCUMENT: '/api/upload-document',
-  
-  // Test Endpoints
-  TEST_BACKEND: '/health',
-  TEST_APPLICATIONS: '/api/test-applications',
+  UPLOAD_DOCUMENT: '/upload',
 };
 
 // Agent credentials for login
@@ -114,12 +109,20 @@ export const AGENT_CREDENTIALS = [
   { id: 105, name: 'Sara Ahmed', password: '005', stringId: 'agent-005' },
 ];
 
-// Status mappings for EAMVU - Updated to match new backend status values
+// EAVMU Officer Actions - Backend V2.0
 export const EAMVU_STATUS_OPTIONS = [
-  { value: 'SUBMITTED_TO_COPS', label: 'Submit to COPS', color: '#F59E0B' },
-  { value: 'SUBMITTED_TO_CIU', label: 'Submit to CIU', color: '#EF4444' },
-  { value: 'SUBMITTED_TO_RRU', label: 'Submit to RRU', color: '#EC4899' },
-  { value: 'Application_Returned', label: 'Return Application', color: '#F97316' },
+  { 
+    value: 'approve', 
+    label: '✅ Approve & Forward to CIU', 
+    color: '#10B981',
+    status: 'eavmu_approved'  // Resulting status
+  },
+  { 
+    value: 'reject', 
+    label: '❌ Reject Application', 
+    color: '#EF4444',
+    status: 'eavmu_rejected'  // Resulting status
+  },
 ];
 
 // Document status options

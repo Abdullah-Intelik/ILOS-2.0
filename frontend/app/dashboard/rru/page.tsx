@@ -76,22 +76,26 @@ const statsData = [
 
 function getStatusBadge(status: string) {
   switch (status) {
-    case "rejected_by_spu":
-      return <Badge variant="destructive">Rejected by SPU</Badge>
+    case "spu_rejected":
+      return <Badge variant="destructive">❌ Rejected by SPU</Badge>
     case "rejected_by_cops":
-      return <Badge variant="destructive">Rejected by COPS</Badge>
+    case "cops_rejected":
+      return <Badge variant="destructive">❌ Rejected by COPS</Badge>
+    case "eavmu_rejected":
     case "rejected_by_eavmu":
-      return <Badge variant="destructive">Rejected by EAMVU</Badge>
+      return <Badge variant="destructive">❌ Rejected by EAVMU</Badge>
+    case "ciu_rejected":
     case "rejected_by_ciu":
-      return <Badge variant="destructive">Rejected by CIU</Badge>
-    case "rejected_by_rru":
-      return <Badge variant="destructive">Rejected by RRU</Badge>
+      return <Badge variant="destructive">❌ Rejected by CIU</Badge>
+    case "rejected":
+      return <Badge variant="destructive">❌ Rejected</Badge>
     case "resolved_by_rru":
-      return <Badge className="bg-green-100 text-green-800">Resolved by RRU</Badge>
+    case "rru_approved":
+      return <Badge className="bg-green-100 text-green-800">✅ Approved for Retry</Badge>
     case "application_completed":
-      return <Badge className="bg-green-100 text-green-800">Completed</Badge>
+      return <Badge className="bg-green-100 text-green-800">✅ Completed</Badge>
     case "returned_by_eavmu_officer":
-      return <Badge className="bg-yellow-100 text-yellow-800">Returned by Officer</Badge>
+      return <Badge className="bg-yellow-100 text-yellow-800">⚠️ Returned by Officer</Badge>
     default:
       return <Badge variant="secondary">{status}</Badge>
   }
@@ -127,25 +131,26 @@ export default function RRUDashboardPage() {
   const [allDepartmentComments, setAllDepartmentComments] = useState<{ [key: string]: any[] }>({})
   const { toast } = useToast()
 
-  // Fetch RRU applications from API
+  // Fetch RRU applications from API (Backend V2.0)
   useEffect(() => {
     const fetchApplications = async () => {
       try {
         setLoading(true)
-        const response = await fetch(`/api/applications/department/RRU/paginated?page=${page}&pageSize=${pageSize}`, { cache: 'no-store' })
+        console.log(`🔍 RRU: Fetching from Backend V2.0: http://localhost:5000/api/v1/applications/department/RRU/paginated`)
+        const response = await fetch(`http://localhost:5000/api/v1/applications/department/RRU/paginated?page=${page}&pageSize=${pageSize}`, { cache: 'no-store' })
         const result = await response.json()
         
-        if (response.ok) {
+        if (response.ok && result.success) {
           const data = result?.data || []
           setApplicationsData(data)
           setTotal(result?.total || 0)
-          console.log('✅ RRU: Fetched', data.length, 'applications (paginated)')
+          console.log('✅ RRU: Fetched', data.length, 'rejected applications from Backend V2.0')
           console.log('📋 RRU Applications:', data)
         } else {
           console.error('❌ RRU: Failed to fetch applications:', result)
           toast({
             title: "Error",
-            description: "Failed to fetch applications",
+            description: "Failed to fetch rejected applications",
             variant: "destructive"
           })
         }

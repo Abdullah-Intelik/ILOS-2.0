@@ -18,7 +18,8 @@ import { Progress } from "@/components/ui/progress"
 import { Search, Filter, Clock, CheckCircle, AlertTriangle, FileText, Eye, MoreHorizontal, ArrowRight, ArrowLeft, X, Download, ExternalLink, Check, Ban, User, Banknote, Activity, CheckSquare, FolderOpen, Upload } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import DocumentExplorer from "@/components/document-explorer"
-import { DynamicFieldDisplay } from "@/components/dynamic-field-display"
+import { MinimalFieldDisplay } from "@/components/minimal-field-display"
+import { getApplicationsByDepartment, getApplicationForm, normalizeApplicationData, extractPaginatedData } from "@/lib/apiHelpers"
 
 
 
@@ -303,7 +304,7 @@ export default function SPUDashboardPage() {
         }
         
         // Use the blob-based approach like DocumentExplorer component
-        const fileUrl = `http://localhost:8081${foundDoc.path}`
+        const fileUrl = `http://localhost:8086${foundDoc.path}`
         console.log(`🔍 Opening file using blob approach: ${fileUrl}`)
         console.log(`🔍 Found document path: ${foundDoc.path}`)
         console.log(`🔍 Document name: ${foundDoc.name}`)
@@ -366,7 +367,7 @@ export default function SPUDashboardPage() {
       // Fallback: try opening directly
       try {
         console.log('🔄 Trying fallback direct opening...')
-        const fallbackUrl = `http://localhost:8081/explorer/${selectedApplication.application_type}/${selectedApplication.los_id}/${encodeURIComponent(doc.name)}`
+        const fallbackUrl = `http://localhost:8086/explorer/${selectedApplication.application_type}/${selectedApplication.los_id}/${encodeURIComponent(doc.name)}`
         window.open(fallbackUrl, '_blank')
         
         toast({
@@ -594,7 +595,7 @@ export default function SPUDashboardPage() {
       name: doc.name,
       type: doc.type,
       category: doc.category,
-      url: `http://localhost:8081/explorer/ilos_loan_application_documents/${appTypePath}/los-${losId}/${doc.name}`,
+      url: `http://localhost:8086/explorer/ilos_loan_application_documents/${appTypePath}/los-${losId}/${doc.name}`,
       status: "uploaded", // Assume uploaded for now
       required: ["CNIC Copy.pdf", "Salary Slip.pdf", "Bank Statement.pdf"].includes(doc.name)
     }))
@@ -625,7 +626,7 @@ export default function SPUDashboardPage() {
       
       console.log('🔄 Starting to fetch SPU applications...')
       
-      const response = await fetch(`/api/applications/department/SPU/paginated?page=${page}&pageSize=${pageSize}`, { cache: 'no-store' })
+      const response = await fetch(`/api/v1/applications/department/SPU/paginated/paginated?page=${page}&pageSize=${pageSize}`, { cache: 'no-store' })
       
       if (!response.ok) {
         throw new Error('Failed to fetch SPU applications')
@@ -943,7 +944,7 @@ export default function SPUDashboardPage() {
   const handleDownloadDocument = (document: any) => {
     // Simulate document download
     const link = document.createElement('a')
-    link.href = `http://localhost:8081/explorer/ilos_loan_application_documents/${selectedApplication?.application_type}/${selectedApplication?.los_id}/${document.name}`
+    link.href = `http://localhost:8086/explorer/ilos_loan_application_documents/${selectedApplication?.application_type}/${selectedApplication?.los_id}/${document.name}`
     link.download = document.name
     link.target = '_blank'
     document.body.appendChild(link)
@@ -989,7 +990,7 @@ export default function SPUDashboardPage() {
       }
       
       // Use the blob-based approach like DocumentExplorer component
-      const fileUrl = `http://localhost:8081/explorer/${selectedApplication.application_type}/${selectedApplication.los_id}/${encodeURIComponent(document.name)}`
+      const fileUrl = `http://localhost:8086/explorer/${selectedApplication.application_type}/${selectedApplication.los_id}/${encodeURIComponent(document.name)}`
       console.log(`🔍 Opening file using blob approach: ${fileUrl}`)
       
       // Fetch the file content as a blob
@@ -1037,7 +1038,7 @@ export default function SPUDashboardPage() {
       // Fallback: try opening directly
       try {
         console.log('🔄 Trying fallback direct opening...')
-        const fallbackUrl = `http://localhost:8081/explorer/${selectedApplication.application_type}/${selectedApplication.los_id}/${encodeURIComponent(document.name)}`
+        const fallbackUrl = `http://localhost:8086/explorer/${selectedApplication.application_type}/${selectedApplication.los_id}/${encodeURIComponent(document.name)}`
         window.open(fallbackUrl, '_blank')
         
         toast({
@@ -1315,14 +1316,8 @@ export default function SPUDashboardPage() {
         applicationType: selectedApplication.application_type
       })
       
-      // Fetch form data using the applications/form endpoint
-      const formResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/applications/form/${losId}`)
-      
-      if (!formResponse.ok) {
-        throw new Error(`Failed to fetch form data: ${formResponse.status}`)
-      }
-      
-      const formData = await formResponse.json()
+      // Fetch form data using Backend V2.0 API
+      const formData = await getApplicationForm(losId)
       console.log('📋 Fetched form data:', formData)
       
       // Extract CNIC from form data with multiple possible field names
@@ -2725,11 +2720,11 @@ export default function SPUDashboardPage() {
                    </CardHeader>
                    <CardContent>
                      {/* Dynamic Field Display - Shows ALL database fields automatically */}
-                     <DynamicFieldDisplay 
-                       data={selectedApplication.formData}
-                       title="Complete Application Data"
-                       excludeFields={['password', 'password_hash']}
-                     />
+                     <MinimalFieldDisplay 
+                        data={selectedApplication.formData}
+                        title="Application Data"
+                        productType="cashplus"
+                      />
                    </CardContent>
                  </Card>
                )}

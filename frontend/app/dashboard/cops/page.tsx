@@ -18,7 +18,7 @@ import { Progress } from "@/components/ui/progress"
 import { Search, Filter, Clock, CheckCircle, AlertTriangle, FileText, Eye, MoreHorizontal, ArrowRight, Database, CheckSquare, X, User, Banknote, Activity, FolderOpen, CheckCircle2, XCircle } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import DocumentExplorer from "@/components/document-explorer"
-import { DynamicFieldDisplay } from "@/components/dynamic-field-display"
+import { MinimalFieldDisplay } from "@/components/minimal-field-display"
 
 // Real data interface for COPS applications
 interface COPSApplication {
@@ -663,7 +663,7 @@ export default function COPSDashboardPage() {
     const fetchApplications = async () => {
       try {
         setLoading(true)
-        const response = await fetch(`/api/applications/department/COPS/paginated?page=${page}&pageSize=${pageSize}`, { cache: 'no-store' })
+        const response = await fetch(`/api/v1/applications/department/COPS/paginated/paginated?page=${page}&pageSize=${pageSize}`, { cache: 'no-store' })
         const result = await response.json()
         if (response.ok) {
           const data = result?.data || []
@@ -978,10 +978,10 @@ await fetch('/api/applications/update-status-workflow', {
                                       </CardHeader>
                                       <CardContent>
                                         {/* Dynamic Field Display - Shows ALL database fields automatically */}
-                                        <DynamicFieldDisplay 
+                                        <MinimalFieldDisplay 
                                           data={selectedApplication.formData}
-                                          title="Complete Application Data"
-                                          excludeFields={['password', 'password_hash']}
+                                          title="Application Data"
+                                          productType="cashplus"
                                         />
 
                                         <div className="space-y-6 mt-6">

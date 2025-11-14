@@ -40,7 +40,7 @@ export const CashplusEmploymentInfoForm = () => {
   );
   const getFieldClasses = (fieldName: string) => {
     const baseClasses = "w-full border border-gray-300 rounded-xl px-4 py-2";
-    const prefilledClasses = "bg-yellow-50 border-yellow-300";
+    const prefilledClasses = "bg-blue-50 border-blue-300";
     const normalClasses = "bg-white";
     return `${baseClasses} ${prefilledFields.has(fieldName) ? prefilledClasses : normalClasses}`;
   };
@@ -51,9 +51,9 @@ export const CashplusEmploymentInfoForm = () => {
         4. Employment / Occupational Details
       </h3>
       {customerData?.isETB && prefilledFields.size > 0 && (
-        <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-          <div className="text-sm text-yellow-800">
-            <strong>Note:</strong> Fields highlighted in yellow are pre-filled from your existing customer data. You can edit them if needed.
+        <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <div className="text-sm text-blue-800">
+            <strong>✨ Auto-Filled:</strong> Fields highlighted in blue are pre-filled from your previous loan application. You can edit them if needed.
           </div>
         </div>
       )}

@@ -1,0 +1,45 @@
+# ============================================================================
+# ILOS V2.0 - Environment Configuration Template
+# ============================================================================
+# Copy this file to .env and update with your values
+
+# BANK CONFIGURATION
+BANK_CODE=demo
+NODE_ENV=development
+
+# SERVER
+PORT=6000
+HOST=localhost
+
+# DATABASE V2 (NEW)
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=ilos_v2_demo
+DB_USER=postgres
+DB_PASSWORD=faez
+
+# CBS DATABASE
+CBS_DB_HOST=localhost
+CBS_DB_PORT=5432
+CBS_DB_NAME=cbs_db
+CBS_DB_USER=postgres
+CBS_DB_PASSWORD=faez
+
+# EXTERNAL APIs
+OCR_CNIC_URL=http://localhost:8001/extract-text
+OCR_SALARY_URL=http://localhost:8003/extract-salary
+NADRA_API_URL=http://localhost:8002/api/nadra
+ECIB_API_URL=http://localhost:8003/api/ecib
+
+# FILE STORAGE
+FILEZILLA_URL=http://localhost:8081
+MAX_FILE_SIZE=10485760
+
+# SECURITY
+JWT_SECRET=change-this-in-production
+JWT_EXPIRY=24h
+
+# LOGGING
+LOG_LEVEL=info
+LOG_FILE=./logs/ilos-v2.log
+

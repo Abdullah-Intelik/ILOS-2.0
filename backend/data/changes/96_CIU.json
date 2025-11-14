@@ -1,0 +1,48 @@
+{
+  "chainKey": "96_CIU",
+  "changes": [
+    {
+      "id": "9e704643-4c6e-44e1-a78e-390dabae3b65",
+      "losId": "96",
+      "department": "CIU",
+      "officer": "CIU_officer",
+      "timestamp": "2025-11-03T13:48:22.765Z",
+      "changeType": "FIELD_MODIFICATION",
+      "fieldChanges": [
+        {
+          "fieldName": "status",
+          "fieldPath": "application.workflow.status",
+          "oldValue": "submitted_to_ciu",
+          "newValue": "application_completed",
+          "changeReason": "approve by CIU: Application approved by CIU - Offer letter generation triggered automatically",
+          "timestamp": "2025-11-03T13:48:22.765Z",
+          "oldHash": "b8fa0a515c6181c8286aeb767a4d2e4408a80316280b7f7140e3656de39708c0",
+          "newHash": "a192307900a06f135b23e535098321b03a5a473b2a22f8998c48b096372d6f0c",
+          "changeHash": "0753f1427baf5c157f46314de0e399aaf4f3b361d5695d8ce1c305fc554a92dd",
+          "sensitivity": "LOW",
+          "riskScore": 1,
+          "requiresApproval": false
+        }
+      ],
+      "departmentContext": {
+        "workflowStage": "APPROVE",
+        "applicationType": "CashPlus",
+        "department": "CIU",
+        "resolveComment": "",
+        "businessReason": "Application approved by CIU - Offer letter generation triggered automatically",
+        "workflowAction": "approve"
+      },
+      "previousHash": "genesis",
+      "compositeHash": "84dc57e8447cbabd0f8e8afdcacb49c991bb3b73bd791b289c28f1fe98bcfd2e",
+      "sequence": 1,
+      "blockchain": {
+        "txId": null,
+        "blockNumber": null,
+        "chainHash": null,
+        "verificationStatus": "FAILED",
+        "error": ""
+      }
+    }
+  ],
+  "lastUpdated": "2025-11-03T13:48:22.773Z"
+}

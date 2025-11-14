@@ -19,6 +19,9 @@ const changeTracker = new DepartmentChangeTracker({
   persistenceEnabled: true
 });
 
+console.log('🔄 Loading automation services...');
+const { processNewApplication } = require('../services/automatedWorkflow');
+
 console.log('✅ Applications route module loaded successfully');
 
 // Define Zod validation schema
@@ -84,6 +87,89 @@ const getStatusParameters = (department) => {
   return department === 'PB' ? [] : allowedStatuses
 }
 
+// Get applications by CNIC (for customer mobile app)
+// IMPORTANT: This must come BEFORE /:id route to avoid route conflicts
+router.get('/by-cnic/:cnic', async (req, res) => {
+  try {
+    const { cnic } = req.params;
+    const cleanCNIC = cnic.replace(/[-\s]/g, '');
+
+    console.log('📱 Customer app: Fetching applications for CNIC:', cleanCNIC);
+
+    const applications = await db.query(`
+      SELECT 
+        los_id,
+        loan_type,
+        status,
+        created_at,
+        updated_at,
+        cnic
+      FROM ilos_applications
+      WHERE cnic = $1
+      ORDER BY created_at DESC
+    `, [cleanCNIC]);
+
+    console.log(`✅ Found ${applications.rows.length} applications for customer`);
+    res.json(applications.rows);
+
+  } catch (error) {
+    console.error('❌ Error fetching customer applications:', error);
+    res.status(500).json({ 
+      error: 'Failed to fetch applications',
+      message: error.message 
+    });
+  }
+});
+
+// Get single application details by ID (for customer app)
+// IMPORTANT: Placed after /by-cnic route to avoid conflicts
+router.get('/:id', async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    
+    // Only handle if ID is numeric (to avoid catching other routes)
+    if (isNaN(parseInt(id))) {
+      return next(); // Pass to next route
+    }
+    
+    const losId = parseInt(id);
+
+    console.log('📱 Customer app: Fetching details for LOS-' + losId);
+
+    const application = await db.query(`
+      SELECT 
+        los_id,
+        loan_type,
+        status,
+        cnic,
+        created_at,
+        updated_at
+      FROM ilos_applications
+      WHERE los_id = $1
+      LIMIT 1
+    `, [losId]);
+
+    if (application.rows.length === 0) {
+      console.log(`❌ Application LOS-${losId} not found in database`);
+      return res.status(404).json({ 
+        error: 'Application not found',
+        losId: losId,
+        message: `No application found with ID ${losId}`
+      });
+    }
+
+    console.log(`✅ Found application LOS-${losId}:`, application.rows[0].loan_type, application.rows[0].status);
+    res.json(application.rows[0]);
+
+  } catch (error) {
+    console.error('❌ Error fetching application details:', error);
+    res.status(500).json({ 
+      error: 'Failed to fetch application details',
+      message: error.message 
+    });
+  }
+});
+
 // Test endpoint to check table structure
 router.get('/test/tables', async (req, res) => {
   try {
@@ -94,7 +180,8 @@ router.get('/test/tables', async (req, res) => {
       'commercial_vehicle_applications',
       'ameendrive_applications',
       'platinum_card_applications',
-      'creditcard_applications'
+      'creditcard_applications',
+      'instantloan_applications'
     ];
 
     const results = {};
@@ -531,7 +618,8 @@ router.get('/test/status-values', async (req, res) => {
       'commercial_vehicle_applications',
       'ameendrive_applications',
       'platinum_card_applications',
-      'creditcard_applications'
+      'creditcard_applications',
+      'instantloan_applications'
     ];
 
     const results = {};
@@ -750,7 +838,8 @@ router.post('/update-status', async (req, res) => {
       'CommercialVehicle': 'commercial_vehicle_applications',
       'AmeenDrive': 'ameendrive_applications',
       'PlatinumCreditCard': 'platinum_card_applications',
-      'ClassicCreditCard': 'creditcard_applications'
+      'ClassicCreditCard': 'creditcard_applications',
+      'InstantLoan': 'instantloan_applications'
     }
 
     const tableName = tableMap[applicationType]
@@ -832,7 +921,8 @@ router.post('/update-status-workflow', async (req, res) => {
       'CommercialVehicle': 'commercial_vehicle_applications',
       'AmeenDrive': 'ameendrive_applications',
       'PlatinumCreditCard': 'platinum_card_applications',
-      'ClassicCreditCard': 'creditcard_applications'
+      'ClassicCreditCard': 'creditcard_applications',
+      'InstantLoan': 'instantloan_applications'
     }
 
     const tableName = tableMap[applicationType]
@@ -858,11 +948,52 @@ router.post('/update-status-workflow', async (req, res) => {
     // Handle department-specific workflow
     if (department === 'PB' && action === 'submit') {
       finalStatus = 'submitted_by_pb'
-      approvalMessage = 'Application submitted by PB to SPU'
+      approvalMessage = 'Application submitted by PB'
+      
+      // 🤖 AUTOMATION: Trigger automated workflow after PB submission
+      console.log(`🤖 AUTOMATION ENABLED: Triggering automated workflow for LOS-${losIdInt}`);
+      
+      // Set initial status first
+      await db.query(`
+        UPDATE ilos_applications 
+        SET status = $1, updated_at = NOW() 
+        WHERE los_id = $2
+      `, [finalStatus, losIdInt]);
+      
+      // Get application data for automated workflow
+      const appData = await db.query(`
+        SELECT 
+          los_id,
+          loan_type,
+          cnic
+        FROM ilos_applications
+        WHERE los_id = $1
+      `, [losIdInt]);
+      
+      if (appData.rows.length > 0) {
+        const app = appData.rows[0];
+        
+        // Trigger automated workflow (async - don't wait)
+        setImmediate(async () => {
+          try {
+            const workflowResult = await processNewApplication(losIdInt, {
+              cnic: app.cnic,
+              applicationType: app.loan_type
+            });
+            console.log(`✅ Automated workflow completed for LOS-${losIdInt}:`, workflowResult);
+          } catch (error) {
+            console.error(`❌ Automated workflow failed for LOS-${losIdInt}:`, error.message);
+          }
+        });
+        
+        approvalMessage = 'Application submitted by PB - Automated workflow initiated (SPU checks + Officer assignment)';
+      }
     } else if (department === 'SPU' && action === 'verify') {
+      // 🤖 AUTOMATION: SPU manual verify (fallback/override)
+      // This is now only for manual override when automation fails
       finalStatus = 'submitted_by_spu'
-      approvalMessage = 'Application verified by SPU - submitted to COPS and EAMVU Head'
-      console.log(`🔄 SPU: Starting fresh workflow - status set to submitted_by_spu`)
+      approvalMessage = 'Application manually verified by SPU (override) - submitted to COPS and EAMVU Head'
+      console.log(`⚠️ SPU: Manual verification used (automation override) - status set to submitted_by_spu`)
     } else if (department === 'SPU' && action === 'reject') {
       finalStatus = 'rejected_by_spu'
       approvalMessage = 'Application rejected by SPU'
@@ -1084,9 +1215,10 @@ router.post('/update-status-workflow', async (req, res) => {
       finalStatus = 'rejected_by_eavmu'
       approvalMessage = 'Application rejected by EAMVU HEAD'
     } else if (department === 'EAMVU_OFFICER' && action === 'complete') {
-      // EAMVU OFFICER completes work and returns to HEAD
+      // 🤖 AUTOMATION: EAMVU OFFICER completes work - auto-forward to CIU (bypass EAVMU Head and COPS)
       const { agentId, investigationNotes } = req.body;
       console.log(`🔍 EAMVU OFFICER: Agent ${agentId} completing work - Current status: ${status}`)
+      console.log(`🤖 AUTOMATION: Will auto-forward to CIU (bypassing EAVMU Head and COPS)`)
       console.log(`📝 Investigation Notes:`, investigationNotes)
       console.log(`🔍 DEBUG - Notes length: ${investigationNotes?.length || 0}`)
       console.log(`🔍 DEBUG - Contains "Lat:": ${investigationNotes?.includes('Lat:') || false}`)
@@ -1193,9 +1325,21 @@ router.post('/update-status-workflow', async (req, res) => {
           return res.status(400).json({ error: 'No active assignment found for this agent' });
         }
         
-        finalStatus = 'returned_by_eavmu_officer'
-        approvalMessage = `Application completed by EAMVU Officer (Agent: ${agentId}) - returned to EAMVU HEAD`
-        console.log(`✅ EAMVU OFFICER: Agent ${agentId} work completed - setting status to returned_by_eavmu_officer`)
+        // 🤖 AUTOMATION: Auto-forward to CIU (bypass EAVMU Head and COPS)
+        finalStatus = 'submitted_to_ciu'
+        approvalMessage = `Application completed by EAMVU Officer (Agent: ${agentId}) - AUTO-FORWARDED to CIU (bypassed EAVMU Head & COPS)`
+        console.log(`✅ EAMVU OFFICER: Agent ${agentId} work completed - AUTO-FORWARDING to CIU`)
+        
+        // Set flags to indicate automated forwarding
+        await db.query(`
+          UPDATE ilos_applications
+          SET 
+            eavmu_submitted = true,
+            cops_submitted = true,
+            auto_forwarded_to_ciu = true,
+            auto_forwarded_at = NOW()
+          WHERE los_id = $1
+        `, [losIdInt])
         
       } catch (error) {
         console.error('❌ Error completing assignment:', error);
@@ -1319,8 +1463,11 @@ router.post('/update-status-workflow', async (req, res) => {
         return res.status(500).json({ error: 'Failed to reject assignment' });
       }
     } else if (department === 'CIU' && action === 'approve') {
+      // CIU approval completes the application - COPS will handle disbursement manually
+      console.log(`✅ CIU approved LOS-${losIdInt} - setting status to application_completed`);
+      
       finalStatus = 'application_completed'
-      approvalMessage = 'Application completed by CIU'
+      approvalMessage = 'Application approved by CIU - Ready for COPS finalization (disbursement/card issuance)'
     } else if (department === 'CIU' && action === 'reject') {
       finalStatus = 'rejected_by_ciu'
       approvalMessage = 'Application rejected by CIU'

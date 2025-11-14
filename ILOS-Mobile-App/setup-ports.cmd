@@ -2,19 +2,28 @@
 REM ========================================
 REM Port Forwarding Setup (Quick Script)
 REM ========================================
-REM Use this to quickly setup ports without rebuilding
+REM Backend V2.0: Forwards Backend API (5000), Document Server (8086), and Metro (8082)
 
 echo.
-echo Setting up port forwarding for Metro on port 8082...
+echo Setting up port forwarding for ILOS Mobile App (EAVMU Officer)...
 echo.
 
 REM Forward ports for all connected devices
 for /f "skip=1 tokens=1" %%D in ('adb devices ^| findstr "device"') do (
     echo Setting up device: %%D
-    adb -s %%D reverse tcp:8081 tcp:8082
+    
+    REM Backend V2 API
+    adb -s %%D reverse tcp:5000 tcp:5000
+    echo   - Port 5000 (Backend API) ✓
+    
+    REM Document Server
+    adb -s %%D reverse tcp:8086 tcp:8086
+    echo   - Port 8086 (Document Server) ✓
+    
+    REM Metro Bundler
     adb -s %%D reverse tcp:8082 tcp:8082
-    echo   - Port 8081 -^> 8082 ✓
-    echo   - Port 8082 -^> 8082 ✓
+    echo   - Port 8082 (Metro Bundler) ✓
+    
     echo.
 )
 

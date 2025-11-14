@@ -2,6 +2,9 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db1');
 
+// Import mobile submission handler
+const { handleMobileSubmission, isMobileAppSubmission } = require('../utils/mobileSubmissionHandler');
+
 
 
 
@@ -108,6 +111,13 @@ router.get('/by-customer/:customer_id', async (req, res) => {
 
 // POST a new commercial vehicle application with all child data
 router.post('/', async (req, res) => {
+  // 📱 CHECK IF THIS IS A MOBILE APP SUBMISSION
+  const isMobileSubmission = isMobileAppSubmission(req.body);
+  
+  if (isMobileSubmission) {
+    console.log('📱 Detected mobile app submission for CommercialVehicle - will create pending_pb_completion status');
+  }
+  
   const client = await db.connect();
   try {
     await client.query('BEGIN');
@@ -195,19 +205,79 @@ router.post('/', async (req, res) => {
       );
     }
 
-                 // Note: ilos_applications record is automatically created by database trigger
+    // Note: ilos_applications record is automatically created by database trigger
     
-    // Update application status to PB_SUBMITTED after successful submission
-    try {
-      await client.query(`SELECT update_status_by_los_id($1, 'PB_SUBMITTED')`, [applicationId]);
-      console.log(`✅ Status updated to PB_SUBMITTED for Commercial Vehicle application ${applicationId}`);
-    } catch (statusError) {
-      console.error(`❌ Error updating status for Commercial Vehicle application ${applicationId}:`, statusError.message);
-      // Don't fail the entire request if status update fails
+    // 📱 HANDLE MOBILE SUBMISSION vs WEB SUBMISSION
+    if (isMobileSubmission) {
+      console.log(`📱 Mobile submission detected - setting status to pending_pb_completion`);
+      
+      try {
+        await client.query(`SELECT update_status_by_los_id($1, 'pending_pb_completion')`, [applicationId]);
+        console.log(`✅ Status updated to pending_pb_completion for mobile submission ${applicationId}`);
+      } catch (statusError) {
+        console.error(`❌ Error updating status:`, statusError.message);
+      }
+
+      try {
+        await client.query(`
+          INSERT INTO ilos_applications 
+          (los_id, loan_type, cnic, customer_id, status, submitted_from_mobile, mobile_submission_data, mobile_documents)
+          VALUES ($1, 'commercial_vehicle_applications', $2, $3, 'pending_pb_completion', true, $4, $5)
+          ON CONFLICT (los_id) DO UPDATE SET
+            status = 'pending_pb_completion',
+            submitted_from_mobile = true,
+            mobile_submission_data = $4,
+            mobile_documents = $5,
+            updated_at = NOW()
+        `, [
+          applicationId, 
+          application.applicant_cnic || req.body.applicant_cnic || null, 
+          application.customer_id || req.body.customer_id || null,
+          JSON.stringify(req.body),
+          JSON.stringify(req.body.documents || {})
+        ]);
+        console.log(`✅ Mobile submission data saved for LOS-${applicationId}`);
+      } catch (e) {
+        console.error('⚠️ Failed to save mobile submission data:', e.message);
+      }
+
+      console.log(`📱 Automation SKIPPED for mobile submission LOS-${applicationId} - awaiting PB completion`);
+      
+    } else {
+      try {
+        await client.query(`SELECT update_status_by_los_id($1, 'PB_SUBMITTED')`, [applicationId]);
+        console.log(`✅ Status updated to PB_SUBMITTED for Commercial Vehicle application ${applicationId}`);
+      } catch (statusError) {
+        console.error(`❌ Error updating status:`, statusError.message);
+      }
+
+      const { processNewApplication } = require('../services/automatedWorkflow');
+      console.log(`🤖 AUTOMATION ENABLED: Triggering automated workflow for LOS-${applicationId}`);
+      
+      setImmediate(async () => {
+        try {
+          const workflowResult = await processNewApplication(applicationId, {
+            cnic: application.applicant_cnic || req.body.applicant_cnic,
+            applicationType: 'CommercialVehicle'
+          });
+          console.log(`✅ Automated workflow completed for LOS-${applicationId}`);
+        } catch (error) {
+          console.error(`❌ Automated workflow failed:`, error.message);
+        }
+      });
     }
 
     await client.query('COMMIT');
-    res.status(201).json({ success: true, application_id: applicationId });
+    res.status(201).json({ 
+      success: true, 
+      application_id: applicationId,
+      losId: applicationId,
+      status: isMobileSubmission ? 'pending_pb_completion' : 'PB_SUBMITTED',
+      requiresPbCompletion: isMobileSubmission,
+      message: isMobileSubmission 
+        ? 'Application submitted successfully. Our team will review and complete your application shortly.' 
+        : 'Application submitted successfully.'
+    });
   } catch (err) {
     await client.query('ROLLBACK');
     console.error('Error creating commercial vehicle application:', err);

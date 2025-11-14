@@ -1,0 +1,43 @@
+{
+  "bank": {
+    "code": "mcb",
+    "name": "MCB",
+    "fullName": "MCB Bank Limited",
+    "country": "Pakistan",
+    "currency": "PKR",
+    "timezone": "Asia/Karachi"
+  },
+  
+  "branding": {
+    "primaryColor": "#00A651",
+    "secondaryColor": "#7AC143",
+    "logo": "/assets/logo-mcb.png",
+    "favicon": "/assets/favicon-mcb.ico",
+    "welcomeMessage": "Welcome to MCB Digital Lending"
+  },
+  
+  "features": {
+    "instantLoan": {
+      "enabled": false
+    },
+    "mobileApp": {
+      "enabled": true,
+      "allowNTB": true,
+      "documentUploadRequired": true
+    }
+  },
+  
+  "products": [
+    {
+      "code": "MCB_SAAF",
+      "name": "MCB SAAF Loan",
+      "type": "personal_loan",
+      "active": true,
+      "limits": {
+        "minAmount": 50000,
+        "maxAmount": 2500000
+      }
+    }
+  ]
+}
+

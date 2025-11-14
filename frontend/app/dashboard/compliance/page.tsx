@@ -16,7 +16,7 @@ import { Progress } from "@/components/ui/progress"
 import { Search, Filter, CheckCircle, AlertTriangle, FileText, Eye, Scale, X, CheckSquare, FolderOpen, Shield, User, Banknote, Activity } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import DocumentExplorer from "@/components/document-explorer"
-import { DynamicFieldDisplay } from "@/components/dynamic-field-display"
+import { MinimalFieldDisplay } from "@/components/minimal-field-display"
 
 // Real data interface for Compliance applications
 interface ComplianceApplication {
@@ -132,7 +132,7 @@ export default function ComplianceDashboardPage() {
     const fetchApplications = async () => {
       try {
         setLoading(true)
-        const response = await fetch(`/api/applications/department/COMPLIANCE/paginated?page=${page}&pageSize=${pageSize}`, { cache: 'no-store' })
+        const response = await fetch(`/api/v1/applications/department/COMPLIANCE/paginated/paginated?page=${page}&pageSize=${pageSize}`, { cache: 'no-store' })
         const result = await response.json()
         
         if (response.ok) {
@@ -641,10 +641,10 @@ export default function ComplianceDashboardPage() {
                   </CardHeader>
                   <CardContent>
                     {/* Dynamic Field Display - Shows ALL database fields automatically */}
-                    <DynamicFieldDisplay 
+                    <MinimalFieldDisplay 
                       data={selectedApplication.formData}
-                      title="Complete Application Data"
-                      excludeFields={['password', 'password_hash']}
+                      title="Application Data"
+                      productType="cashplus"
                     />
                   </CardContent>
                 </Card>

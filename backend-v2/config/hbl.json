@@ -1,0 +1,49 @@
+{
+  "bank": {
+    "code": "hbl",
+    "name": "HBL",
+    "fullName": "Habib Bank Limited",
+    "country": "Pakistan",
+    "currency": "PKR",
+    "timezone": "Asia/Karachi"
+  },
+  
+  "branding": {
+    "primaryColor": "#005A9C",
+    "secondaryColor": "#0080C8",
+    "logo": "/assets/logo-hbl.png",
+    "favicon": "/assets/favicon-hbl.ico",
+    "welcomeMessage": "Welcome to HBL Loan Origination System"
+  },
+  
+  "features": {
+    "instantLoan": {
+      "enabled": true,
+      "maxAmount": 500000,
+      "eligibleCustomerTypes": ["ETB"],
+      "autoApprove": true,
+      "autoDisburse": false
+    },
+    "mobileApp": {
+      "enabled": true,
+      "allowNTB": false,
+      "documentUploadRequired": true
+    }
+  },
+  
+  "products": [
+    {
+      "code": "HBL_PERSONAL",
+      "name": "HBL Personal Loan",
+      "type": "personal_loan",
+      "active": true,
+      "limits": {
+        "minAmount": 100000,
+        "maxAmount": 3000000,
+        "minTenure": 12,
+        "maxTenure": 60
+      }
+    }
+  ]
+}
+

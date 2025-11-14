@@ -3,10 +3,12 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Clock, CheckCircle, AlertTriangle, FileText, Eye, MoreHorizontal } from "lucide-react"
+import { Clock, CheckCircle, AlertTriangle, FileText, Eye, MoreHorizontal, Smartphone } from "lucide-react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import Link from "next/link"
+import MobileSubmissionsComponent from "./mobile-submissions/page"
 
 
 const statsData = [
@@ -131,62 +133,81 @@ export default function PBDashboardPage() {
         ))}
       </div>
 
-      {/* Recent Applications Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Applications</CardTitle>
-          <CardDescription>Manage your recent loan applications</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Applicant</TableHead>
-                <TableHead>LOS ID</TableHead>
-                <TableHead>Segment</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Amount</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {recentApplicants.map((applicant) => (
-                <TableRow key={applicant.id}>
-                  <TableCell>
-                    <div>
-                      <div className="font-medium">{applicant.name}</div>
-                      <div className="text-sm text-muted-foreground">{applicant.lastUpdate}</div>
-                    </div>
-                  </TableCell>
-                  <TableCell className="font-mono text-sm">{applicant.id}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline">{applicant.segment}</Badge>
-                  </TableCell>
-                  <TableCell>{getStatusBadge(applicant.status)}</TableCell>
-                  <TableCell className="font-medium">{applicant.amount}</TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem>
-                          <Eye className="mr-2 h-4 w-4" />
-                          View Details
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>Edit Application</DropdownMenuItem>
-                        <DropdownMenuItem className="text-red-600">Cancel Application</DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+      {/* Applications Tabs */}
+      <Tabs defaultValue="all" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="all">
+            <FileText className="h-4 w-4 mr-2" />
+            All Applications
+          </TabsTrigger>
+          <TabsTrigger value="mobile">
+            <Smartphone className="h-4 w-4 mr-2" />
+            📱 Mobile App Submissions
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="all" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Recent Applications</CardTitle>
+              <CardDescription>Manage your recent loan applications</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Applicant</TableHead>
+                    <TableHead>LOS ID</TableHead>
+                    <TableHead>Segment</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Amount</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {recentApplicants.map((applicant) => (
+                    <TableRow key={applicant.id}>
+                      <TableCell>
+                        <div>
+                          <div className="font-medium">{applicant.name}</div>
+                          <div className="text-sm text-muted-foreground">{applicant.lastUpdate}</div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="font-mono text-sm">{applicant.id}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline">{applicant.segment}</Badge>
+                      </TableCell>
+                      <TableCell>{getStatusBadge(applicant.status)}</TableCell>
+                      <TableCell className="font-medium">{applicant.amount}</TableCell>
+                      <TableCell className="text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="h-8 w-8 p-0">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem>
+                              <Eye className="mr-2 h-4 w-4" />
+                              View Details
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>Edit Application</DropdownMenuItem>
+                            <DropdownMenuItem className="text-red-600">Cancel Application</DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="mobile" className="space-y-4">
+          <MobileSubmissionsComponent />
+        </TabsContent>
+      </Tabs>
     </div>
   )
 } 

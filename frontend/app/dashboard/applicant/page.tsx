@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation"
 import { useCustomer } from "@/contexts/CustomerContext"
 
 export default function ApplicantPage() {
-  const [cnic, setCnic] = useState("35201-1111222-1")
+  const [cnic, setCnic] = useState("38403-9346396-1")
   const [product, setProduct] = useState("")
   const [subOption, setSubOption] = useState("")
   const [cnicEntered, setCnicEntered] = useState(false)

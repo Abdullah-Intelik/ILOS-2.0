@@ -1,0 +1,40 @@
+{
+  "bank": {
+    "code": "demo",
+    "name": "Demo Bank",
+    "fullName": "Demo Islamic Bank Limited",
+    "country": "Pakistan",
+    "currency": "PKR",
+    "timezone": "Asia/Karachi"
+  },
+  
+  "branding": {
+    "primaryColor": "#008080",
+    "secondaryColor": "#20B2AA",
+    "logo": "/assets/logo-demo.png",
+    "favicon": "/assets/favicon-demo.ico",
+    "welcomeMessage": "Welcome to Demo Bank ILOS"
+  },
+  
+  "features": {
+    "instantLoan": {
+      "enabled": true,
+      "maxAmount": 750000,
+      "eligibleCustomerTypes": ["ETB"],
+      "autoApprove": true,
+      "autoDisburse": true
+    },
+    "mobileApp": {
+      "enabled": true,
+      "allowNTB": true,
+      "documentUploadRequired": true
+    },
+    "automation": {
+      "enabled": true,
+      "spuAutoCheck": true,
+      "eavmuAutoAssign": true,
+      "ciuAutoReview": false
+    }
+  }
+}
+

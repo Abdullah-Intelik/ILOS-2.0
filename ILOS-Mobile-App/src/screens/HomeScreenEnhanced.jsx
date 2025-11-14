@@ -54,20 +54,21 @@ const HomeScreenEnhanced = ({ navigation }) => {
 
       console.log('🔄 Fetching applications for agent:', currentAgent.id);
       
-      // Test connectivity
+      // Test connectivity (Backend V2.0)
       try {
-        const healthResponse = await fetch(`${API_CONFIG.API_BASE_URL}/health`);
+        const healthResponse = await fetch(`${API_CONFIG.API_BASE_URL}/api/v1/health`);
         if (!healthResponse.ok) {
-          throw new Error('Backend health check failed');
+          throw new Error('Backend V2.0 health check failed');
         }
-        console.log('✅ Backend health check passed');
+        console.log('✅ Backend V2.0 health check passed');
       } catch (healthError) {
         console.error('❌ Backend health check failed:', healthError);
-        setError('Backend server is not accessible.');
+        setError('Backend server is not accessible. Please check port forwarding.');
         return;
       }
       
-      const applications = await apiService.getAssignedApplicationsForAgent(currentAgent.id);
+      // Backend V2.0: Get EAMVU applications filtered by agent
+      const applications = await apiService.getEAMVUApplications(currentAgent.id);
       console.log('✅ Fetched applications:', applications.length);
       setApplications(transformEAMVUApplications(applications));
       

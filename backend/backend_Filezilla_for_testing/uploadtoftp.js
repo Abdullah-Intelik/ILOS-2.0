@@ -5,7 +5,7 @@ const fs = require("fs");
 require('dotenv').config();
 
 const app = express();
-const PORT = 8081;
+const PORT = 8086; // Changed from 8081 to avoid conflict
 
 const LOCAL_ROOT = process.env.DOCUMENTS_ROOT || path.join(__dirname, '..', 'ilos_loan_application_documents');
 
@@ -171,6 +171,36 @@ app.post("/upload", upload.single("file"), (req, res) => {
         `);
     }
 });
+
+// ====== /list-files route: list files in a LOS directory ======
+app.get("/list-files", (req, res) => {
+  const { loan_type, los_id } = req.query;
+  
+  if (!loan_type || !los_id) {
+    return res.status(400).json({ error: 'loan_type and los_id required' });
+  }
+  
+  const dirPath = path.join(LOCAL_ROOT, loan_type, `los-${los_id}`);
+  
+  if (!fs.existsSync(dirPath)) {
+    return res.json({ files: [], message: 'Directory does not exist' });
+  }
+  
+  try {
+    const files = fs.readdirSync(dirPath);
+    res.json({ 
+      files: files.map(f => ({
+        name: f,
+        url: `http://localhost:${PORT}/files/${loan_type}/los-${los_id}/${f}`
+      }))
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ====== /files route: serve files for viewing ======
+app.use('/files', express.static(LOCAL_ROOT));
 
 // ====== Save OCR JSON alongside documents ======
 app.post('/save-ocr', (req, res) => {

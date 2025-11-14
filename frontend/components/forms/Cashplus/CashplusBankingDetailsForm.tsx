@@ -34,7 +34,7 @@ export const CashplusBankingDetailsForm = () => {
 
   const getFieldClasses = (fieldName: string) => {
     const base = "w-full border rounded-xl px-4 py-2";
-    const prefilled = "bg-yellow-50 border-yellow-300";
+    const prefilled = "bg-blue-50 border-blue-300";
     const normal = "bg-white";
     return `${base} ${prefilledFields.has(fieldName) ? prefilled : normal}`;
   };

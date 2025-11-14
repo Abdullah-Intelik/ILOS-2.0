@@ -1,0 +1,10 @@
+✅ FIXED: All API calls now include /api/v1 prefix
+
+Next Steps:
+1. Refresh your browser (Ctrl + Shift + R)
+2. The frontend should now correctly call: http://localhost:5000/api/v1/applications/...
+3. Make sure Backend V2.0 is running on port 5000
+
+To Start Backend V2.0:
+cd d:\ILOS 2.0\backend-v2
+npm run dev

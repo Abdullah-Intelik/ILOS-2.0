@@ -68,9 +68,20 @@ export const CashplusPersonalInfoForm = () => {
     ]
   );
 
+  // 🔍 DEBUG: Log prefilled fields detection
+  console.log('🔍 Personal Info Form - Prefilled Fields:', {
+    personalDetailsKeys: Object.keys(personalDetails),
+    personalDetailsWithValues: Object.entries(personalDetails).filter(([k, v]) => !!v).map(([k]) => k),
+    currentAddressKeys: Object.keys(currentAddress),
+    prefilledFieldsCount: prefilledFields.size,
+    prefilledFieldsList: Array.from(prefilledFields),
+    isETB: customerData?.isETB,
+    showBanner: customerData?.isETB && prefilledFields.size > 0
+  });
+
   const getFieldClasses = (fieldName: string) => {
     const baseClasses = "w-full border border-gray-300 rounded-xl px-4 py-2";
-    const prefilledClasses = "bg-yellow-50 border-yellow-300";
+    const prefilledClasses = "bg-blue-50 border-blue-300";
     const normalClasses = "bg-white";
     
     return `${baseClasses} ${prefilledFields.has(fieldName) ? prefilledClasses : normalClasses}`;
@@ -80,9 +91,9 @@ export const CashplusPersonalInfoForm = () => {
     <section className="mb-10">
       <h3 className="text-2xl rounded-lg text-white font-semibold mb-4 p-4 bg-primary text-primary-foreground">3. Personal Information</h3>
       {customerData?.isETB && prefilledFields.size > 0 && (
-        <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-          <div className="text-sm text-yellow-800">
-            <strong>Note:</strong> Fields highlighted in yellow are pre-filled from your existing customer data. You can edit them if needed.
+        <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <div className="text-sm text-blue-800">
+            <strong>✨ Auto-Filled:</strong> Fields highlighted in blue are pre-filled from your previous loan application or CBS records. You can edit them if needed.
           </div>
         </div>
       )}

@@ -73,47 +73,50 @@ class ILOSApiService {
     }
   }
 
-  // EAMVU Applications
-  async getEAMVUApplications() {
+  // EAMVU Applications - Backend V2.0
+  async getEAMVUApplications(agentId = null, page = 1, pageSize = 100) {
     try {
       debugLog('Fetching EAMVU applications...');
-      console.log('🔍 API Base URL:', API_CONFIG.BASE_URL);
-      console.log('🔍 Full URL:', `${API_CONFIG.BASE_URL}${API_ENDPOINTS.EAMVU_APPLICATIONS}`);
+      console.log('🔍 API Base URL:', API_CONFIG.API_BASE_URL);
+      console.log('🔍 Agent ID:', agentId);
       
-      const response = await apiClient.get(API_ENDPOINTS.EAMVU_APPLICATIONS);
+      // Backend V2.0: Uses department-based endpoint with pagination
+      const response = await apiClient.get(API_ENDPOINTS.EAMVU_APPLICATIONS, {
+        params: { page, pageSize }
+      });
       
       console.log('✅ API Response received:', response.status);
-      console.log('✅ Response data type:', typeof response.data);
-      console.log('✅ Response data length:', Array.isArray(response.data) ? response.data.length : 'Not an array');
       
-      if (response.data && Array.isArray(response.data)) {
-        debugLog(`Successfully fetched ${response.data.length} EAMVU applications`);
-        return response.data;
-      } else {
-        debugLog('No applications found or invalid response format');
-        console.log('⚠️ Response data:', response.data);
-        return [];
-      }
+      // Backend V2.0 returns: { success: true, data: [...], total, page, pageSize }
+      const applications = response.data.data || response.data.applications || [];
+      
+      console.log('✅ Total applications fetched:', applications.length);
+      console.log('📋 Sample application:', applications[0]);
+      
+      // ✅ NO FILTERING by assigned_to - Backend already filters by current_stage = 'EAVMU_OFFICER'
+      // All EAVMU stage applications are returned, matching web dashboard behavior
+      // (In web, agent login determines which apps they see, same here)
+      
+      debugLog(`Successfully fetched ${applications.length} EAVMU applications`);
+      return applications;
     } catch (error) {
-      console.error('❌ Detailed error info:', {
+      console.error('❌ Error fetching EAMVU applications:', {
         message: error.message,
         code: error.code,
         response: error.response?.status,
         responseData: error.response?.data,
-        config: error.config?.url,
-        baseURL: API_CONFIG.BASE_URL,
       });
       throw handleApiError(error, 'Failed to fetch EAMVU applications');
     }
   }
 
-  // Application Details
+  // Application Details - Backend V2.0
   async getApplicationDetails(losId) {
     try {
       debugLog(`Fetching application details for LOS ID: ${losId}`);
       
-      // Extract numeric ID from LOS-XXX format
-      const numericId = losId.replace('LOS-', '');
+      // Backend V2.0 expects numeric LOS ID
+      const numericId = losId.toString().replace('LOS-', '');
       
       const response = await apiClient.get(API_ENDPOINTS.APPLICATION_DETAILS(numericId));
       return response.data;
@@ -122,106 +125,112 @@ class ILOSApiService {
     }
   }
 
-  // Update Application Status
-  async updateApplicationStatus(losId, status, applicationType) {
+  // Update Application Status - Backend V2.0 (Unified approach matching web dashboard)
+  async updateApplicationStatus(losId, action, verificationData, agentId) {
     try {
-      debugLog(`Updating application status: ${losId} -> ${status}`);
-      const response = await apiClient.post(API_ENDPOINTS.UPDATE_STATUS, {
-        losId,
-        status,
-        applicationType,
-      });
+      debugLog(`Updating application LOS-${losId}: ${action}`);
+      
+      const numericId = losId.toString().replace('LOS-', '');
+      
+      // Determine status based on action
+      let status;
+      let eavmuVerification;
+      
+      if (action === 'approve' || action === 'verify') {
+        status = 'eavmu_approved'; // Moves to CIU
+        eavmuVerification = {
+          overall_result: 'Approved',
+          residence_verified: verificationData.residence_verified !== false,
+          workplace_verified: verificationData.workplace_verified !== false,
+          verification_notes: verificationData.notes || 'Investigation completed',
+          documents_uploaded: verificationData.documents_uploaded !== false,
+          verification_method: verificationData.method || 'field_visit'
+        };
+      } else if (action === 'reject') {
+        status = 'eavmu_rejected'; // Rejected
+        eavmuVerification = {
+          overall_result: 'Rejected',
+          residence_verified: false,
+          workplace_verified: false,
+          verification_notes: verificationData.notes || 'Application rejected',
+          documents_uploaded: false,
+          verification_method: 'field_visit'
+        };
+      } else {
+        throw new Error(`Invalid action: ${action}`);
+      }
+      
+      const response = await apiClient.patch(
+        API_ENDPOINTS.UPDATE_STATUS(numericId),
+        {
+          status,
+          comments: verificationData.notes || '',
+          userId: parseInt(agentId),
+          department: 'EAVMU',
+          action: action === 'approve' ? 'verify' : action,
+          eavmuVerification
+        }
+      );
+      
       return response.data;
     } catch (error) {
-      throw handleApiError(error, 'Failed to update application status');
+      throw handleApiError(error, `Failed to ${action} application`);
     }
   }
 
-  // Complete EAMVU Investigation
-  async completeEamvuInvestigation(losId, applicationType, agentId, investigationNotes) {
+  // Convenience method: Approve Application
+  async approveApplication(losId, notes, agentId, verificationData = {}) {
+    return this.updateApplicationStatus(losId, 'approve', {
+      notes,
+      residence_verified: verificationData.residence_verified,
+      workplace_verified: verificationData.workplace_verified,
+      documents_uploaded: verificationData.documents_uploaded,
+      method: verificationData.method
+    }, agentId);
+  }
+
+  // Convenience method: Reject Application
+  async rejectApplication(losId, notes, agentId) {
+    return this.updateApplicationStatus(losId, 'reject', { notes }, agentId);
+  }
+
+  // Add Comment - Backend V2.0
+  async addComment(losId, commentData) {
     try {
-      debugLog(`Completing EAMVU investigation: ${losId}`);
-      const response = await apiClient.post('/api/applications/update-status-workflow', {
-        losId,
-        status: 'assigned_to_eavmu_officer',
-        applicationType,
-        department: 'EAMVU_OFFICER',
-        action: 'complete',
-        agentId,
-        investigationNotes,
-      });
+      debugLog(`Adding comment for LOS-${losId}`);
+      
+      const numericId = losId.toString().replace('LOS-', '');
+      
+      const response = await apiClient.post(
+        API_ENDPOINTS.ADD_COMMENT(numericId),
+        commentData
+      );
+      
       return response.data;
     } catch (error) {
-      throw handleApiError(error, 'Failed to complete EAMVU investigation');
+      throw handleApiError(error, 'Failed to add comment');
     }
   }
 
-  // Reject EAMVU Investigation
-  async rejectEamvuInvestigation(losId, applicationType, agentId, investigationNotes) {
+  // Get Comments - Backend V2.0
+  async getComments(losId) {
     try {
-      debugLog(`Rejecting EAMVU investigation: ${losId}`);
-      const response = await apiClient.post('/api/applications/update-status-workflow', {
-        losId,
-        status: 'assigned_to_eavmu_officer',
-        applicationType,
-        department: 'EAMVU_OFFICER',
-        action: 'reject',
-        agentId,
-        investigationNotes,
-      });
+      debugLog(`Fetching comments for LOS-${losId}`);
+      
+      const numericId = losId.toString().replace('LOS-', '');
+      
+      const response = await apiClient.get(
+        API_ENDPOINTS.GET_COMMENTS(numericId)
+      );
+      
       return response.data;
     } catch (error) {
-      throw handleApiError(error, 'Failed to reject EAMVU investigation');
+      throw handleApiError(error, 'Failed to fetch comments');
     }
   }
 
-  // Update Application Comment
-  async updateApplicationComment(losId, fieldName, commentText) {
-    try {
-      debugLog(`Updating comment for LOS ID: ${losId}, Field: ${fieldName}`);
-      const response = await apiClient.post(API_ENDPOINTS.UPDATE_COMMENT, {
-        losId,
-        fieldName,
-        commentText,
-      });
-      return response.data;
-    } catch (error) {
-      throw handleApiError(error, 'Failed to update application comment');
-    }
-  }
-
-  // Get Application Comments
-  async getApplicationComments(losId) {
-    try {
-      debugLog(`Fetching comments for LOS ID: ${losId}`);
-      const response = await apiClient.get(API_ENDPOINTS.APPLICATION_COMMENTS(losId));
-      return response.data;
-    } catch (error) {
-      throw handleApiError(error, 'Failed to fetch application comments');
-    }
-  }
-
-  // Customer Status Check
-  async checkCustomerStatus(cnic) {
-    try {
-      debugLog(`Checking customer status for CNIC: ${cnic}`);
-      const response = await apiClient.post(API_ENDPOINTS.CUSTOMER_STATUS, { cnic });
-      return response.data;
-    } catch (error) {
-      throw handleApiError(error, 'Failed to check customer status');
-    }
-  }
-
-  // Get CIF Details
-  async getCIFDetails(consumerId) {
-    try {
-      debugLog(`Fetching CIF details for consumer ID: ${consumerId}`);
-      const response = await apiClient.get(API_ENDPOINTS.CIF_DETAILS(consumerId));
-      return response.data;
-    } catch (error) {
-      throw handleApiError(error, 'Failed to fetch CIF details');
-    }
-  }
+  // ❌ DEPRECATED: CBS/CIF methods removed in Backend V2.0
+  // Customer status is now determined by party data in the main database
 
   // Document Management
   async getApplicationDocuments(losId, applicationType = null) {
@@ -230,7 +239,7 @@ class ILOSApiService {
       // Extract numeric ID
       const numericId = losId.toString().replace('LOS-', '');
       
-      // Use document server (port 8081) for document operations
+      // Use document server (port 8086) for document operations
       const docServerUrl = API_CONFIG.DOCUMENT_SERVER_URL || API_CONFIG.API_BASE_URL;
       
       // Add applicationType as query parameter if provided
@@ -256,7 +265,7 @@ class ILOSApiService {
       // Extract numeric LOS ID
       const numericLosId = losId.toString().replace('LOS-', '');
       
-      // Document server (port 8081) uses different field names
+      // Document server (port 8086) uses different field names
       formData.append('losId', numericLosId);
       formData.append('loanType', applicationType); // Document server uses 'loanType'
       formData.append('document_type', documentType);
@@ -283,7 +292,7 @@ class ILOSApiService {
 
       debugLog('Upload request:', { losId: numericLosId, loanType: applicationType, documentType, filename, customName: customFileName });
 
-      // Use document server (port 8081) for upload
+      // Use document server (port 8086) for upload
       const docServerUrl = API_CONFIG.DOCUMENT_SERVER_URL || API_CONFIG.API_BASE_URL;
       const url = `${docServerUrl}/upload`; // Document server uses /upload not /api/upload-document
       
@@ -307,7 +316,7 @@ class ILOSApiService {
   async getDocumentUrl(documentPath) {
     try {
       // documentPath is like: /explorer/cashplus/los-123/photo.jpg
-      // Use document server (port 8081) for viewing documents
+      // Use document server (port 8086) for viewing documents
       const docServerUrl = API_CONFIG.DOCUMENT_SERVER_URL || API_CONFIG.API_BASE_URL;
       const fullUrl = `${docServerUrl}${documentPath}`;
       debugLog(`Document URL: ${fullUrl}`);
@@ -361,142 +370,9 @@ class ILOSApiService {
     }
   }
 
-  // Batch Operations
-  async batchUpdateApplications(updates) {
-    try {
-      debugLog(`Batch updating ${updates.length} applications`);
-      const promises = updates.map(update => 
-        this.updateApplicationStatus(update.losId, update.status, update.applicationType)
-      );
-      const results = await Promise.allSettled(promises);
-      
-      const successful = results.filter(result => result.status === 'fulfilled');
-      const failed = results.filter(result => result.status === 'rejected');
-      
-      debugLog(`Batch update completed: ${successful.length} successful, ${failed.length} failed`);
-      
-      return {
-        successful: successful.length,
-        failed: failed.length,
-        results,
-      };
-    } catch (error) {
-      throw handleApiError(error, 'Failed to batch update applications');
-    }
-  }
-
-  // Get Application Statistics
-  async getApplicationStatistics() {
-    try {
-      debugLog('Fetching application statistics...');
-      const applications = await this.getEAMVUApplications();
-      
-      const stats = {
-        total: applications.length,
-        byStatus: {},
-        byPriority: {},
-        byType: {},
-      };
-
-      applications.forEach(app => {
-        // Count by status
-        const status = app.status || 'Unknown';
-        stats.byStatus[status] = (stats.byStatus[status] || 0) + 1;
-
-        // Count by priority
-        const priority = app.priority || 'Low';
-        stats.byPriority[priority] = (stats.byPriority[priority] || 0) + 1;
-
-        // Count by type
-        const type = app.applicationType || 'Unknown';
-        stats.byType[type] = (stats.byType[type] || 0) + 1;
-      });
-
-      return stats;
-    } catch (error) {
-      throw handleApiError(error, 'Failed to fetch application statistics');
-    }
-  }
-
-  // Get Agent Assignments
-  async getAgentAssignments() {
-    try {
-      debugLog('Fetching agent assignments...');
-      const response = await apiClient.get(API_ENDPOINTS.AGENT_ASSIGNMENTS);
-      
-      if (response.data && response.data.assignments) {
-        debugLog(`Successfully fetched ${response.data.assignments.length} agent assignments`);
-        return response.data;
-      } else {
-        debugLog('No assignments found or invalid response format');
-        return { total_assignments: 0, assignments: [] };
-      }
-    } catch (error) {
-      throw handleApiError(error, 'Failed to fetch agent assignments');
-    }
-  }
-
-  // Get Assigned Applications for Specific Agent
-  async getAssignedApplicationsForAgent(agentId) {
-    try {
-      debugLog(`Fetching assigned applications for agent: ${agentId}`);
-      
-      // First, get all EAMVU applications
-      const eamvuResponse = await apiClient.get(API_ENDPOINTS.EAMVU_APPLICATIONS);
-      const eamvuData = eamvuResponse.data;
-      
-      console.log('✅ EAMVU applications fetched:', eamvuData.length);
-      
-      try {
-        // Then, get agent assignments
-        const assignmentsResponse = await this.getAgentAssignments();
-        const assignmentsData = assignmentsResponse.assignments;
-        
-        console.log('✅ Agent assignments fetched:', assignmentsData.length);
-        
-        // Filter assignments for this specific agent with active status
-        // Use agent_id_str for string-based agent IDs (e.g., 'agent-001')
-        const agentAssignments = assignmentsData.filter(assignment => 
-          (assignment.agent_id_str === agentId || assignment.agent_id === agentId) && 
-          assignment.assignment_status === 'active'
-        );
-        
-        console.log('✅ Active assignments for agent', agentId, ':', agentAssignments.length);
-        
-        // Filter EAMVU applications to only show those assigned to this specific agent
-        const assignedApplications = eamvuData.filter(app => {
-          const isAssignedToThisAgent = agentAssignments.some(assignment => 
-            assignment.los_id === parseInt(app.los_id.replace('LOS-', ''))
-          );
-          
-          const hasValidStatus = app.status === 'submitted_by_spu' || app.status === 'assigned_to_eavmu_officer';
-          
-          console.log(`🔍 App ${app.los_id}: status=${app.status}, assigned=${isAssignedToThisAgent}, valid=${hasValidStatus}`);
-          
-          // Include applications that are either submitted by SPU or assigned to EAMVU officer
-          return hasValidStatus && isAssignedToThisAgent;
-        });
-        
-        debugLog(`Found ${assignedApplications.length} applications assigned to agent ${agentId}`);
-        return assignedApplications;
-        
-      } catch (assignmentError) {
-        console.warn('⚠️ Agent assignments API failed, showing all EAMVU applications:', assignmentError.message);
-        
-        // Fallback: show all EAMVU applications if assignment API fails
-        const allEAMVUApplications = eamvuData.filter(app => 
-          app.status === 'submitted_by_spu' || app.status === 'assigned_to_eavmu_officer'
-        );
-        
-        debugLog(`Fallback: Showing ${allEAMVUApplications.length} EAMVU applications`);
-        return allEAMVUApplications;
-      }
-      
-    } catch (error) {
-      console.error('❌ Error in getAssignedApplicationsForAgent:', error);
-      throw handleApiError(error, 'Failed to fetch assigned applications for agent');
-    }
-  }
+  // ❌ DEPRECATED: Agent assignment methods removed
+  // Backend V2.0 uses assigned_to field directly in applications table
+  // Use getEAMVUApplications(agentId) instead
 }
 
 // Create and export the API service instance

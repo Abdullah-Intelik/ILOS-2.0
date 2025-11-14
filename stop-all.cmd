@@ -26,7 +26,7 @@ echo   ✓ Metro bundler stopped
 echo.
 echo [3/3] Clearing Android port forwards...
 adb reverse --remove tcp:5000 >nul 2>&1
-adb reverse --remove tcp:8081 >nul 2>&1
+adb reverse --remove tcp:8086 >nul 2>&1
 adb reverse --remove tcp:8082 >nul 2>&1
 echo   ✓ Port forwards cleared
 
@@ -38,7 +38,7 @@ echo.
 echo  Ports Released:
 echo    - 3000 (Frontend)
 echo    - 5000 (Backend)
-echo    - 8081 (Document Server)
+echo    - 8086 (Document Server)
 echo    - 8082 (Metro Bundler)
 echo.
 echo  You can now restart services using:

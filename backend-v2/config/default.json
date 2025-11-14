@@ -1,0 +1,201 @@
+{
+  "bank": {
+    "code": "default",
+    "name": "Default Bank",
+    "country": "Pakistan",
+    "currency": "PKR",
+    "timezone": "Asia/Karachi"
+  },
+  
+  "branding": {
+    "primaryColor": "#008080",
+    "secondaryColor": "#20B2AA",
+    "logo": "/assets/logo-default.png",
+    "favicon": "/assets/favicon.ico"
+  },
+  
+  "features": {
+    "instantLoan": {
+      "enabled": true,
+      "maxAmount": 750000,
+      "eligibleCustomerTypes": ["ETB"],
+      "autoApprove": true,
+      "autoDisbur se": true
+    },
+    "mobileApp": {
+      "enabled": true,
+      "allowNTB": true,
+      "documentUploadRequired": true
+    },
+    "automation": {
+      "enabled": true,
+      "spuAutoCheck": true,
+      "eavmuAutoAssign": true,
+      "ciuAutoReview": false
+    },
+    "biometric": {
+      "enabled": false
+    },
+    "eCIB": {
+      "enabled": true,
+      "autoFetch": true
+    }
+  },
+  
+  "products": [
+    {
+      "code": "CASHPLUS",
+      "name": "Cash Plus",
+      "type": "personal_loan",
+      "active": true,
+      "instantEligible": true,
+      "limits": {
+        "minAmount": 50000,
+        "maxAmount": 2000000,
+        "minTenure": 12,
+        "maxTenure": 60,
+        "interestRateMin": 12,
+        "interestRateMax": 24
+      },
+      "eligibility": {
+        "minAge": 21,
+        "maxAge": 60,
+        "minIncome": 25000,
+        "allowedCustomerTypes": ["NTB", "ETB"]
+      }
+    },
+    {
+      "code": "AUTOLOAN",
+      "name": "Auto Loan",
+      "type": "auto_loan",
+      "active": true,
+      "instantEligible": false,
+      "limits": {
+        "minAmount": 500000,
+        "maxAmount": 10000000,
+        "minTenure": 12,
+        "maxTenure": 84,
+        "interestRateMin": 14,
+        "interestRateMax": 22
+      },
+      "eligibility": {
+        "minAge": 21,
+        "maxAge": 65,
+        "minIncome": 50000,
+        "allowedCustomerTypes": ["ETB"]
+      }
+    },
+    {
+      "code": "CREDITCARD_PLATINUM",
+      "name": "Platinum Credit Card",
+      "type": "credit_card",
+      "active": true,
+      "instantEligible": false,
+      "limits": {
+        "minAmount": 100000,
+        "maxAmount": 1000000
+      },
+      "eligibility": {
+        "minAge": 21,
+        "maxAge": 65,
+        "minIncome": 75000,
+        "allowedCustomerTypes": ["ETB"]
+      }
+    }
+  ],
+  
+  "workflow": {
+    "stages": [
+      {
+        "code": "pb_entry",
+        "name": "PB Entry",
+        "roles": ["pb"],
+        "automationAllowed": false
+      },
+      {
+        "code": "spu_check",
+        "name": "SPU Compliance Check",
+        "roles": ["spu"],
+        "automationAllowed": true
+      },
+      {
+        "code": "eavmu_verification",
+        "name": "EAVMU Verification",
+        "roles": ["eamvu", "eamvu_officer"],
+        "automationAllowed": true
+      },
+      {
+        "code": "ciu_review",
+        "name": "CIU Credit Review",
+        "roles": ["ciu"],
+        "automationAllowed": false
+      },
+      {
+        "code": "cops_disbursement",
+        "name": "COPS Disbursement",
+        "roles": ["cops"],
+        "automationAllowed": true
+      }
+    ],
+    "instantLoanWorkflow": {
+      "skipStages": ["pb_entry", "eavmu_verification", "ciu_review"],
+      "autoStages": ["spu_check", "cops_disbursement"]
+    }
+  },
+  
+  "limits": {
+    "maxApplicationsPerDay": 1000,
+    "maxApplicationsPerUser": 10,
+    "maxDocumentSize": 10485760,
+    "maxDocumentsPerApplication": 20
+  },
+  
+  "notifications": {
+    "email": {
+      "enabled": true,
+      "from": "noreply@ilos.com"
+    },
+    "sms": {
+      "enabled": true
+    },
+    "push": {
+      "enabled": false
+    }
+  },
+  
+  "security": {
+    "jwtExpiry": "24h",
+    "sessionTimeout": 1800,
+    "maxLoginAttempts": 5,
+    "lockoutDuration": 1800,
+    "passwordPolicy": {
+      "minLength": 8,
+      "requireUppercase": true,
+      "requireLowercase": true,
+      "requireNumbers": true,
+      "requireSpecialChars": false
+    }
+  },
+  
+  "compliance": {
+    "pepCheck": {
+      "enabled": true,
+      "provider": "internal"
+    },
+    "sbpBlacklist": {
+      "enabled": true,
+      "provider": "internal"
+    },
+    "nadraVerisys": {
+      "enabled": true,
+      "apiUrl": "http://localhost:8002/api/nadra"
+    },
+    "internalWatchlist": {
+      "enabled": true
+    },
+    "cclCheck": {
+      "enabled": true
+    }
+  }
+}
+

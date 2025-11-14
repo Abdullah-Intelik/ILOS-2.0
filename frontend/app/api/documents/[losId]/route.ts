@@ -33,10 +33,10 @@ export async function GET(
     let endpoint = ''
     if (search === 'true') {
       // Search across all application types
-      endpoint = `http://localhost:8081/api/documents/search/${losId}`
+      endpoint = `http://localhost:8086/api/documents/search/${losId}`
     } else {
       // Get documents for specific application type
-      endpoint = `http://localhost:8081/api/documents/${losId}`
+      endpoint = `http://localhost:8086/api/documents/${losId}`
       if (applicationType) {
         endpoint += `?applicationType=${applicationType}`
       }

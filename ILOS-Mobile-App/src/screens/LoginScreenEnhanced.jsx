@@ -16,8 +16,9 @@ import { LinearGradient } from 'react-native-linear-gradient';
 import { AGENT_CREDENTIALS } from '../utils/config';
 
 const LoginScreenEnhanced = ({ navigation }) => {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  // ✅ Autofill credentials for easier testing
+  const [username, setUsername] = useState('Ahmad Hassan');
+  const [password, setPassword] = useState('001');
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {

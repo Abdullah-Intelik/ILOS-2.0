@@ -78,6 +78,8 @@ const ApplicationDetailScreen = ({ route, navigation }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [visitModalVisible, setVisitModalVisible] = useState(false);
+  const [documentModalVisible, setDocumentModalVisible] = useState(false);
+  const [selectedDocument, setSelectedDocument] = useState(null);
   const [visitStatus, setVisitStatus] = useState('pending'); // pending, in-progress, completed
   const [comments, setComments] = useState({
     verification: '',
@@ -129,11 +131,18 @@ const ApplicationDetailScreen = ({ route, navigation }) => {
                       'cashplus'; // Default fallback
       
       const documents = await apiService.getApplicationDocuments(application.losId, appType);
-      setUploadedDocuments(documents || []);
-      console.log(`📄 Loaded ${documents?.length || 0} documents for ${application.losId} (${appType})`);
+      // Filter out eCIB and Application Form - EAVMU Officer should not see them
+      const filteredDocuments = (documents || []).filter(doc => {
+        const name = doc.name.toLowerCase();
+        return !name.includes('ecib') && !name.includes('application.pdf');
+      });
+      setUploadedDocuments(filteredDocuments);
+      console.log(`📄 Loaded ${filteredDocuments.length} documents for ${application.losId} (${appType}) - eCIB & Application Form hidden`);
     } catch (error) {
       console.error('📄 Failed to load documents:', error);
-      // Don't show error to user, just log it
+      // Set empty array so UI doesn't show error
+      setUploadedDocuments([]);
+      // Don't show error toast - document viewing is not critical for EAVMU workflow
     }
   };
 
@@ -250,17 +259,24 @@ Accuracy: ${Math.round(locationData.accuracy)}m
       `.trim();
       
       // Extract numeric LOS ID
-      const losId = application.losId.replace('LOS-', '');
+      const losId = typeof application.losId === 'string' 
+        ? application.losId.replace('LOS-', '') 
+        : application.losId;
       
       // Get current agent ID (numeric)
       const agentId = global.currentAgent?.id || 101;
       
-      // Call API to complete investigation
-      await apiService.completeEamvuInvestigation(
+      // Backend V2.0: Approve application with verification data
+      await apiService.approveApplication(
         losId,
-        applicationDetails.application_type || application.applicationType || 'CashPlus',
+        investigationNotes,
         agentId,
-        investigationNotes
+        {
+          residence_verified: true,
+          workplace_verified: true,
+          documents_uploaded: uploadedDocuments?.length > 0 || false,
+          method: locationData ? 'field_visit' : 'remote'
+        }
       );
       
       Alert.alert(
@@ -357,17 +373,18 @@ Accuracy: ${Math.round(locationData.accuracy)}m
       `.trim();
       
       // Extract numeric LOS ID
-      const losId = application.losId.replace('LOS-', '');
+      const losId = typeof application.losId === 'string' 
+        ? application.losId.replace('LOS-', '') 
+        : application.losId;
       
       // Get current agent ID (numeric)
       const agentId = global.currentAgent?.id || 101;
       
-      // Call API to reject investigation
-      await apiService.rejectEamvuInvestigation(
+      // Backend V2.0: Reject application
+      await apiService.rejectApplication(
         losId,
-        applicationDetails.application_type || application.applicationType || 'CashPlus',
-        agentId,
-        investigationNotes
+        investigationNotes,
+        agentId
       );
       
       Alert.alert(
@@ -547,16 +564,15 @@ Accuracy: ${Math.round(locationData.accuracy)}m
   };
 
   const handlePreviewDocument = (document) => {
-    Alert.alert(
-      'Document Preview',
-      `Name: ${document.name}\nSize: ${document.size}\nType: ${document.type}`,
-      [
-        {
-          text: 'OK',
-          style: 'default',
-        },
-      ]
-    );
+    // Open document in modal viewer
+    console.log(`📄 Opening document: ${document.name}`);
+    setSelectedDocument(document);
+    setDocumentModalVisible(true);
+  };
+
+  const closeDocumentModal = () => {
+    setDocumentModalVisible(false);
+    setSelectedDocument(null);
   };
 
   const renderHeader = () => (
@@ -1113,6 +1129,57 @@ Accuracy: ${Math.round(locationData.accuracy)}m
           </View>
         </TouchableOpacity>
       </Modal>
+
+      {/* Document Viewer Modal */}
+      <Modal
+        visible={documentModalVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={closeDocumentModal}
+      >
+        <View style={styles.documentModalOverlay}>
+          <View style={styles.documentModalContent}>
+            <View style={styles.documentModalHeader}>
+              <Text style={styles.documentModalTitle}>{selectedDocument?.name}</Text>
+              <TouchableOpacity onPress={closeDocumentModal} style={styles.closeModalButton}>
+                <AppIcon name="close" size={24} color="#1F2937" />
+              </TouchableOpacity>
+            </View>
+            
+            {selectedDocument && (
+              <View style={styles.documentViewerContainer}>
+                {selectedDocument.type === 'JPG' || selectedDocument.type === 'PNG' || selectedDocument.type === 'JPEG' ? (
+                  <Image
+                    source={{ uri: `${API_CONFIG.DOCUMENT_SERVER_URL}${selectedDocument.path}` }}
+                    style={styles.documentImage}
+                    resizeMode="contain"
+                  />
+                ) : selectedDocument.type === 'PDF' ? (
+                  <View style={styles.pdfPlaceholder}>
+                    <AppIcon name="description" size={60} color="#3B82F6" />
+                    <Text style={styles.pdfPlaceholderText}>PDF Document</Text>
+                    <Text style={styles.pdfPlaceholderSubtext}>{selectedDocument.name}</Text>
+                    <TouchableOpacity 
+                      style={styles.openExternalButton}
+                      onPress={() => {
+                        Linking.openURL(`${API_CONFIG.DOCUMENT_SERVER_URL}${selectedDocument.path}`);
+                      }}
+                    >
+                      <Text style={styles.openExternalButtonText}>Open in Browser</Text>
+                    </TouchableOpacity>
+                  </View>
+                ) : (
+                  <View style={styles.pdfPlaceholder}>
+                    <AppIcon name="description" size={60} color="#6B7280" />
+                    <Text style={styles.pdfPlaceholderText}>Document</Text>
+                    <Text style={styles.pdfPlaceholderSubtext}>{selectedDocument.name}</Text>
+                  </View>
+                )}
+              </View>
+            )}
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -1535,6 +1602,78 @@ const styles = StyleSheet.create({
     color: '#6B7280',
     marginTop: 5,
     textAlign: 'center',
+  },
+  // Document Viewer Modal Styles
+  documentModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  documentModalContent: {
+    width: '95%',
+    height: '90%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  documentModalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
+    backgroundColor: '#F9FAFB',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+  },
+  documentModalTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1F2937',
+    flex: 1,
+    marginRight: 16,
+  },
+  closeModalButton: {
+    padding: 8,
+  },
+  documentViewerContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F3F4F6',
+  },
+  documentImage: {
+    width: '100%',
+    height: '100%',
+  },
+  pdfPlaceholder: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 32,
+  },
+  pdfPlaceholderText: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#1F2937',
+    marginTop: 16,
+  },
+  pdfPlaceholderSubtext: {
+    fontSize: 14,
+    color: '#6B7280',
+    marginTop: 8,
+    textAlign: 'center',
+  },
+  openExternalButton: {
+    marginTop: 24,
+    backgroundColor: '#3B82F6',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  openExternalButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
 

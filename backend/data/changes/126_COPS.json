@@ -1,0 +1,48 @@
+{
+  "chainKey": "126_COPS",
+  "changes": [
+    {
+      "id": "9794f7c4-0dcf-4224-b6ad-79403dec7b9b",
+      "losId": "126",
+      "department": "COPS",
+      "officer": "COPS_officer",
+      "timestamp": "2025-11-05T13:25:44.889Z",
+      "changeType": "FIELD_MODIFICATION",
+      "fieldChanges": [
+        {
+          "fieldName": "status",
+          "fieldPath": "application.workflow.status",
+          "oldValue": "application_completed",
+          "newValue": "loan_disbursed",
+          "changeReason": "finalize by COPS: Loan disbursed by COPS",
+          "timestamp": "2025-11-05T13:25:44.889Z",
+          "oldHash": "a192307900a06f135b23e535098321b03a5a473b2a22f8998c48b096372d6f0c",
+          "newHash": "f043e5498c0fc7b0a64dcb25f65df6ca6f6d469c156db63e6b9f4f389e8c8e76",
+          "changeHash": "8666ae62240c0a8c35a77978a8799e2729b4cffb4a9fdc2573662ea9f6e1b35d",
+          "sensitivity": "LOW",
+          "riskScore": 1,
+          "requiresApproval": false
+        }
+      ],
+      "departmentContext": {
+        "workflowStage": "FINALIZE",
+        "applicationType": "CashPlus",
+        "department": "COPS",
+        "resolveComment": "",
+        "businessReason": "Loan disbursed by COPS",
+        "workflowAction": "finalize"
+      },
+      "previousHash": "genesis",
+      "compositeHash": "f828232f59153552cb1b80e4f2b2dc257eaa8d5cc3fd90fd073f10d51df5cda3",
+      "sequence": 1,
+      "blockchain": {
+        "txId": null,
+        "blockNumber": null,
+        "chainHash": null,
+        "verificationStatus": "FAILED",
+        "error": ""
+      }
+    }
+  ],
+  "lastUpdated": "2025-11-05T13:25:44.891Z"
+}

@@ -23,14 +23,16 @@ adb devices
 echo.
 
 echo [2/4] Setting up port forwarding for all devices...
-echo   - Forwarding port 8081 -^> 8082 (for default Metro connections)
-echo   - Forwarding port 8082 -^> 8082 (for configured Metro connections)
+echo   - Port 5000 (Backend API)
+echo   - Port 8086 (Document Server)
+echo   - Port 8082 (Metro Bundler)
 echo.
 
 REM Forward ports for all connected devices
 for /f "skip=1 tokens=1" %%D in ('adb devices ^| findstr "device"') do (
     echo   Setting up ports for device: %%D
-    adb -s %%D reverse tcp:8081 tcp:8082 2>nul
+    adb -s %%D reverse tcp:5000 tcp:5000 2>nul
+    adb -s %%D reverse tcp:8086 tcp:8086 2>nul
     adb -s %%D reverse tcp:8082 tcp:8082 2>nul
 )
 

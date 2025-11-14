@@ -89,13 +89,24 @@ const DocumentManagement: React.FC = () => {
   const mapLoanTypeLabelToSlug = (label: string): string => {
     if (!label) return 'cashplus'
     const lower = label.toLowerCase()
+    
+    // Backend V2.0 product types
+    if (lower === 'personal_loan') return 'cashplus' // Backend V2.0 uses 'personal_loan' for CashPlus
+    if (lower === 'auto_loan') return 'autoloan'
+    if (lower === 'islamic_finance') return 'ameendrive'
+    if (lower === 'sme_loan') return 'smeasaan'
+    if (lower === 'credit_card') return 'creditcard'
+    if (lower === 'instant_loan') return 'cashplus' // Instant Loan uses cashplus folder
+    
+    // Legacy V1 labels (for backward compatibility)
     if (lower.includes('cash') && lower.includes('plus')) return 'cashplus'
     if (lower.includes('auto')) return 'autoloan'
     if (lower.includes('ameendrive') || (lower.includes('ameen') && lower.includes('drive'))) return 'ameendrive'
     if (lower.includes('sme') && (lower.includes('asaan') || lower.includes('loan'))) return 'smeasaan'
     if (lower.includes('commercial') && (lower.includes('vehicle') || lower.includes('sme'))) return 'commercialVehicle'
     if (lower.includes('credit') && lower.includes('card')) return 'creditcard'
-    return 'cashplus'
+    
+    return 'cashplus' // Default fallback
   }
   
   const runOcr = async (file: File, doc: string) => {
@@ -112,7 +123,7 @@ const DocumentManagement: React.FC = () => {
     try {
       const numericLosId = losId.replace(/^LOS-/, '');
       if (!loan_type || !numericLosId) return false;
-      const resp = await fetch('http://localhost:8081/save-ocr', {
+      const resp = await fetch('http://localhost:8086/save-ocr', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
         body: JSON.stringify({ loan_type, los_id: numericLosId, document_type: doc, ocr_data: data })
@@ -196,37 +207,88 @@ const DocumentManagement: React.FC = () => {
   const fetchApplicationsAndAutoSelect = async (submissionInfo: {applicationId: number, applicationType: string}) => {
     setLoadingApplications(true);
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/applications/department/pb`);
-      if (response.ok) {
-        const data = await response.json();
-        setApplications(data);
+      // Fetch the specific application by LOS ID instead of searching through PB list
+      // (Application might have been auto-assigned to EAVMU_OFFICER and won't be in PB list)
+      const losIdToFetch = typeof submissionInfo.applicationId === 'number' 
+        ? submissionInfo.applicationId 
+        : submissionInfo.applicationId.toString().replace('LOS-', '');
+      
+      const directResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/v1/applications/form/${losIdToFetch}`);
+      
+      if (directResponse.ok) {
+        const directResult = await directResponse.json();
         
-        // Find the matching application by ID and type
-        const matchingApp = data.find((app: Application) => {
-          // Extract the numeric ID from the composite ID (e.g., "AmeenDrive-123" -> 123)
-          const appId = app.id.split('-').pop();
-          return appId === submissionInfo.applicationId.toString() && 
-                 app.application_type === submissionInfo.applicationType;
-        });
-        
-        if (matchingApp) {
-          // Auto-select the matching application
+        if (directResult.success && directResult.data) {
+          const appData = directResult.data;
+          
+          // Build application object from direct fetch
+          // Log raw data to debug
+          console.log('📋 Raw appData from backend:', {
+            customer_name: appData.customer_name,
+            first_name: appData.first_name,
+            last_name: appData.last_name,
+            name: appData.name,
+            cnic: appData.cnic,
+            ALL_KEYS: Object.keys(appData)
+          });
+          
+          // Try multiple name sources with detailed logging
+          let applicantName = 'Unknown';
+          
+          if (appData.customer_name && appData.customer_name.trim()) {
+            applicantName = appData.customer_name.trim();
+            console.log('✅ Name from customer_name:', applicantName);
+          } else if (appData.name && appData.name.trim()) {
+            applicantName = appData.name.trim();
+            console.log('✅ Name from name:', applicantName);
+          } else if (appData.first_name || appData.last_name) {
+            applicantName = `${appData.first_name || ''} ${appData.last_name || ''}`.trim();
+            if (applicantName) {
+              console.log('✅ Name from first_name + last_name:', applicantName);
+            } else {
+              console.warn('⚠️ first_name and last_name exist but are empty');
+            }
+          } else {
+            console.error('❌ NO NAME FIELDS FOUND IN BACKEND RESPONSE!');
+          }
+          
+          const matchingApp = {
+            id: `LOS-${appData.los_id || losIdToFetch}`,
+            los_id: appData.los_id || parseInt(losIdToFetch, 10),
+            applicant_name: applicantName,
+            cnic: appData.cnic,
+            product_type: appData.product_type,
+            requested_amount: appData.requested_amount || appData.amount,
+            current_stage: appData.current_stage,
+            status: appData.status,
+            created_at: appData.created_at || appData.submitted_at
+          };
+          
+          console.log('✅ Built matchingApp:', matchingApp);
+          
+          console.log('✅ Direct fetch successful:', matchingApp);
+          
+          // Auto-select the application
           handleCustomerSelect(matchingApp);
-          setDocumentType('Application Form Physical Copy'); // Auto-select mandatory document type
+          setDocumentType('Application Form Physical Copy');
           
           toast({
             title: "Customer Auto-Selected",
-            description: `Selected ${matchingApp.applicant_name} (${matchingApp.los_id}). Please upload the Application Form Physical Copy first.`,
+            description: `Selected ${matchingApp.applicant_name} (LOS-${matchingApp.los_id}). Please upload the Application Form Physical Copy first.`,
           });
+          
+          // Also fetch full PB list for the dropdown
+          const listResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/v1/applications/department/PB/paginated?page=1&limit=100`);
+          if (listResponse.ok) {
+            const listResult = await listResponse.json();
+            const listData = listResult.data || listResult.applications || listResult;
+            setApplications(Array.isArray(listData) ? listData : []);
+          }
         } else {
-          toast({
-            title: "Application Not Found",
-            description: "Could not find the submitted application. Please select manually.",
-            variant: "destructive",
-          });
+          throw new Error('Application not found in database');
         }
       } else {
-        throw new Error('Failed to fetch applications');
+        throw new Error(`Failed to fetch application: ${directResponse.status}`);
       }
     } catch (error) {
       console.error('Error fetching applications for auto-select:', error);
@@ -242,7 +304,7 @@ const DocumentManagement: React.FC = () => {
 
   const checkServerStatus = async () => {
     try {
-      const response = await fetch('http://localhost:8081/', { 
+      const response = await fetch('http://localhost:8086/', { 
         method: 'GET',
         mode: 'no-cors' // This will help us detect if server is running
       });
@@ -256,10 +318,12 @@ const DocumentManagement: React.FC = () => {
   const fetchApplications = async () => {
     setLoadingApplications(true);
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/applications/department/pb`);
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/v1/applications/department/PB/paginated?page=1&limit=100`);
       if (response.ok) {
-        const data = await response.json();
-        setApplications(data);
+        const result = await response.json();
+        // Backend V2.0 returns: { success: true, data: [...], total, page, pageSize }
+        const data = result.data || result.applications || result;
+        setApplications(Array.isArray(data) ? data : []);
       } else {
         throw new Error('Failed to fetch applications');
       }
@@ -441,7 +505,7 @@ const DocumentManagement: React.FC = () => {
           }, 200);
 
           // Use the dedicated upload server on port 8081
-          const response = await fetch('http://localhost:8081/upload', {
+          const response = await fetch('http://localhost:8086/upload', {
             method: 'POST',
             headers: {
               'Accept': 'application/json',
@@ -536,7 +600,7 @@ const DocumentManagement: React.FC = () => {
   };
 
   const openUploadForm = () => {
-    window.open('http://localhost:8081/pb-upload', '_blank');
+    window.open('http://localhost:8086/pb-upload', '_blank');
   };
 
   const handleFileSelectFromExplorer = (file: any) => {
@@ -546,18 +610,108 @@ const DocumentManagement: React.FC = () => {
     });
   };
 
-  const handleCustomerSelect = (application: Application) => {
-    // Map various display labels to a canonical folder slug
-    const mappedloan_type = mapLoanTypeLabelToSlug(application.loan_type)
+  const [existingDocuments, setExistingDocuments] = useState<any>(null);
+  const [loadingDocuments, setLoadingDocuments] = useState(false);
+  const [physicalFiles, setPhysicalFiles] = useState<string[]>([]);
+
+  const fetchExistingDocuments = async (losId: string, loanTypeForFetch: string) => {
+    setLoadingDocuments(true);
+    let ocrCount = 0;
+    let filesCount = 0;
     
-    setLosId(application.los_id); // Keep the full LOS ID format for display
+    try {
+      const numericId = losId.replace(/^LOS-/, '');
+      console.log(`🔍 Fetching documents for LOS-${numericId}, Loan Type: ${loanTypeForFetch}`);
+      
+      // Fetch OCR data from Backend V2.0
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/v1/applications/form/${numericId}`);
+      if (response.ok) {
+        const data = await response.json();
+        console.log('📄 Fetched application data from V2.0:', data);
+        
+        // Backend V2.0 stores documents in different field
+        const documents = data.documents || data.mobile_documents || null;
+        
+        if (documents && typeof documents === 'object') {
+          console.log('📄 Found documents:', documents);
+          setExistingDocuments(documents);
+          ocrCount = Object.keys(documents).filter(k => documents[k] && documents[k].data).length;
+        } else {
+          console.log('⚠️ No documents found in application');
+          setExistingDocuments(null);
+        }
+      } else {
+        console.warn(`⚠️ Failed to fetch application data: ${response.status}`);
+      }
+      
+      // ✅ Fetch physical files from FileZilla
+      try {
+        const fileApiUrl = `http://localhost:8086/list-files?loan_type=${loanTypeForFetch}&los_id=${numericId}`;
+        console.log(`📁 Fetching files from: ${fileApiUrl}`);
+        
+        const filesResponse = await fetch(fileApiUrl);
+        console.log(`📁 Files response status: ${filesResponse.status}`);
+        
+        if (filesResponse.ok) {
+          const filesData = await filesResponse.json();
+          console.log('📁 Physical files in FileZilla:', filesData);
+          setPhysicalFiles(filesData.files || []);
+          filesCount = (filesData.files || []).length;
+        } else {
+          console.error('❌ Failed to fetch files:', filesResponse.statusText);
+        }
+      } catch (error) {
+        console.error('❌ Error fetching physical files:', error);
+      }
+      
+      if (ocrCount > 0 || filesCount > 0) {
+        toast({
+          title: "Documents loaded",
+          description: `Found ${ocrCount} OCR document(s) and ${filesCount} physical file(s)`,
+        });
+      } else {
+        toast({
+          title: "No documents found",
+          description: "No documents found from form submission. Please upload documents.",
+          variant: "default",
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching documents:', error);
+    } finally {
+      setLoadingDocuments(false);
+    }
+  };
+
+  const handleCustomerSelect = (application: Application) => {
+    console.log('📋 Selecting application:', application);
+    
+    // Backend V2.0 compatibility: Handle both formats
+    const losIdValue = application.id || `LOS-${application.los_id}`;
+    const productType = application.productType || application.product_type || application.loan_type || 'cashplus';
+    const applicantName = application.applicantName || application.applicant_name || 'Customer';
+    
+    // Map various display labels to a canonical folder slug
+    const mappedloan_type = mapLoanTypeLabelToSlug(productType);
+    
+    console.log('📋 Mapped values:', {
+      losIdValue,
+      productType,
+      mappedloan_type,
+      applicantName
+    });
+    
+    setLosId(losIdValue); // Keep the full LOS ID format for display
     setloan_type(mappedloan_type);
     setSelectedApplicationForDocs(application); // Set the selected application for document viewing
     setShowCustomerSelector(false);
     
+    // Fetch existing OCR documents and physical files
+    fetchExistingDocuments(losIdValue, mappedloan_type);
+    
     toast({
       title: "Application selected",
-      description: `${application.applicant_name} (${application.los_id})`,
+      description: `${applicantName} (${losIdValue})`,
     });
   };
 
@@ -635,10 +789,16 @@ const DocumentManagement: React.FC = () => {
     }
   };
 
-  const filteredApplications = applications.filter(app => 
-    app.applicant_name.toLowerCase().includes(searchCustomer.toLowerCase()) ||
-    app.los_id.toLowerCase().includes(searchCustomer.toLowerCase())
-  );
+  const filteredApplications = applications.filter(app => {
+    // Backend V2.0 uses camelCase: applicantName, not applicant_name
+    const applicantName = app.applicantName || app.applicant_name || '';
+    const losId = app.id || `LOS-${app.los_id}` || ''; // los_id is number, id is "LOS-XX" string
+    
+    return (
+      applicantName.toLowerCase().includes(searchCustomer.toLowerCase()) ||
+      losId.toLowerCase().includes(searchCustomer.toLowerCase())
+    );
+  });
 
   return (
     <div className="p-6">
@@ -696,7 +856,13 @@ const DocumentManagement: React.FC = () => {
                   <Input
                     id="customer"
                     placeholder="Selected customer..."
-                    value={losId ? `${losId} - ${applications.find(app => app.los_id === losId)?.applicant_name || 'Unknown'}` : ''}
+                    value={losId ? `${losId} - ${(() => {
+                      // Extract numeric ID from losId (e.g., "LOS-43" -> 43)
+                      const numericId = parseInt(losId.replace(/^LOS-/, ''));
+                      const app = applications.find(a => a.los_id === numericId);
+                      // Backend V2.0 uses customer_name
+                      return app?.customer_name || app?.applicantName || app?.applicant_name || 'Unknown';
+                    })()}` : ''}
                     readOnly
                     className="flex-1"
                   />
@@ -761,6 +927,137 @@ const DocumentManagement: React.FC = () => {
     <option value="Other">Other</option>
   </select>
 </div>
+
+              {/* Physical Files from FileZilla */}
+              {physicalFiles.length > 0 && (
+                <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <h4 className="text-sm font-semibold text-blue-900 mb-2 flex items-center gap-2">
+                    <FileText className="h-4 w-4" />
+                    Physical Documents (FileZilla)
+                  </h4>
+                  <div className="space-y-2">
+                    {physicalFiles.map((file: any, index: number) => (
+                      <div key={index} className="flex items-center justify-between p-2 bg-white rounded">
+                        <div className="flex items-center gap-2">
+                          <FileText className="h-4 w-4 text-blue-600" />
+                          <p className="text-sm font-medium">{file.name}</p>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={async () => {
+                              try {
+                                // Fetch the file and show in preview modal
+                                const response = await fetch(file.url);
+                                const blob = await response.blob();
+                                const blobUrl = URL.createObjectURL(blob);
+                                
+                                const fileName = file.name.toLowerCase();
+                                const isPdf = fileName.endsWith('.pdf');
+                                const isImage = fileName.endsWith('.jpg') || fileName.endsWith('.jpeg') || fileName.endsWith('.png') || fileName.endsWith('.gif');
+                                
+                                if (isPdf) {
+                                  setPreviewContent({ url: blobUrl, kind: 'pdf', name: file.name });
+                                } else if (isImage) {
+                                  setPreviewContent({ url: blobUrl, kind: 'image', name: file.name });
+                                } else {
+                                  setPreviewContent({ url: blobUrl, kind: 'unsupported', name: file.name });
+                                }
+                                setPreviewOpen(true);
+                              } catch (error) {
+                                console.error('Error loading file:', error);
+                                toast({
+                                  title: "Error",
+                                  description: "Failed to load file preview",
+                                  variant: "destructive"
+                                });
+                              }
+                            }}
+                          >
+                            <Eye className="h-3 w-3 mr-1" /> View
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              const a = document.createElement('a');
+                              a.href = file.url;
+                              a.download = file.name;
+                              a.click();
+                            }}
+                          >
+                            <Download className="h-3 w-3 mr-1" /> Download
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-blue-700 mt-2">
+                    📁 {physicalFiles.length} file(s) stored in FileZilla server
+                  </p>
+                </div>
+              )}
+              
+              {/* Existing Documents from Form */}
+              {existingDocuments && (
+                <div className="mb-4 p-4 bg-teal-50 border border-teal-200 rounded-lg">
+                  <h4 className="text-sm font-semibold text-teal-900 mb-2 flex items-center gap-2">
+                    <Check className="h-4 w-4" />
+                    OCR Data (Database)
+                  </h4>
+                  <div className="space-y-2">
+                    {existingDocuments.cnic && (
+                      <div className="flex items-center justify-between p-2 bg-white rounded">
+                        <div>
+                          <p className="text-sm font-medium">CNIC OCR Data</p>
+                          <p className="text-xs text-gray-600">Verified • {new Date(existingDocuments.cnic.uploadedAt).toLocaleString()}</p>
+                        </div>
+                        <Badge variant="default" className="bg-teal-600">✓ Extracted</Badge>
+                      </div>
+                    )}
+                    {existingDocuments.salarySlip && (
+                      <div className="flex items-center justify-between p-2 bg-white rounded">
+                        <div>
+                          <p className="text-sm font-medium">Salary Slip OCR Data</p>
+                          <p className="text-xs text-gray-600">Verified • {new Date(existingDocuments.salarySlip.uploadedAt).toLocaleString()}</p>
+                        </div>
+                        <Badge variant="default" className="bg-teal-600">✓ Extracted</Badge>
+                      </div>
+                    )}
+                    {existingDocuments.ecib && (
+                      <div className="flex items-center justify-between p-2 bg-white rounded">
+                        <div>
+                          <p className="text-sm font-medium">eCIB Report Data</p>
+                          <p className="text-xs text-gray-600">Uploaded • {new Date(existingDocuments.ecib.uploadedAt).toLocaleString()}</p>
+                        </div>
+                        <Badge variant="default" className="bg-teal-600">✓ Extracted</Badge>
+                      </div>
+                    )}
+                    {existingDocuments.reference1Cnic && (
+                      <div className="flex items-center justify-between p-2 bg-white rounded">
+                        <div>
+                          <p className="text-sm font-medium">Reference 1 CNIC OCR Data</p>
+                          <p className="text-xs text-gray-600">Verified • {new Date(existingDocuments.reference1Cnic.uploadedAt).toLocaleString()}</p>
+                        </div>
+                        <Badge variant="default" className="bg-teal-600">✓ Extracted</Badge>
+                      </div>
+                    )}
+                    {existingDocuments.reference2Cnic && (
+                      <div className="flex items-center justify-between p-2 bg-white rounded">
+                        <div>
+                          <p className="text-sm font-medium">Reference 2 CNIC OCR Data</p>
+                          <p className="text-xs text-gray-600">Verified • {new Date(existingDocuments.reference2Cnic.uploadedAt).toLocaleString()}</p>
+                        </div>
+                        <Badge variant="default" className="bg-teal-600">✓ Extracted</Badge>
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-xs text-teal-700 mt-2">
+                    ℹ️ OCR data extracted and stored in database.
+                  </p>
+                </div>
+              )}
 
               {/* File Upload Area */}
               <div
@@ -891,6 +1188,25 @@ const DocumentManagement: React.FC = () => {
                   </>
                 )}
               </Button>
+              
+              {/* Skip Upload / Continue Button (when documents already exist) */}
+              {(existingDocuments || physicalFiles.length > 0) && selectedFiles.length === 0 && (
+                <Button
+                  variant="default"
+                  onClick={() => {
+                    toast({
+                      title: "✅ Documents Confirmed",
+                      description: `Redirecting to dashboard...`,
+                    });
+                    // Redirect back to the PB Applications dashboard
+                    router.push('/dashboard/pb/applications');
+                  }}
+                  className="w-full mt-2 bg-teal-600 hover:bg-teal-700"
+                >
+                  <Check className="mr-2 h-4 w-4" />
+                  ✅ Confirm & Continue - Documents Complete
+                </Button>
+              )}
 
                               {/* Quick Actions */}
                 <div className="mt-4 space-y-2">
